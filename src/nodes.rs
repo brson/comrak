@@ -110,6 +110,9 @@ pub enum NodeValue {
 
     /// **Inline**.  A footnote reference; the `Vec<u8>` is the referent footnote's name.
     FootnoteReference(Vec<u8>),
+
+    /// **Inline**.  Underline
+    Underline,
 }
 
 /// Alignment of a single table cell.
