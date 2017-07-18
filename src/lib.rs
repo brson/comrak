@@ -65,7 +65,6 @@
 	missing_copy_implementations,
 	trivial_casts,
 	trivial_numeric_casts,
-	unsafe_code,
 	unstable_features,
 	unused_import_braces,
 	unused_qualifications)]
@@ -74,6 +73,9 @@
 #![cfg_attr(feature = "dev", feature(plugin))]
 #![cfg_attr(feature = "dev", plugin(clippy))]
 #![allow(unknown_lints, doc_markdown, cyclomatic_complexity)]
+
+#![cfg_attr(rustbuild, feature(staged_api, rustc_private))]
+#![cfg_attr(rustbuild, unstable(feature = "rustc_private", issue = "27812"))]
 
 extern crate unicode_categories;
 extern crate typed_arena;
@@ -100,11 +102,44 @@ pub use html::format_document as format_html;
 pub use parser::{parse_document, ComrakOptions};
 use typed_arena::Arena;
 
+extern crate libc;
+
+use libc::c_char;
+use std::ffi::{CStr, CString};
+
 /// Render Markdown to HTML.
 ///
 /// See the documentation of the crate root for an example.
-pub fn markdown_to_html(md: &str, options: &ComrakOptions) -> String {
+#[no_mangle]
+pub extern fn markdown_to_html(md: &str, options: &ComrakOptions) -> String {
     let arena = Arena::new();
     let root = parse_document(&arena, md, options);
     format_html(root, options)
+}
+
+/// Entryway for Reddit Python bridge.
+#[no_mangle]
+pub extern fn html(s: *const c_char) -> CString {
+    let c_str = unsafe {
+        assert!(!s.is_null());
+        CStr::from_ptr(s)
+    };
+    let r_str = c_str.to_str().unwrap();
+    let arena = Arena::new();
+
+    let options = ComrakOptions {
+        hardbreaks: false,
+        github_pre_lang: false,
+        width: 0,
+        ext_strikethrough: true,
+        ext_tagfilter: false,
+        ext_table: true,
+        ext_autolink: true,
+        ext_tasklist: false,
+        ext_superscript: false
+    };
+
+    let root = parse_document(&arena, &r_str, &options);
+    let rendered_html = format_html(root, &ComrakOptions::default());
+    CString::new(rendered_html).unwrap()
 }
