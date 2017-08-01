@@ -23,6 +23,7 @@ use std::cell::Cell;
 /// A node inside a DOM-like tree.
 #[derive(Debug)]
 pub struct Node<'a, T: 'a> {
+    // ZT: add context to determine whether reddit-specific parsing required
     parent: Cell<Option<&'a Node<'a, T>>>,
     previous_sibling: Cell<Option<&'a Node<'a, T>>>,
     next_sibling: Cell<Option<&'a Node<'a, T>>>,

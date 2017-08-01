@@ -1,0 +1,67 @@
+// Reddit-flavored extensions
+use ctype::{isspace, isalpha, isalnum};
+use nodes::{NodeValue, NodeLink, AstNode};
+use parser::inlines::make_inline;
+use regex::{Regex, Captures};
+use typed_arena::Arena;
+use unicode_categories::UnicodeCategories;
+
+// ZT: recursively call this to nest; enable multiple initial levels of nesting
+pub fn process_glyphs<'a>(
+    arena: &'a Arena<AstNode<'a>>,
+    node: &'a AstNode<'a>,
+    contents: &mut String
+) {
+    lazy_static! {
+        static ref re: Regex = Regex::new(r"([\^%]{1,10})((\w+|\([\w\s\(\)]+\))+)").unwrap();
+    }
+
+    let owned_contents = contents.to_owned();
+    let matched = re.find(&owned_contents);
+    let m = match matched {
+        Some(m) => m,
+        _ => return
+    };
+        let start = m.start();
+        let end = m.end();
+    
+        let inl = make_inline(
+            arena,
+            NodeValue::Superscript
+        );
+
+        let slice = &owned_contents[start..end].to_owned();
+        let prefix = &slice[..1].to_owned();
+        let mut idx = 0;
+        let mut wrapped = false;
+        for c in prefix.clone().into_bytes() {
+            match c {
+                b'^' | b'%' => idx += 1,
+                b'(' => {
+                    wrapped = true;
+                    break
+                }
+                _ => break
+            }
+        }
+
+        let mut inner_text;
+        if wrapped {
+            inner_text = &slice[idx+1..slice.len()-1];
+        } else {
+            inner_text = &slice[idx..slice.len()]
+        }
+
+        inl.append(make_inline(
+            arena,
+            NodeValue::Text(
+                inner_text.to_owned()
+            )
+        ));
+
+        node.insert_after(inl);
+        let remain = owned_contents[end..].to_string();
+        inl.insert_after(make_inline(arena, NodeValue::Text(remain)));
+
+        contents.truncate(start);
+}
