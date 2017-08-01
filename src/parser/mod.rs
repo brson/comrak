@@ -1,3 +1,4 @@
+mod reddit;
 mod table;
 mod autolink;
 mod inlines;
@@ -1288,6 +1289,10 @@ impl<'a, 'o> Parser<'a, 'o> {
     }
 
     fn postprocess_text_node(&mut self, node: &'a AstNode<'a>, text: &mut String) {
+        if !self.options.ext_superscript {
+            reddit::process_glyphs(self.arena, node, text);
+        }
+
         if self.options.ext_tasklist {
             self.process_tasklist(node, text);
         }

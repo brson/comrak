@@ -128,6 +128,7 @@ pub extern fn html(s: *const c_char) -> CString {
     let arena = Arena::new();
 
     let options = ComrakOptions {
+        rtjson: true,
         hardbreaks: false,
         github_pre_lang: false,
         width: 0,
