@@ -1,14 +1,14 @@
 //! The `comrak` binary.
 
-// #![deny(missing_docs,
-//         missing_debug_implementations,
-// 	missing_copy_implementations,
-// 	trivial_casts,
-// 	trivial_numeric_casts,
-// 	unsafe_code,
-// 	unstable_features,
-// 	unused_import_braces,
-// 	unused_qualifications)]
+#![deny(missing_docs,
+        missing_debug_implementations,
+    missing_copy_implementations,
+    trivial_casts,
+    trivial_numeric_casts,
+    unsafe_code,
+    unstable_features,
+    unused_import_braces,
+    unused_qualifications)]
 
 #![cfg_attr(feature = "dev", allow(unstable_features))]
 #![cfg_attr(feature = "dev", feature(plugin))]
@@ -57,6 +57,9 @@ fn main() {
                     "The CommonMark file to parse; or standard input if none passed",
                 ),
         )
+        .arg(clap::Arg::with_name("rtjson").long("rtjson").help(
+            "Parse AST into an RTJSON compliant format",
+        ))
         .arg(clap::Arg::with_name("hardbreaks").long("hardbreaks").help(
             "Treat newlines as hard line breaks",
         ))
@@ -111,6 +114,7 @@ fn main() {
     );
 
     let options = parser::ComrakOptions {
+        rtjson: matches.is_present("rtjson"),
         hardbreaks: matches.is_present("hardbreaks"),
         github_pre_lang: matches.is_present("github-pre-lang"),
         width: matches.value_of("width").unwrap_or("0").parse().unwrap_or(

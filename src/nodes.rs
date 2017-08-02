@@ -65,6 +65,9 @@ pub enum NodeValue {
     /// **Block**.  A table cell.  Contains **inlines**.
     TableCell,
 
+    /// **Inline**.  FormattedString
+    FormattedText(String, Vec<[u8; 3]>),
+
     /// **Inline**.  [Textual content](https://github.github.com/gfm/#textual-content).  All text
     /// in a document will be contained in a `Text` node.
     Text(String),
@@ -100,6 +103,12 @@ pub enum NodeValue {
     /// **Inline**.  A [link](https://github.github.com/gfm/#links) to some URL, with possible
     /// title.
     Link(NodeLink),
+
+    /// **Inline**.  FormattedLink
+    FormattedLink(String, String, Vec<[u8; 3]>),
+
+    /// **Inline**.  UnformattedLink
+    UnformattedLink(String, String),
 
     /// **Inline**.  An [image](https://github.github.com/gfm/#images).
     Image(NodeLink),
@@ -275,6 +284,7 @@ impl NodeValue {
     /// Indicates whether this node may contain inlines.
     pub fn contains_inlines(&self) -> bool {
         match *self {
+            NodeValue::Link(..) |
             NodeValue::Paragraph |
             NodeValue::Heading(..) |
             NodeValue::TableCell => true,

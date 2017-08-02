@@ -407,6 +407,7 @@ impl<'a, 'o> CommonMarkFormatter<'a, 'o> {
                     self.blankline();
                 }
             }
+            NodeValue::FormattedText(ref literal, ref format_ranges) => (),
             NodeValue::Text(ref literal) => {
                 if entering {
                     self.output(literal.as_bytes(), allow_wrap, Escaping::Normal);
@@ -524,6 +525,8 @@ impl<'a, 'o> CommonMarkFormatter<'a, 'o> {
                     write!(self, ")").unwrap();
                 }
             }
+            NodeValue::FormattedLink(ref url, ref literal, ref format_ranges) => (),
+            NodeValue::UnformattedLink(ref url, ref literal) => (),
             NodeValue::Image(ref nl) => {
                 if entering {
                     write!(self, "![").unwrap();
