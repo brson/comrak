@@ -349,20 +349,45 @@ impl<'a, 'o> CommonMarkFormatter<'a, 'o> {
                 if !first_in_list_item {
                     self.blankline();
                 }
-
-                if ncb.info.is_empty()
-                    && (ncb.literal.len() > 2 && !isspace(ncb.literal[0])
-                        && !(isspace(ncb.literal[ncb.literal.len() - 1])
-                            && isspace(ncb.literal[ncb.literal.len() - 2])))
-                    && !first_in_list_item
-                {
-                    write!(self, "    ").unwrap();
-                    write!(self.prefix, "    ").unwrap();
-                    self.write_all(&ncb.literal).unwrap();
-                    let new_len = self.prefix.len() - 4;
-                    self.prefix.truncate(new_len);
-                } else {
-                    let numticks = max(3, longest_backtick_sequence(&ncb.literal) + 1);
+            }
+            NodeValue::ThematicBreak => {
+                if entering {
+                    self.blankline();
+                    write!(self, "-----").unwrap();
+                    self.blankline();
+                }
+            }
+            NodeValue::Paragraph => {
+                if !entering {
+                    self.blankline();
+                }
+            }
+            NodeValue::FormattedText(ref literal, ref format_ranges) => (),
+            NodeValue::Text(ref literal) => {
+                if entering {
+                    self.output(literal.as_bytes(), allow_wrap, Escaping::Normal);
+                }
+            }
+            NodeValue::LineBreak => {
+                if entering {
+                    if !self.options.hardbreaks {
+                        write!(self, "  ").unwrap();
+                    }
+                    self.cr();
+                }
+            }
+            NodeValue::SoftBreak => {
+                if entering {
+                    if !self.no_linebreaks && self.options.width == 0 && !self.options.hardbreaks {
+                        self.cr();
+                    } else {
+                        self.output(&[b' '], allow_wrap, Escaping::Literal);
+                    }
+                }
+            }
+            NodeValue::Code(ref literal) => {
+                if entering {
+                    let numticks = shortest_unused_sequence(literal, b'`');
                     for _ in 0..numticks {
                         write!(self, "`").unwrap();
                     }
@@ -470,6 +495,7 @@ impl<'a, 'o> CommonMarkFormatter<'a, 'o> {
                     write!(self, ">").unwrap();
                     return false;
                 }
+<<<<<<< HEAD
             } else if entering {
                 write!(self, "[").unwrap();
             } else {
@@ -479,6 +505,23 @@ impl<'a, 'o> CommonMarkFormatter<'a, 'o> {
                     write!(self, " \"").unwrap();
                     self.output(&nl.title, false, Escaping::Title);
                     write!(self, "\"").unwrap();
+=======
+            }
+            NodeValue::FormattedLink(ref url, ref literal, ref format_ranges) => (),
+            NodeValue::UnformattedLink(ref url, ref literal) => (),
+            NodeValue::Image(ref nl) => {
+                if entering {
+                    write!(self, "![").unwrap();
+                } else {
+                    write!(self, "](").unwrap();
+                    self.output(nl.url.as_bytes(), false, Escaping::URL);
+                    if !nl.title.is_empty() {
+                        self.output(&[b' ', b'"'], allow_wrap, Escaping::Literal);
+                        self.output(nl.title.as_bytes(), false, Escaping::Title);
+                        write!(self, "\"").unwrap();
+                    }
+                    write!(self, ")").unwrap();
+>>>>>>> Add option and logic to generate RTJSON specific AST
                 }
                 write!(self, ")").unwrap();
             },

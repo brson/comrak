@@ -66,6 +66,9 @@ pub struct Parser<'a, 'o> {
 #[derive(Default, Debug, Clone)]
 /// Options for both parser and formatter functions.
 pub struct ComrakOptions {
+    /// RTJSON AST formatting
+    pub rtjson: bool,
+
     /// [Soft line breaks](http://spec.commonmark.org/0.27/#soft-line-breaks) in the input
     /// translate into hard line breaks in the output.
     ///
@@ -1003,9 +1006,16 @@ impl<'a, 'o> Parser<'a, 'o> {
             let linebuf = mem::replace(&mut self.linebuf, vec![]);
             self.process_line(&linebuf);
         }
-
         self.finalize_document();
         self.postprocess_text_nodes(self.root);
+        if self.options.rtjson {
+            self.postprocess_rtjson_ast(
+                self.root,
+                &mut String::new(),
+                &mut 0,
+                &mut vec![]
+            );
+        }
         self.root
     }
 
@@ -1295,7 +1305,114 @@ impl<'a, 'o> Parser<'a, 'o> {
         }
     }
 
-    fn postprocess_text_node(&mut self, node: &'a AstNode<'a>, text: &mut Vec<u8>) {
+    fn reset_rtjson_node(
+        &mut self,
+        unformatted_text: &mut String,
+        current_format: &mut u8,
+        format_ranges: &mut Vec<[u8; 3]>,
+    ) {
+        unformatted_text.truncate(0);
+        *current_format = 0;
+        format_ranges.clear();
+    }
+
+    fn postprocess_rtjson_ast(
+        &mut self,
+        node: &'a AstNode<'a>,
+        unformatted_text: &mut String,
+        current_format: &mut u8,
+        format_ranges: &mut Vec<[u8; 3]>,
+    ) {
+        match node.data.borrow_mut().value {
+            NodeValue::Text(ref text) => {
+                if *current_format != 0 {
+                    let range_idx = unformatted_text.len() as u8;
+                    let range_length = text.len() as u8;
+                    let new_range = [*current_format, range_idx, range_length];
+                    format_ranges.push(new_range);
+                }
+                unformatted_text.push_str(text);
+                *current_format = 0;
+            },
+            NodeValue::Link(ref link) => {
+                if !unformatted_text.is_empty() {
+
+                    let text_node = if format_ranges.is_empty() {
+                        NodeValue::Text(
+                            unformatted_text.to_string(),
+                        )
+                    } else {
+                        NodeValue::FormattedText(
+                            unformatted_text.to_string(),
+                            format_ranges.to_owned()
+                        )
+                    };
+
+                    let inline_text_node = inlines::make_inline(
+                        self.arena,
+                        text_node
+                    );
+                    node.insert_before(inline_text_node);
+                    self.reset_rtjson_node(unformatted_text, current_format, format_ranges);
+                }
+            },
+            NodeValue::Strong => *current_format += 1,
+            NodeValue::Emph => *current_format += 2,
+            NodeValue::Strikethrough => *current_format += 8,
+            NodeValue::Superscript => *current_format += 32,
+            _ => ()
+        }
+
+        for c in node.children() {
+            self.postprocess_rtjson_ast(
+                c,
+                unformatted_text,
+                current_format,
+                format_ranges
+            );
+        }
+
+        if node.data.borrow_mut().value.contains_inlines() {
+            match node.data.borrow_mut().value {
+                NodeValue::Link(ref nl) => {
+                    let link_node = if format_ranges.is_empty() {
+                        NodeValue::UnformattedLink(
+                            nl.to_owned().url,
+                            unformatted_text.to_string()
+                        )
+                    } else {
+                        NodeValue::FormattedLink(
+                            nl.to_owned().url,
+                            unformatted_text.to_string(),
+                            format_ranges.to_owned()
+                        )
+                    };
+                    let inline_text_node = inlines::make_inline(
+                        self.arena,
+                        link_node
+                    );
+                    node.insert_before(inline_text_node);
+                    self.reset_rtjson_node(unformatted_text, current_format, format_ranges);
+                    node.detach();
+                }
+                _ => {
+                    let formatted_text_node = inlines::make_inline(
+                        self.arena,
+                        NodeValue::FormattedText(
+                            unformatted_text.to_string(),
+                            format_ranges.to_owned()
+                        ),
+                    );
+                    node.append(formatted_text_node);
+                    self.reset_rtjson_node(unformatted_text, current_format, format_ranges);
+                }
+            }
+        } else {
+            node.detach();
+        }
+    }
+
+    fn postprocess_text_node(&mut self, node: &'a AstNode<'a>, text: &mut String) {
         if self.options.ext_tasklist {
             self.process_tasklist(node, text);
         }

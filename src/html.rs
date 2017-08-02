@@ -419,10 +419,30 @@ impl<'o> HtmlFormatter<'o> {
                     _ => false,
                 };
 
-                if !tight {
-                    if entering {
-                        try!(self.cr());
-                        try!(self.output.write_all(b"<p>"));
+                if entering {
+                    if !tight {
+                        self.cr();
+                        self.s += "<p>";
+                    }
+                } else if !tight {
+                    self.s += "</p>\n";
+                }
+            }
+            NodeValue::FormattedText(ref literal, ref format_ranges) => (),
+            NodeValue::Text(ref literal) => {
+                if entering {
+                    self.escape(literal);
+                }
+            }
+            NodeValue::LineBreak => {
+                if entering {
+                    self.s += "<br />\n";
+                }
+            }
+            NodeValue::SoftBreak => {
+                if entering {
+                    if self.options.hardbreaks {
+                        self.s += "<br />\n";
                     } else {
                         if match node.parent().unwrap().data.borrow().value {
                             NodeValue::FootnoteDefinition(..) => true,
@@ -503,17 +523,21 @@ impl<'o> HtmlFormatter<'o> {
                     try!(self.output.write_all(b"\" title=\""));
                     try!(self.escape(&nl.title));
                 }
-                try!(self.output.write_all(b"\" />"));
-            },
-            NodeValue::Table(..) => if entering {
-                try!(self.cr());
-                try!(self.output.write_all(b"<table>\n"));
-            } else {
-                if !node.last_child()
-                    .unwrap()
-                    .same_node(node.first_child().unwrap())
-                {
-                    try!(self.output.write_all(b"</tbody>"));
+            }
+            NodeValue::FormattedLink(ref url, ref literal, ref format_ranges) => (),
+            NodeValue::UnformattedLink(ref url, ref literal) => (),
+            NodeValue::Image(ref nl) => {
+                if entering {
+                    self.s += "<img src=\"";
+                    self.escape_href(&nl.url);
+                    self.s += "\" alt=\"";
+                    return true;
+                } else {
+                    if !nl.title.is_empty() {
+                        self.s += "\" title=\"";
+                        self.escape(&nl.title);
+                    }
+                    self.s += "\" />";
                 }
                 try!(self.output.write_all(b"</table>\n"));
             },
