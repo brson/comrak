@@ -1,6 +1,7 @@
 use {parse_document, Arena, ComrakOptions};
 use cm;
 use html;
+use rtjson;
 
 fn compare_strs(output: &str, expected: &str, kind: &str) {
     if output != expected {
@@ -19,17 +20,19 @@ fn compare_strs(output: &str, expected: &str, kind: &str) {
     assert_eq!(output, expected);
 }
 
-fn html(input: &str, expected: &str) {
-    html_opts(input, expected, |_| ());
+fn rtjson(input: &str, expected: &str) {
+    rtjson_opts(input, expected, |_| ());
 }
 
-fn html_opts<F>(input: &str, expected: &str, opts: F)
+fn rtjson_opts<F>(input: &str, expected: &str, opts: F)
 where
     F: Fn(&mut ComrakOptions),
 {
     let arena = Arena::new();
     let mut options = ComrakOptions::default();
     opts(&mut options);
+    options.rtjson = true;
+    options.ext_table = true;
 
     let root = parse_document(&arena, input, &options);
     let mut output = vec![];
@@ -50,261 +53,126 @@ where
 
 #[test]
 fn basic() {
-    html(
+    rtjson(
         concat!(
-            "My **document**.\n",
-            "\n",
-            "It's mine.\n",
-            "\n",
-            "> Yes.\n",
-            "\n",
-            "## Hi!\n",
-            "\n",
-            "Okay.\n"
+            "this is a link with **bold** and *italic*"
         ),
         concat!(
-            "<p>My <strong>document</strong>.</p>\n",
-            "<p>It's mine.</p>\n",
-            "<blockquote>\n",
-            "<p>Yes.</p>\n",
-            "</blockquote>\n",
-            "<h2>Hi!</h2>\n",
-            "<p>Okay.</p>\n"
+            "'document': [ { 'e': 'par', 'c': [{ 'e': 'link', 'u': 'https://reddit.com', 't': 'this is a link with bold and italic', 'f': [[1, 20, 4], [2, 29, 6]], }, ], }, ],"
         ),
     );
 }
 
 #[test]
-fn codefence() {
-    html(
-        concat!("``` rust yum\n", "fn main<'a>();\n", "```\n"),
+fn basic_2() {
+    rtjson(
         concat!(
-            "<pre><code class=\"language-rust\">fn main&lt;'a&gt;();\n",
-            "</code></pre>\n"
+            "*Hello Reddit*, this an example paragraph. Read more RTJson [here](https://docs.google.com/document/d/1Qpf2tl8iabZIEKvUSE3bFRV2QCIjxaXn-6Mblvojpvs/edit#heading=h.w2llmo96i6e1)",
+        ),
+        concat!(
+            "'document': [",
+                "{",
+                    "'e': 'par',",
+                    "'c': [",
+                        "{",
+                            "'e': 'text',",
+                            "'t': 'Hello Reddit, this an example paragraph. Read more RTJson ',",
+                            "'f': [[2, 0, 12]],",
+                        "},",
+                        "{",
+                            "'e': 'link',",
+                            "'t': 'here',",
+                            "'u': 'https://docs.google.com/document/d/1Qpf2tl8iabZIEKvUSE3bFRV2QCIjxaXn-6Mblvojpvs/edit#heading=h.w2llmo96i6e1',",
+                        "}",
+                    "]",
+                "},",
+            "]",
         ),
     );
 }
 
 #[test]
-fn lists() {
-    html(
-        concat!("2. Hello.\n", "3. Hi.\n"),
+fn heading() {
+    rtjson(
         concat!(
-            "<ol start=\"2\">\n",
-            "<li>Hello.</li>\n",
-            "<li>Hi.</li>\n",
-            "</ol>\n"
-        ),
-    );
-
-    html(
-        concat!("- Hello.\n", "- Hi.\n"),
-        concat!("<ul>\n", "<li>Hello.</li>\n", "<li>Hi.</li>\n", "</ul>\n"),
-    );
-}
-
-#[test]
-fn thematic_breaks() {
-    html(
-        concat!("---\n", "\n", "- - -\n", "\n", "\n", "_        _   _\n"),
-        concat!("<hr />\n", "<hr />\n", "<hr />\n"),
-    );
-}
-
-#[test]
-fn setext_heading() {
-    html(
-        concat!("Hi\n", "==\n", "\n", "Ok\n", "-----\n"),
-        concat!("<h1>Hi</h1>\n", "<h2>Ok</h2>\n"),
-    );
-}
-
-#[test]
-fn html_block_1() {
-    html(
-        concat!(
-            "<script>\n",
-            "*ok* </script> *ok*\n",
-            "\n",
-            "*ok*\n",
-            "\n",
-            "*ok*\n",
-            "\n",
-            "<pre x>\n",
-            "*ok*\n",
-            "</style>\n",
-            "*ok*\n",
-            "<style>\n",
-            "*ok*\n",
-            "</style>\n",
-            "\n",
-            "*ok*\n"
+            "### This heading contains plain text, [a link](https://reddit.com), and a u/username.\n\nHello, this is a paragraph."
         ),
         concat!(
-            "<script>\n",
-            "*ok* </script> *ok*\n",
-            "<p><em>ok</em></p>\n",
-            "<p><em>ok</em></p>\n",
-            "<pre x>\n",
-            "*ok*\n",
-            "</style>\n",
-            "<p><em>ok</em></p>\n",
-            "<style>\n",
-            "*ok*\n",
-            "</style>\n",
-            "<p><em>ok</em></p>\n"
+            "'document':[{'e': 'h','l': 3,'c': [{'e': 'raw','t': 'This heading contains plain text, '},{'e': 'link','u': 'https://reddit.com','t': 'a link'},{'e': 'raw','t': ', and a '},{'e': 'u/','t': 'username'},{'e': 'raw','t': '.'}],},{'e': 'par','c': [{'e': 'text','t': 'Hello, this is a paragraph.'}],},]"
         ),
     );
 }
 
 #[test]
-fn html_block_2() {
-    html(
-        concat!("   <!-- abc\n", "\n", "ok --> *hi*\n", "*hi*\n"),
+fn blockquote_1() {
+    rtjson(
         concat!(
-            "   <!-- abc\n",
-            "\n",
-            "ok --> *hi*\n",
-            "<p><em>hi</em></p>\n"
+            ">This post begins with a blockquote.\n\nThis post has a paragraph in the middle.\n\n>This post ends with a blockquote."
+        ),
+        concat!(
+            "'document': [{'e': 'blockquote','c': [{'e': 'par','c': [{'e': 'text','t': 'This post begins with a blockquote.',}]}]},{'e': 'par','c': [{'e': 'text','t': 'This post has a paragraph in the middle.',}]},{'e': 'blockquote','c': [{'e': 'par','c': [{'e': 'text','t': 'This post ends with a blockquote.',}]}]}]"
         ),
     );
 }
 
 #[test]
-fn html_block_3() {
-    html(
-        concat!(" <? o\n", "k ?> *a*\n", "*a*\n"),
-        concat!(" <? o\n", "k ?> *a*\n", "<p><em>a</em></p>\n"),
-    );
-}
-
-#[test]
-fn html_block_4() {
-    html(
-        concat!("<!X >\n", "ok\n", "<!X\n", "um > h\n", "ok\n"),
-        concat!("<!X >\n", "<p>ok</p>\n", "<!X\n", "um > h\n", "<p>ok</p>\n"),
-    );
-}
-
-#[test]
-fn html_block_5() {
-    html(
+fn blockquote_only() {
+    rtjson(
         concat!(
-            "<![CDATA[\n",
-            "\n",
-            "hm >\n",
-            "*ok*\n",
-            "]]> *ok*\n",
-            "*ok*\n"
+            ">A blockquote with nothing else."
         ),
         concat!(
-            "<![CDATA[\n",
-            "\n",
-            "hm >\n",
-            "*ok*\n",
-            "]]> *ok*\n",
-            "<p><em>ok</em></p>\n"
+            "'document': [{'e': 'blockquote','c': [{'e': 'par','c': [{'e': 'text','t': 'A blockquote with nothing else.'}]}],}]"
         ),
     );
 }
 
+
+// TODO: This utilizes one of the breaks.
+// works for mow, but we should figure out which break it uses
 #[test]
-fn html_block_6() {
-    html(
-        concat!(" </table>\n", "*x*\n", "\n", "ok\n", "\n", "<li\n", "*x*\n"),
-        concat!(" </table>\n", "*x*\n", "<p>ok</p>\n", "<li\n", "*x*\n"),
+fn blockquote_with_br() {
+    rtjson(
+        concat!(
+            ">Line proceeding; this line has a [link](https://reddit.com) and a r/redditlink  \n>Line preceding; no line proceeding  \n>  \n>No line preceding; no line proceeding  \n>  \n>No line preceding; line proceeding  \n>Line preceding"
+        ),
+        concat!(
+            "'document': [{'e': 'blockquote','c': [{'e': 'par','c': [{'e': 'text','t': 'Line proceeding; this line has a '},{'e': 'link','u': 'https://reddit.com','t': 'link'},{'e': 'text','t': ' and a '},{'e': 'r/','t': 'redditlink'}]},{'e': 'par','c': [{'e': 'text','t': 'Line preceding; no line proceeding'}]},{'e': 'par','c': [{'e': 'text','t': ''}]},{'e': 'par','c': [{'e': 'text','t': 'No line preceding; no line proceeding'}]},{'e': 'par','c': [{'e': 'text','t': ''}]},{'e': 'par','c': [{'e': 'text','t': 'No line preceding; line proceeding'}]},{'e': 'par','c': [{'e': 'text','t': 'Line preceding'}]}]}]"
+        ),
     );
 }
 
+
+// TODO: Ask Z about how this renders
 #[test]
-fn html_block_7() {
-    html(
+fn blockquote_newline_literal() {
+    rtjson(
         concat!(
-            "<a b >\n",
-            "ok\n",
-            "\n",
-            "<a b=>\n",
-            "ok\n",
-            "\n",
-            "<a b \n",
-            "<a b> c\n",
-            "ok\n"
+            ">This post ends with a blockquote\n\nwith embedded newlines."
         ),
         concat!(
-            "<a b >\n",
-            "ok\n",
-            "<p>&lt;a b=&gt;\n",
-            "ok</p>\n",
-            "<p>&lt;a b\n",
-            "<a b> c\n",
-            "ok</p>\n"
-        ),
-    );
-
-    html(
-        concat!("<a b c=x d='y' z=\"f\" >\n", "ok\n", "\n", "ok\n"),
-        concat!("<a b c=x d='y' z=\"f\" >\n", "ok\n", "<p>ok</p>\n"),
-    );
-}
-
-#[test]
-fn backticks() {
-    html(
-        "Some `code\\` yep.\n",
-        "<p>Some <code>code\\</code> yep.</p>\n",
-    );
-}
-
-#[test]
-fn backslashes() {
-    html(
-        concat!(
-            "Some \\`fake code\\`.\n",
-            "\n",
-            "Some fake linebreaks:\\\n",
-            "Yes.\\\n",
-            "See?\n",
-            "\n",
-            "Ga\\rbage.\n"
-        ),
-        concat!(
-            "<p>Some `fake code`.</p>\n",
-            "<p>Some fake linebreaks:<br />\n",
-            "Yes.<br />\n",
-            "See?</p>\n",
-            "<p>Ga\\rbage.</p>\n"
+            "'document': [{'e': 'blockquote','c': [{'e': 'par','c': [{'e': 'text','t': 'This post ends with a blockquote\n\nwith embedded newlines.',}]}]}]"
         ),
     );
 }
 
 #[test]
-fn entities() {
-    html(
+fn redditlink() {
+    rtjson(
         concat!(
-            "This is &amp;, &copy;, &trade;, \\&trade;, &xyz;, &NotEqualTilde;.\n",
-            "\n",
-            "&#8734; &#x221e;\n"
+            "Hello, **this is bold**, *this is italic*, ***this is both***. And this is a u/username and a r/subreddit."
         ),
         concat!(
-            "<p>This is &amp;, ©, ™, &amp;trade;, &amp;xyz;, \u{2242}\u{338}.</p>\n",
-            "<p>∞ ∞</p>\n"
+            "'document': [{'e': 'par','c': [{'e': 'text','t': 'Hello, this is bold, this is italic, this is both. And this is a ', 'f': [[1, 7, 12], [2, 21, 14], [3, 37, 12]],},{'e': 'u/','t': 'username'},{'e': 'text','t': ' and a '},{'e': 'r/','t': 'subreddit'},{'e': 'text','t': '.'}]}]"
         ),
     );
 }
 
 #[test]
-fn pointy_brace() {
-    html(
+fn ul() {
+    rtjson(
         concat!(
-            "URI autolink: <https://www.pixiv.net>\n",
-            "\n",
-            "Email autolink: <bill@microsoft.com>\n",
-            "\n",
-            "* Inline <em>tag</em> **ha**.\n",
-            "* Inline <!-- comment --> **ha**.\n",
-            "* Inline <? processing instruction ?> **ha**.\n",
-            "* Inline <!DECLARATION OKAY> **ha**.\n",
-            "* Inline <![CDATA[ok]ha **ha** ]]> **ha**.\n"
+            "Below this is a list:\n\n* First item\n* Second item\n* Third item\n\nAbove this is a list."
         ),
         concat!(
             "<p>URI autolink: <a \
@@ -323,25 +191,13 @@ fn pointy_brace() {
 }
 
 #[test]
-fn links() {
-    html(
-        concat!(
-            "Where are you [going](https://microsoft.com (today))?\n",
-            "\n",
-            "[Where am I?](/here)\n"
-        ),
+fn mixed_list_1() {
+    rtjson(
         concat!(
             "<p>Where are you <a href=\"https://microsoft.com\" \
              title=\"today\">going</a>?</p>\n",
             "<p><a href=\"/here\">Where am I?</a></p>\n"
         ),
-    );
-}
-
-#[test]
-fn images() {
-    html(
-        concat!("I am ![eating [things](/url)](http://i.imgur.com/QqK1vq7.png).\n"),
         concat!(
             "<p>I am <img src=\"http://i.imgur.com/QqK1vq7.png\" alt=\"eating things\" \
              />.</p>\n"
@@ -350,54 +206,27 @@ fn images() {
 }
 
 #[test]
-fn reference_links() {
-    html(
+fn table_1() {
+    rtjson_opts(
         concat!(
-            "This [is] [legit], [very][honestly] legit.\n",
-            "\n",
-            "[legit]: ok\n",
-            "[honestly]: sure \"hm\"\n"
+            "|Col 1|Col 2|Col 3|\n|:-|:-:|-:|\n|a |**bold*****bold+italic****italic*|a |"
         ),
         concat!(
             "<p>This [is] <a href=\"ok\">legit</a>, <a href=\"sure\" title=\"hm\">very</a> \
              legit.</p>\n"
         ),
+        |opts| opts.ext_table = true,
     );
 }
 
 #[test]
-fn strikethrough() {
-    html_opts(
+fn table_2() {
+    rtjson_opts(
         concat!(
-            "This is ~strikethrough~.\n",
-            "\n",
-            "As is ~~this, okay~~?\n"
+            "These are two tables:\n\n|Table|1|\n|:-|:-|\n|c1:r1|c2:r1|\n\n|Table|2|\n|:-|:-|\n|c1:r2|c2:r2|"
         ),
         concat!(
-            "<p>This is <del>strikethrough</del>.</p>\n",
-            "<p>As is <del>this, okay</del>?</p>\n"
-        ),
-        |opts| opts.ext_strikethrough = true,
-    );
-}
-
-#[test]
-fn table() {
-    html_opts(
-        concat!("| a | b |\n", "|---|:-:|\n", "| c | d |\n"),
-        concat!(
-            "<table>\n",
-            "<thead>\n",
-            "<tr>\n",
-            "<th>a</th>\n",
-            "<th align=\"center\">b</th>\n",
-            "</tr>\n",
-            "</thead>\n",
-            "<tbody>\n",
-            "<tr>\n",
-            "<td>c</td>\n",
-            "<td align=\"center\">d</td>\n",
-            "</tr></tbody></table>\n"
+            "'document': [{'e': 'par','c': [{'e': 'text','t': 'These are two tables:',}]},{'e': 'table','h': [{'c': [{'e': 'text','t': 'Table'}]},{'c': [{'e': 'text','t': '1',}]},],'b': [[{'c': [{'e': 'text','t': 'c1:r1'}]},{'c': [{'e': 'text','t': 'c2:r1'}]},]]},{'e': 'table','h': [{'c': [{'e': 'text','t': 'Table'}]},{'c': [{'e': 'text','t': '2'}]},],'b': [[{'c': [{'e': 'text','t': 'c1:r2'}]},{'c': [{'e': 'text','t': 'c2:r2'}]},]]},]"
         ),
         |opts| opts.ext_table = true,
     );
@@ -422,16 +251,14 @@ fn autolink_email() {
 }
 
 #[test]
-fn autolink_scheme() {
-    html_opts(
-        concat!("https://google.com/search\n"),
+fn lists() {
+    rtjson(
+        concat!("1.\n   * 1 level [hello](www.reddit.com) nested - ul\n2. 0 levels nested - ol\n3. 0 levels nested - ol\n   1. 1 level nested - ol\n      1. 2 levels nested - ol\n      2. 2 levels nested - ol\n   2. 1 level nested - ol\n      * 2 levels nested - ul\n4. 0 levels nested - ol"),
         concat!(
             "<p><a href=\"https://google.com/search\">https://google.\
              com/search</a></p>\n"
         ),
-        |opts| opts.ext_autolink = true,
     );
-}
 
 #[test]
 fn autolink_scheme_multiline() {
@@ -456,47 +283,34 @@ fn tagfilter() {
 }
 
 #[test]
-fn tasklist() {
-    html_opts(
+fn codeblock() {
+    rtjson(
+        concat!("    function test() {\n      console.log(\"notice the blank line before this function?\");\n    }"),
         concat!(
-            "* [ ] Red\n",
-            "* [x] Green\n",
-            "* [ ] Blue\n",
-            "<!-- end list -->\n",
-            "1. [ ] Bird\n",
-            "2. [ ] McHale\n",
-            "3. [x] Parish\n",
-            "<!-- end list -->\n",
-            "* [ ] Red\n",
-            "  * [x] Green\n",
-            "    * [ ] Blue\n"
+            "'document':[",
+            "{",
+            "'e':'code',",
+            "'c':[",
+            "{",
+            "'e':'raw',",
+            "'t':'function test() {'",
+            "},",
+            "{",
+            "'e':'raw',",
+            "'t':'  console.log(&quot;notice the blank line before this function?&quot;);'",
+            "},",
+            "{",
+            "'e':'raw',",
+            "'t':'}'",
+            "},",
+            "{",
+            "'e':'raw',",
+            "'t':''",
+            "},",
+            "],",
+            "},",
+            "],",
         ),
-        concat!(
-            "<ul>\n",
-            "<li><input type=\"checkbox\" disabled=\"\" /> Red</li>\n",
-            "<li><input type=\"checkbox\" disabled=\"\" checked=\"\" /> Green</li>\n",
-            "<li><input type=\"checkbox\" disabled=\"\" /> Blue</li>\n",
-            "</ul>\n",
-            "<!-- end list -->\n",
-            "<ol>\n",
-            "<li><input type=\"checkbox\" disabled=\"\" /> Bird</li>\n",
-            "<li><input type=\"checkbox\" disabled=\"\" /> McHale</li>\n",
-            "<li><input type=\"checkbox\" disabled=\"\" checked=\"\" /> Parish</li>\n",
-            "</ol>\n",
-            "<!-- end list -->\n",
-            "<ul>\n",
-            "<li><input type=\"checkbox\" disabled=\"\" /> Red\n",
-            "<ul>\n",
-            "<li><input type=\"checkbox\" disabled=\"\" checked=\"\" /> Green\n",
-            "<ul>\n",
-            "<li><input type=\"checkbox\" disabled=\"\" /> Blue</li>\n",
-            "</ul>\n",
-            "</li>\n",
-            "</ul>\n",
-            "</li>\n",
-            "</ul>\n"
-        ),
-        |opts| opts.ext_tasklist = true,
     );
 }
 
