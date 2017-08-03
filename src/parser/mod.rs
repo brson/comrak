@@ -1409,7 +1409,15 @@ impl<'a, 'o> Parser<'a, 'o> {
                 }
             }
         } else {
-            node.detach();
+            match node.data.borrow_mut().value {
+                NodeValue::Text(..) |
+                NodeValue::Link(..) |
+                NodeValue::Emph |
+                NodeValue::Strong |
+                NodeValue::Strikethrough |
+                NodeValue::Superscript => node.detach(),
+                _ => ()
+            }
         }
     }
 
