@@ -120,16 +120,16 @@ pub extern fn markdown_to_html(md: &str, options: &ComrakOptions) -> String {
 
 /// Entryway for Reddit Python bridge.
 #[no_mangle]
-pub extern fn html(s: *const c_char) -> CString {
-    let c_str = unsafe {
+pub extern fn html(s: *const c_char) -> *mut c_char {
+    let cstr = unsafe {
         assert!(!s.is_null());
         CStr::from_ptr(s)
     };
-    let r_str = c_str.to_str().unwrap();
+    let rstr = cstr.to_str().unwrap();
     let arena = Arena::new();
 
     let options = ComrakOptions {
-        rtjson: true,
+        rtjson: false,
         hardbreaks: false,
         github_pre_lang: false,
         width: 0,
@@ -141,7 +141,7 @@ pub extern fn html(s: *const c_char) -> CString {
         ext_superscript: false
     };
 
-    let root = parse_document(&arena, &r_str, &options);
+    let root = parse_document(&arena, rstr, &options);
     let rendered_html = format_html(root, &ComrakOptions::default());
-    CString::new(rendered_html).unwrap()
+    CString::new(rendered_html).unwrap().into_raw()
 }
