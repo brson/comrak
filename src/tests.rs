@@ -33,6 +33,7 @@ where
     opts(&mut options);
     options.rtjson = true;
     options.ext_table = true;
+    options.ext_tagfilter = false;
 
     let root = parse_document(&arena, input, &options);
     let mut output = vec![];

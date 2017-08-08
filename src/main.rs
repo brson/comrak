@@ -26,6 +26,7 @@ extern crate unicode_categories;
 
 mod arena_tree;
 mod html;
+mod rtjson;
 mod cm;
 mod parser;
 mod nodes;
