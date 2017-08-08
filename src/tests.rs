@@ -33,6 +33,7 @@ where
     opts(&mut options);
     options.rtjson = true;
     options.ext_table = true;
+    options.ext_tagfilter = false;
 
     let root = parse_document(&arena, &input.chars().collect::<String>(), &options);
     let output = rtjson::format_document(root, &options);
@@ -215,7 +216,7 @@ fn table_2() {
 // fn special_characters() {
 //     rtjson(
 //         concat!(
-//             "Hello reddit, \*\***this should be bold,**\*\* the stars around it should not be."
+//             "Hello reddit, \\*\\***this should be bold,**\\*\\* the stars around it should not be."
 //         ),
 //         concat!(
 //             "'document': [{'e': 'par','c': [{'e': 'text','t': 'Hello reddit, **this should be bold,** the stars around it should not be.','f': [[1, 16, 20]]}]}]"
@@ -233,7 +234,6 @@ fn table_2() {
 //             "'document': [{'e': 'par','c': [{'e': 'text','t': 'Hello reddit, **this should be bold,** the stars around it should not be.',  # noqa'f': [[1, 16, 20]]}]},{'e': 'par','c': [{'e': 'text','t': '> This is text with an arrow in front'}]},{'e': 'blockquote','c': [{'e': 'par','c': [{'e': 'text','t': 'This is a quote',}]}]},{'e': 'par','c': [{'e': 'text','t': 'Here we have something in italics','f': [[2, 0, 33]]}]},{'e': 'par','c': [{'e': 'text','t': '*Here we have something with single-stars around it*'}]},{'e': 'par','c': [{'e': 'text','t': '`Is this a codeblock?`'}]},{'e': 'par','c': [{'e': 'text','t': '~~This should not be strike through~~'}]},{'e': 'par','c': [{'e': 'text','t': 'But this should be','f': [[8, 0, 18]]}]},{'e': 'par','c': [{'e': 'text','t': '[Finally here we have no link](www.example.com)'}]},{'e': 'par','c': [{'e': 'text','t': 'www.thisisalink.com'}]}]"
 //         ),
 //     );
-// }
 
 #[test]
 fn lists() {
@@ -490,23 +490,3 @@ fn codeblock() {
         ),
     );
 }
-
-// #[test]
-// fn autolink_scheme_multiline() {
-//     html_opts(
-//         concat!("https://google.com/search\nhttps://www.google.com/maps"),
-//         concat!(
-//             "<p><a href=\"https://google.com/search\">https://google.\
-//                        com/search</a>\n<a href=\"https://www.google.com/maps\">\
-//                        https://www.google.com/maps</a></p>\n"
-//         ),
-//         |opts| opts.ext_autolink = true,
-//     );
-// }
-//
-// #[test]
-// fn tagfilter() {
-//     html_opts(concat!("hi <xmp> ok\n", "\n", "<xmp>\n"),
-//               concat!("<p>hi &lt;xmp> ok</p>\n", "&lt;xmp>\n"),
-//               |opts| opts.ext_tagfilter = true);
-// }

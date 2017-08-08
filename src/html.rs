@@ -295,7 +295,7 @@ impl<'o> HtmlFormatter<'o> {
                     self.s += "</p>\n";
                 }
             }
-            NodeValue::FormattedText(ref literal, ref format_ranges) => (),
+            NodeValue::FormattedText(_, _) => (),
             NodeValue::Text(ref literal) => {
                 if entering {
                     self.escape(literal);
@@ -380,8 +380,8 @@ impl<'o> HtmlFormatter<'o> {
                     self.s += "</a>";
                 }
             }
-            NodeValue::FormattedLink(ref url, ref literal, ref format_ranges) => (),
-            NodeValue::UnformattedLink(ref url, ref literal) => (),
+            NodeValue::FormattedLink(_, _, _) => (),
+            NodeValue::UnformattedLink(_, _) => (),
             NodeValue::Image(ref nl) => {
                 if entering {
                     self.s += "<img src=\"";
