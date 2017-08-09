@@ -193,8 +193,12 @@ impl<'o> RTJsonFormatter<'o> {
                         self.s += format!(r#"{{"e":"code","l":"{}","c":["#, self.escape(&ncb.info[..first_tag])).as_str();
                     }
 
-                    for it in ncb.literal.split("\n") {
+                    let max = ncb.literal.split("\n").count() - 1;
+                    for (i, it) in ncb.literal.split("\n").enumerate() {
                         self.s += format!(r#"{{"e":"raw","t":"{}"}}"#, self.escape(it)).as_str();
+                        if i != max {
+                            self.s += ",";
+                        }
                         self.append_comma(node);
                     }
                     self.s += "]}";

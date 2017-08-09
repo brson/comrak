@@ -1335,7 +1335,7 @@ impl<'a, 'o> Parser<'a, 'o> {
                 unformatted_text.push_str(text);
                 *current_format = 0;
             },
-            NodeValue::Link(ref link) => {
+            NodeValue::Link(_) => {
                 if !unformatted_text.is_empty() {
 
                     let text_node = if format_ranges.is_empty() {

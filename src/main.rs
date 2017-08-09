@@ -299,9 +299,33 @@ fn main() {
         ext_superscript: false
     };
 
-    if matches.is_present("spec") {
-        spec_test(&matches.values_of("spec").unwrap().collect::<Vec<_>>(), options);
-    }
+    assert!(exts.is_empty());
+
+    let mut s = String::with_capacity(2048);
+
+    match matches.values_of("file") {
+        None => {
+            std::io::stdin().read_to_string(&mut s).unwrap();
+        }
+        Some(fs) => {
+            for f in fs {
+                let mut io = std::fs::File::open(f).unwrap();
+                io.read_to_string(&mut s).unwrap();
+            }
+        }
+    };
+
+    let arena = Arena::new();
+    let root = parser::parse_document(&arena, &s, &options);
+
+    let formatter = match matches.value_of("format") {
+        Some("html") => html::format_document,
+        Some("commonmark") => cm::format_document,
+        Some("rtjson") => rtjson::format_document,
+        _ => panic!("unknown format"),
+    };
+
+    print!("{}", formatter(root, &options));
 
     process::exit(0);
 }

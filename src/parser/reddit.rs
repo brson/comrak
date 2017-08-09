@@ -1,10 +1,8 @@
 // Reddit-flavored extensions
-use ctype::{isspace, isalpha, isalnum};
-use nodes::{NodeValue, NodeLink, AstNode};
+use nodes::{NodeValue, AstNode};
 use parser::inlines::make_inline;
-use regex::{Regex, Captures};
+use regex::Regex;
 use typed_arena::Arena;
-use unicode_categories::UnicodeCategories;
 
 // ZT: recursively call this to nest; enable multiple initial levels of nesting
 pub fn process_glyphs<'a>(
@@ -13,18 +11,18 @@ pub fn process_glyphs<'a>(
     contents: &mut String
 ) {
     lazy_static! {
-        static ref re: Regex = Regex::new(r"([\^%]{1,10})((\w+|\([\w\s\(\)]+\))+)").unwrap();
+        static ref RE: Regex = Regex::new(r"([\^%]{1,10})((\w+|\([\w\s\(\)]+\))+)").unwrap();
     }
 
     let owned_contents = contents.to_owned();
-    let matched = re.find(&owned_contents);
+    let matched = RE.find(&owned_contents);
     let m = match matched {
         Some(m) => m,
         _ => return
     };
         let start = m.start();
         let end = m.end();
-    
+
         let inl = make_inline(
             arena,
             NodeValue::Superscript
@@ -45,7 +43,7 @@ pub fn process_glyphs<'a>(
             }
         }
 
-        let mut inner_text;
+        let inner_text;
         if wrapped {
             inner_text = &slice[idx+1..slice.len()-1];
         } else {
