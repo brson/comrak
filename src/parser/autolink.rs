@@ -1,7 +1,7 @@
 use ctype::{isspace, isalpha, isalnum};
 use nodes::{NodeValue, NodeLink, AstNode};
 use parser::inlines::make_inline;
-use regex::{Regex, Captures};
+use regex::Regex;
 use typed_arena::Arena;
 use unicode_categories::UnicodeCategories;
 
@@ -354,11 +354,11 @@ pub fn process_redditlinks<'a>(
 
     let borrowed_contents = contents.to_string();
     let matched = RE.find(&borrowed_contents);
-    let mut redditlink = "";
-    let mut redditlink_start = 0;
-    let mut redditlink_end = 0;
+    let redditlink;
+    let redditlink_start: usize;
+    let redditlink_end: usize;
     match matched {
-        Some(rl) => {
+        Some(_) => {
             let m = matched.unwrap();
             redditlink_start = m.start();
             redditlink_end = m.end();
@@ -367,7 +367,7 @@ pub fn process_redditlinks<'a>(
         _ => return
     }
 
-    let mut with_preceding_slash;
+    let with_preceding_slash;
     let full_redditlink = match redditlink.as_bytes()[0] {
         b'/' => redditlink,
         _ => {

@@ -151,6 +151,7 @@ fn main() {
     let formatter = match matches.value_of("format") {
         Some("html") => html::format_document,
         Some("commonmark") => cm::format_document,
+        Some("rtjson") => rtjson::format_document,
         _ => panic!("unknown format"),
     };
 
