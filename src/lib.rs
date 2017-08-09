@@ -99,6 +99,8 @@ mod tests;
 
 pub use cm::format_document as format_commonmark;
 pub use html::format_document as format_html;
+pub use rtjson::format_document as format_rtjson;
+
 pub use parser::{parse_document, ComrakOptions};
 use typed_arena::Arena;
 
@@ -121,7 +123,7 @@ pub extern fn markdown_to_html(md: &str, options: &ComrakOptions) -> String {
 
 /// Entryway for Reddit Python bridge.
 #[no_mangle]
-pub extern fn html(s: *const c_char) -> *mut c_char {
+pub extern fn cm_to_rtjson(s: *const c_char) -> *mut c_char {
     let cstr = unsafe {
         assert!(!s.is_null());
         CStr::from_ptr(s)
@@ -130,7 +132,7 @@ pub extern fn html(s: *const c_char) -> *mut c_char {
     let arena = Arena::new();
 
     let options = ComrakOptions {
-        rtjson: false,
+        rtjson: true,
         hardbreaks: false,
         github_pre_lang: false,
         width: 0,
@@ -143,6 +145,6 @@ pub extern fn html(s: *const c_char) -> *mut c_char {
     };
 
     let root = parse_document(&arena, rstr, &options);
-    let rendered_html = format_html(root, &ComrakOptions::default());
-    CString::new(rendered_html).unwrap().into_raw()
+    let rendered_rtjson = format_rtjson(root, &ComrakOptions::default());
+    CString::new(rendered_rtjson).unwrap().into_raw()
 }
