@@ -1397,13 +1397,22 @@ impl<'a, 'o> Parser<'a, 'o> {
                     node.detach();
                 }
                 _ => {
-                    let formatted_text_node = inlines::make_inline(
-                        self.arena,
-                        NodeValue::FormattedText(
-                            unformatted_text.to_string(),
-                            format_ranges.to_owned()
-                        ),
-                    );
+                    let formatted_text_node = if !format_ranges.is_empty() {
+                        inlines::make_inline(
+                            self.arena,
+                            NodeValue::FormattedText(
+                                unformatted_text.to_string(),
+                                format_ranges.to_owned()
+                            ),
+                        )
+                    } else {
+                        inlines::make_inline(
+                            self.arena,
+                            NodeValue::Text(
+                                unformatted_text.to_string()
+                            ),
+                        )
+                    };
                     node.append(formatted_text_node);
                     self.reset_rtjson_node(unformatted_text, current_format, format_ranges);
                 }
