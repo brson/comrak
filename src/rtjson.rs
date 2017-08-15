@@ -148,7 +148,6 @@ impl<'o> RTJsonFormatter<'o> {
                     self.s += r#"{"e":"blockquote","c":["#;
                 } else {
                     self.s += "]}";
-                    self.append_comma(node);
                 }
             }
             NodeValue::List(ref nl) => {
@@ -160,7 +159,6 @@ impl<'o> RTJsonFormatter<'o> {
                     }
                 } else {
                     self.s += "]}";
-                    self.append_comma(node);
                 }
             }
             NodeValue::Item(..) => {
@@ -168,7 +166,6 @@ impl<'o> RTJsonFormatter<'o> {
                     self.s += r#"{"e":"li","c":["#;
                 } else {
                     self.s += "]}";
-                    self.append_comma(node);
                 }
             }
             NodeValue::Heading(ref nch) => {
@@ -176,7 +173,6 @@ impl<'o> RTJsonFormatter<'o> {
                     self.s += &format!(r#"{{"e":"h","l":{},"c":["#, nch.level);
                 } else {
                     self.s += "]}";
-                    self.append_comma(node);
                 }
             }
             NodeValue::CodeBlock(ref ncb) => {
@@ -199,36 +195,78 @@ impl<'o> RTJsonFormatter<'o> {
                         if i != max {
                             self.s += ",";
                         }
-                        self.append_comma(node);
                     }
                     self.s += "]}";
-                    self.append_comma(node);
                 }
             }
+            NodeValue::HtmlBlock(_) => unreachable!(),
+            NodeValue::ThematicBreak | NodeValue::LineBreak |
+            NodeValue:: SoftBreak => {
+                if entering {
+                    self.s += r#"{"e":"br"}"#
+                }
+            }
+            NodeValue::Code(_) => {
+                if entering {
+                    self.s += r#"{"e":"error code"}"#;
+                }
+            }
+            NodeValue::Underline => {
+                if entering {
+                    self.s += r#"{"e":"error underline"}"#;
+                }
+            }
+            NodeValue::HtmlInline(ref literal) => {
+                if entering {
+                    self.s += r#"{"e":"error inline"}"#;
+                }
+            },
+            NodeValue::Strong | NodeValue::Emph | NodeValue::Superscript |
+            NodeValue::Strikethrough => unreachable!(),
             NodeValue::Paragraph => {
                 if entering {
                     self.s += r#"{"e":"par","c":["#;
                 } else  {
                     self.s += "]}";
-                    self.append_comma(node);
                 }
             }
             NodeValue::Text(ref literal) => {
                 if entering {
                     match node.parent().unwrap().data.borrow().value {
                         NodeValue::Link(_) => self.s += self.escape(literal).as_str(),
+                        NodeValue::Image(_) => self.s += self.escape(literal).as_str(),
                         NodeValue::Text(ref literal) |
                         NodeValue::Code(ref literal) |
                         NodeValue::HtmlInline(ref literal) => self.s += self.escape(literal).as_str(),
-                        NodeValue::LineBreak | NodeValue::SoftBreak => self.s += r#"{"e":"br"},"#,
-                        NodeValue::Heading(_) => {
+                        NodeValue::LineBreak | NodeValue::SoftBreak | NodeValue::ThematicBreak => self.s += r#"{"e":"br"},"#,
+                        NodeValue::Heading(_) | NodeValue::CodeBlock(_) => {
                             self.s += format!(r#"{{"e":"raw","t":"{}"}}"#, self.escape(literal)).as_str();
-                            self.append_comma(node);
                         },
-                        _ => {
+                        NodeValue::Item(_) => {
                             self.s += format!(r#"{{"e":"text","t":"{}"}}"#, self.escape(literal)).as_str();
-                            self.append_comma(node);
-                        },
+                        }
+                        NodeValue::BlockQuote  | NodeValue::Paragraph => {
+                            self.s += format!(r#"{{"e":"text","t":"{}"}}"#, self.escape(literal)).as_str();
+                        }
+                        NodeValue::TableCell  => {
+                            let row = &node.parent().unwrap().parent().unwrap().data.borrow().value;
+                            let in_header = match *row {
+                                NodeValue::TableRow(header) => header,
+                                _ => panic!(),
+                            };
+                            if in_header {
+                                self.s += format!( r#""e":"text","t":"{}"}}"#, self.escape(literal)).as_str();
+                            } else {
+                                self.s += format!( r#"{{"e":"text","t":"{}"}}"#, self.escape(literal)).as_str();
+                            }
+                        }
+                        NodeValue::Document | NodeValue::Strong | NodeValue::Emph |
+                        NodeValue::Underline | NodeValue::Superscript |
+                        NodeValue::Strikethrough => unreachable!(),
+                        NodeValue::List(_) | NodeValue::Item(_) | NodeValue::HtmlBlock(_) |
+                        NodeValue::Table(_) | NodeValue::TableRow(_) => unreachable!(),
+                        NodeValue::FormattedText(_, _) | NodeValue::UnformattedLink(_, _) => unreachable!(),
+                        NodeValue::FormattedLink(_,_,_) => unreachable!(),
                     }
                 }
             }
@@ -243,29 +281,44 @@ impl<'o> RTJsonFormatter<'o> {
                             };
                             if in_header {
                                 self.s += format!( r#""e":"text","t":"{}","f":{:?}}}"#, self.escape(literal), format_ranges).as_str();
-                                self.append_comma(node);
                             } else {
                                 self.s += format!( r#"{{"e":"text","t":"{}","f":{:?}}}"#, self.escape(literal), format_ranges).as_str();
-                                self.append_comma(node);
                             }
                         },
-                        _ => {
-                            self.s += format!(r#"{{"e":"text","t":"{}","f":{:?}}}"#, self.escape(literal), format_ranges).as_str();
-                            self.append_comma(node);
+                        NodeValue::Link(_) => self.s += self.escape(literal).as_str(),
+                        NodeValue::Image(_) => self.s += self.escape(literal).as_str(),
+                        NodeValue::Text(ref literal) | NodeValue::Code(ref literal) |
+                        NodeValue::HtmlInline(ref literal) => self.s += self.escape(literal).as_str(),
+                        NodeValue::LineBreak | NodeValue::SoftBreak | NodeValue::ThematicBreak => self.s += r#"{"e":"br"},"#,
+                        NodeValue::Heading(_) | NodeValue::CodeBlock(_) => {
+                            self.s += format!(r#"{{"e":"raw","t":"{}"}}"#, self.escape(literal)).as_str();
                         },
+                        NodeValue::Paragraph  => {
+                            self.s += format!(r#"{{"e":"text","t":"{}","f":{:?}}}"#, self.escape(literal), format_ranges).as_str();
+                        }
+                        NodeValue::Document | NodeValue::Strong | NodeValue::Emph|
+                        NodeValue::Underline | NodeValue::Superscript |
+                        NodeValue::Strikethrough | NodeValue::BlockQuote => unreachable!(),
+                        NodeValue::List(_) | NodeValue::Item(_) | NodeValue::HtmlBlock(_) |
+                        NodeValue::Table(_) | NodeValue::TableRow(_) => unreachable!(),
+                        NodeValue::FormattedText(_, _) | NodeValue::UnformattedLink(_, _) => unreachable!(),
+                        NodeValue::FormattedLink(_,_,_) => unreachable!(),
                     }
                 }
             }
             NodeValue::FormattedLink(ref url, ref literal, ref format_ranges) => {
                 if entering {
                     self.s += format!(r#"{{"e":"link","u":"{}","t":"{}","f":{:?}}}"#, self.escape_href(url), self.escape(literal), format_ranges).as_str();
-                    self.append_comma(node);
                 }
             }
             NodeValue::UnformattedLink(ref url, ref literal) => {
                 if entering {
                     self.s += format!(r#"{{"e":"link","u":"{}","t":"{}"}}"#, self.escape_href(url), self.escape(literal)).as_str();
-                    self.append_comma(node);
+                }
+            }
+            NodeValue::Link(ref nl) => {
+                if entering {
+                    self.s += format!(r#"{{"e":"link","u":"{}","t":"{}"}}"#, self.escape_href(&nl.url), self.escape(&nl.title)).as_str();
                 }
             }
             NodeValue::Image(ref nl) => {
@@ -292,7 +345,6 @@ impl<'o> RTJsonFormatter<'o> {
                         self.s += "]";
                     }
                     self.s += "}";
-                    self.append_comma(node);
                 }
             }
             NodeValue::TableRow(header) => {
@@ -353,14 +405,13 @@ impl<'o> RTJsonFormatter<'o> {
                         self.s += r#"{"c":["#;
                     }
 
-                } else if in_header {
-                    self.append_comma(node);
-                } else {
+                } else if !in_header {
                     self.s += "]}";
-                    self.append_comma(node);
                 }
             }
-            _ => (),
+        }
+        if !entering {
+            self.append_comma(node);
         }
         false
     }
