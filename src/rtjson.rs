@@ -249,6 +249,10 @@ impl<'o> RTJsonFormatter<'o> {
                                 self.append_comma(node);
                             }
                         },
+                        NodeValue::Heading(_) => {
+                            self.s += format!(r#"{{"e":"raw","t":"{}","f":{:?}}}"#, self.escape(literal), format_ranges).as_str();
+                            self.append_comma(node);
+                        },
                         _ => {
                             self.s += format!(r#"{{"e":"text","t":"{}","f":{:?}}}"#, self.escape(literal), format_ranges).as_str();
                             self.append_comma(node);
