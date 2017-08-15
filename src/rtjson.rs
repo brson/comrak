@@ -148,7 +148,6 @@ impl<'o> RTJsonFormatter<'o> {
                     self.s += r#"{"e":"blockquote","c":["#;
                 } else {
                     self.s += "]}";
-                    self.append_comma(node);
                 }
             }
             NodeValue::List(ref nl) => {
@@ -160,7 +159,6 @@ impl<'o> RTJsonFormatter<'o> {
                     }
                 } else {
                     self.s += "]}";
-                    self.append_comma(node);
                 }
             }
             NodeValue::Item(..) => {
@@ -168,7 +166,6 @@ impl<'o> RTJsonFormatter<'o> {
                     self.s += r#"{"e":"li","c":["#;
                 } else {
                     self.s += "]}";
-                    self.append_comma(node);
                 }
             }
             NodeValue::Heading(ref nch) => {
@@ -176,7 +173,6 @@ impl<'o> RTJsonFormatter<'o> {
                     self.s += &format!(r#"{{"e":"h","l":{},"c":["#, nch.level);
                 } else {
                     self.s += "]}";
-                    self.append_comma(node);
                 }
             }
             NodeValue::CodeBlock(ref ncb) => {
@@ -199,10 +195,8 @@ impl<'o> RTJsonFormatter<'o> {
                         if i != max {
                             self.s += ",";
                         }
-                        self.append_comma(node);
                     }
                     self.s += "]}";
-                    self.append_comma(node);
                 }
             }
             NodeValue::Paragraph => {
@@ -210,7 +204,6 @@ impl<'o> RTJsonFormatter<'o> {
                     self.s += r#"{"e":"par","c":["#;
                 } else  {
                     self.s += "]}";
-                    self.append_comma(node);
                 }
             }
             NodeValue::Text(ref literal) => {
@@ -223,7 +216,6 @@ impl<'o> RTJsonFormatter<'o> {
                         NodeValue::LineBreak | NodeValue::SoftBreak => self.s += r#"{"e":"br"},"#,
                         NodeValue::Heading(_) => {
                             self.s += format!(r#"{{"e":"raw","t":"{}"}}"#, self.escape(literal)).as_str();
-                            self.append_comma(node);
                         },
                         _ => {
                             self.s += format!(r#"{{"e":"text","t":"{}"}}"#, self.escape(literal)).as_str();
@@ -243,10 +235,8 @@ impl<'o> RTJsonFormatter<'o> {
                             };
                             if in_header {
                                 self.s += format!( r#""e":"text","t":"{}","f":{:?}}}"#, self.escape(literal), format_ranges).as_str();
-                                self.append_comma(node);
                             } else {
                                 self.s += format!( r#"{{"e":"text","t":"{}","f":{:?}}}"#, self.escape(literal), format_ranges).as_str();
-                                self.append_comma(node);
                             }
                         },
                         NodeValue::Heading(_) => {
@@ -263,7 +253,6 @@ impl<'o> RTJsonFormatter<'o> {
             NodeValue::FormattedLink(ref url, ref literal, ref format_ranges) => {
                 if entering {
                     self.s += format!(r#"{{"e":"link","u":"{}","t":"{}","f":{:?}}}"#, self.escape_href(url), self.escape(literal), format_ranges).as_str();
-                    self.append_comma(node);
                 }
             }
             NodeValue::UnformattedLink(ref url, ref literal) => {
@@ -296,7 +285,6 @@ impl<'o> RTJsonFormatter<'o> {
                         self.s += "]";
                     }
                     self.s += "}";
-                    self.append_comma(node);
                 }
             }
             NodeValue::TableRow(header) => {
@@ -361,10 +349,11 @@ impl<'o> RTJsonFormatter<'o> {
                     self.append_comma(node);
                 } else {
                     self.s += "]}";
-                    self.append_comma(node);
                 }
             }
-            _ => (),
+        }
+        if !entering {
+            self.append_comma(node);
         }
         false
     }
