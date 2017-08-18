@@ -1,7 +1,6 @@
-use {Arena, parse_document, ComrakOptions};
-use cm;
-use html;
-use rtjson;
+extern crate comrak;
+
+use comrak::{Arena, parse_document, ComrakOptions, format_rtjson, format_commonmark};
 
 fn compare_strs(output: &str, expected: &str, kind: &str) {
     if output != expected {
@@ -36,12 +35,12 @@ where
     options.ext_tagfilter = false;
 
     let root = parse_document(&arena, &input.chars().collect::<String>(), &options);
-    let output = rtjson::format_document(root, &options);
+    let output = format_rtjson(root, &options);
     compare_strs(&output, expected, "regular");
 
-    let md = cm::format_document(root, &options);
+    let md = format_commonmark(root, &options);
     let root = parse_document(&arena, &md.chars().collect::<String>(), &options);
-    let output_from_rt = rtjson::format_document(root, &options);
+    let output_from_rt = format_rtjson(root, &options);
     compare_strs(&output_from_rt, expected, "roundtrip");
 }
 
@@ -212,28 +211,29 @@ fn table_2() {
     );
 }
 
-// #[test]
-// fn special_characters() {
-//     rtjson(
-//         concat!(
-//             "Hello reddit, \\*\\***this should be bold,**\\*\\* the stars around it should not be."
-//         ),
-//         concat!(
-//             "'document': [{'e': 'par','c': [{'e': 'text','t': 'Hello reddit, **this should be bold,** the stars around it should not be.','f': [[1, 16, 20]]}]}]"
-//         ),
-//     );
-// }
-//
-// #[test]
-// fn special_characters_2() {
-//     rtjson(
-//         concat!(
-//             "Hello reddit, \\\\*\\\\***this should be bold,**\\\\*\\\\* the stars around it should not be.\n\n\\\\> This is text with an arrow in front\n\n>This is a quote\n\n*Here we have something in italics*\n\n\\\\*Here we have something with single-stars around it\\\\*\n\n\\\\`Is this a codeblock?\\\\`\n\n\\\\~\\\\~This should not be strike through\\\\~\\\\~\n\n~~But this should be~~\n\n\\\\[Finally here we have no link\\\\]\\\\(www.example.com\\\\)\n\nwww.thisisalink.com"
-//         ),
-//         concat!(
-//             "'document': [{'e': 'par','c': [{'e': 'text','t': 'Hello reddit, **this should be bold,** the stars around it should not be.',  # noqa'f': [[1, 16, 20]]}]},{'e': 'par','c': [{'e': 'text','t': '> This is text with an arrow in front'}]},{'e': 'blockquote','c': [{'e': 'par','c': [{'e': 'text','t': 'This is a quote',}]}]},{'e': 'par','c': [{'e': 'text','t': 'Here we have something in italics','f': [[2, 0, 33]]}]},{'e': 'par','c': [{'e': 'text','t': '*Here we have something with single-stars around it*'}]},{'e': 'par','c': [{'e': 'text','t': '`Is this a codeblock?`'}]},{'e': 'par','c': [{'e': 'text','t': '~~This should not be strike through~~'}]},{'e': 'par','c': [{'e': 'text','t': 'But this should be','f': [[8, 0, 18]]}]},{'e': 'par','c': [{'e': 'text','t': '[Finally here we have no link](www.example.com)'}]},{'e': 'par','c': [{'e': 'text','t': 'www.thisisalink.com'}]}]"
-//         ),
-//     );
+#[test]
+fn special_characters() {
+    rtjson(
+        concat!(
+            "Hello reddit, \\*\\***this should be bold,**\\*\\* the stars around it should not be."
+        ),
+        concat!(
+            "'document': [{'e': 'par','c': [{'e': 'text','t': 'Hello reddit, **this should be bold,** the stars around it should not be.','f': [[1, 16, 20]]}]}]"
+        ),
+    );
+}
+
+#[test]
+fn special_characters_2() {
+    rtjson(
+        concat!(
+            "Hello reddit, \\*\\***this should be bold,**\\*\\* the stars around it should not be.\n\n\\> This is text with an arrow in front\n\n>This is a quote\n\n*Here we have something in italics*\n\n\\*Here we have something with single-stars around it\\\\*\n\n\\`Is this a codeblock?\\`\n\n\\~\\~This should not be strike through\\~\\~\n\n~~But this should be~~\n\n\\[Finally here we have no link\\]\\(www.example.com\\)\n\nwww.thisisalink.com"
+        ),
+        concat!(
+            "'document': [{'e': 'par','c': [{'e': 'text','t': 'Hello reddit, **this should be bold,** the stars around it should not be.',  # noqa'f': [[1, 16, 20]]}]},{'e': 'par','c': [{'e': 'text','t': '> This is text with an arrow in front'}]},{'e': 'blockquote','c': [{'e': 'par','c': [{'e': 'text','t': 'This is a quote',}]}]},{'e': 'par','c': [{'e': 'text','t': 'Here we have something in italics','f': [[2, 0, 33]]}]},{'e': 'par','c': [{'e': 'text','t': '*Here we have something with single-stars around it*'}]},{'e': 'par','c': [{'e': 'text','t': '`Is this a codeblock?`'}]},{'e': 'par','c': [{'e': 'text','t': '~~This should not be strike through~~'}]},{'e': 'par','c': [{'e': 'text','t': 'But this should be','f': [[8, 0, 18]]}]},{'e': 'par','c': [{'e': 'text','t': '[Finally here we have no link](www.example.com)'}]},{'e': 'par','c': [{'e': 'text','t': 'www.thisisalink.com'}]}]"
+        ),
+    );
+}
 
 #[test]
 fn lists() {

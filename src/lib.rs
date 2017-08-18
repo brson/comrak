@@ -94,15 +94,13 @@ mod ctype;
 pub mod nodes;
 mod entity;
 mod strings;
-#[cfg(test)]
-mod tests;
 
 pub use cm::format_document as format_commonmark;
 pub use html::format_document as format_html;
 pub use rtjson::format_document as format_rtjson;
 
 pub use parser::{parse_document, ComrakOptions};
-use typed_arena::Arena;
+pub use typed_arena::Arena;
 
 extern crate libc;
 

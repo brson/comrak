@@ -40,10 +40,151 @@ mod scanners;
 mod strings;
 mod entity;
 
-use std::collections::BTreeSet;
-use std::io::Read;
+use std::io::{Read,Write};
 use std::process;
+use std::path::Path;
+use std::fs::File;
 use typed_arena::Arena;
+
+fn render_html(text: &str, opts: parser::ComrakOptions) -> String {
+    let arena = Arena::new();
+    let root = parser::parse_document(&arena, text, &opts);
+    let rendered_html = html::format_document(root, &parser::ComrakOptions::default());
+    rendered_html
+}
+
+// Tests in the spec (v0.26) are of the form:
+//
+// ```````````````````````````````` example
+// <markdown input>
+// .
+// <expected output>
+// ````````````````````````````````
+#[derive(Debug)]
+struct Spec<'a> {
+    spec: &'a str,
+    test_n: usize,
+}
+
+impl<'a> Spec<'a> {
+    pub fn new(spec: &'a str) -> Self {
+        Spec{ spec:spec, test_n: 0 }
+    }
+}
+
+struct TestCase <'a> {
+    n: usize,
+    input: &'a str,
+    expected: &'a str,
+}
+
+impl<'a> TestCase<'a> {
+    pub fn new(n: usize, input: &'a str, expected: &'a str) -> Self {
+        TestCase{n: n, input: input, expected: expected }
+    }
+}
+
+impl<'a> Iterator for Spec<'a> {
+    type Item = TestCase<'a>;
+
+    fn next(&mut self) -> Option<TestCase<'a>> {
+        let spec = self.spec;
+
+        let i_start = match self.spec.find("```````````````````````````````` example\n").map(|pos| pos + 41) {
+            Some(pos) => pos,
+            None => return None,
+        };
+
+        let i_end = match self.spec[i_start..].find("\n.\n").map(|pos| (pos + 1) + i_start ) {
+            Some(pos) => pos,
+            None => return None,
+        };
+
+        let e_end = match self.spec[i_end + 2..].find("````````````````````````````````\n").map(|pos| pos + i_end + 2){
+            Some(pos) => pos,
+            None => return None,
+        };
+
+        self.test_n += 1;
+        self.spec = &self.spec[e_end + 33 ..];
+
+        Some(TestCase::new(self.test_n, &spec[i_start .. i_end], &spec[i_end + 2 .. e_end]))
+    }
+}
+
+fn spec_test (args: &Vec<&str>, opts: parser::ComrakOptions) {
+    let mut spec_text = String::new();
+    for fs in args {
+        spec_text.push_str(&read_file(&fs).replace("→","\t"));
+    }
+
+    let (first, last) = if args.is_empty( ) {
+        (None, None)
+    } else {
+        let mut iter = args[0].split("..");
+        let first = iter.next().and_then(|s| s.parse().ok());
+        let last = match iter.next() {
+            Some(s) => s.parse().ok(),
+            None => first
+        };
+        (first, last)
+    };
+    println!("{:?} {:?}",first,last );
+
+    let spec = Spec::new(&spec_text[..]);
+    let mut tests_failed = 0;
+    let mut tests_run = 0;
+    let mut fail_report = String::new();
+
+    for test in spec {
+        if first.map(|fst| test.n < fst).unwrap_or(false) { continue }
+        if last.map(|lst| test.n > lst).unwrap_or(false) { break }
+
+        if test.n % 10 == 1 {
+            if test.n % 40 == 1 {
+                if test.n > 1 {
+                    println!("");
+                }
+            } else {
+                print!(" ");
+            }
+            print!("[{:3}]", test.n );
+        } else if test.n % 10 == 6 {
+            print!(" ");
+        }
+
+        let our_html = render_html(&test.input, opts);
+
+        if our_html == test.expected {
+            print!(".");
+        } else {
+            fail_report += format!("\nFAIL {}:\n\n---input---\n{:?}\n\n---wanted---\n{:?}\n\n---got---\n{:?}\n",
+                test.n, test.input, test.expected, our_html).as_str();
+            print!("X");
+            tests_failed += 1;
+        }
+
+        let _ = std::io::stdout().flush();
+        tests_run += 1;
+    }
+
+    println!("\n{}/{}", tests_run - tests_failed, tests_run );
+    print!("{}", fail_report);
+    println!("\n {} test succeeded out of {} test run.", tests_run - tests_failed, tests_run );
+}
+
+fn read_file(filename: &str) -> String {
+    let path = Path::new(filename);
+    let mut file = match File::open(&path) {
+        Err(why) => panic!("couldn't open {}: {}", path.display(), why),
+        Ok(file) => file
+    };
+    let mut s = String::new();
+    match file.read_to_string(&mut s) {
+        Err(why) => panic!("couldn't open {}: {}", path.display(), why),
+        Ok(_) => s
+    }
+}
 
 fn main() {
     let matches = clap::App::new(crate_name!())
@@ -107,55 +248,32 @@ fn main() {
                 .default_value("0")
                 .help("Specify wrap width (0 = nowrap)"),
         )
+        .arg(
+            clap::Arg::with_name("spec")
+                .long("spec")
+                .takes_value(true)
+                .multiple(true)
+                .value_name("SPEC")
+                .help("Run test from spec file"),
+        )
         .get_matches();
 
-    let mut exts = matches.values_of("extension").map_or(
-        BTreeSet::new(),
-        |vals| vals.collect(),
-    );
-
     let options = parser::ComrakOptions {
-        rtjson: matches.is_present("rtjson"),
-        hardbreaks: matches.is_present("hardbreaks"),
-        github_pre_lang: matches.is_present("github-pre-lang"),
-        width: matches.value_of("width").unwrap_or("0").parse().unwrap_or(
-            0,
-        ),
-        ext_strikethrough: exts.remove("strikethrough"),
-        ext_tagfilter: exts.remove("tagfilter"),
-        ext_table: exts.remove("table"),
-        ext_autolink: exts.remove("autolink"),
-        ext_tasklist: exts.remove("tasklist"),
-        ext_superscript: exts.remove("superscript"),
+        rtjson: false,
+        hardbreaks: false,
+        github_pre_lang: false,
+        width: 0,
+        ext_strikethrough: true,
+        ext_tagfilter: false,
+        ext_table: true,
+        ext_autolink: true,
+        ext_tasklist: false,
+        ext_superscript: false
     };
 
-    assert!(exts.is_empty());
-
-    let mut s = String::with_capacity(2048);
-
-    match matches.values_of("file") {
-        None => {
-            std::io::stdin().read_to_string(&mut s).unwrap();
-        }
-        Some(fs) => {
-            for f in fs {
-                let mut io = std::fs::File::open(f).unwrap();
-                io.read_to_string(&mut s).unwrap();
-            }
-        }
-    };
-
-    let arena = Arena::new();
-    let root = parser::parse_document(&arena, &s, &options);
-
-    let formatter = match matches.value_of("format") {
-        Some("html") => html::format_document,
-        Some("commonmark") => cm::format_document,
-        Some("rtjson") => rtjson::format_document,
-        _ => panic!("unknown format"),
-    };
-
-    print!("{}", formatter(root, &options));
+    if matches.is_present("spec") {
+        spec_test(&matches.values_of("spec").unwrap().collect::<Vec<_>>(), options);
+    }
 
     process::exit(0);
 }
