@@ -35,9 +35,10 @@ mod scanners;
 mod strings;
 mod entity;
 
-use std::collections::BTreeSet;
-use std::io::Read;
+use std::io::{Read,Write};
 use std::process;
+use std::path::Path;
+use std::fs::File;
 use typed_arena::Arena;
 
 fn render_html(text: &str, opts: parser::ComrakOptions) -> String {
@@ -325,7 +326,9 @@ fn main() {
         _ => panic!("unknown format"),
     };
 
-    print!("{}", formatter(root, &options));
+    if matches.is_present("spec") {
+        spec_test(&matches.values_of("spec").unwrap().collect::<Vec<_>>(), options);
+    }
 
     process::exit(0);
 }
