@@ -349,19 +349,30 @@ pub fn process_redditlinks<'a>(
     contents: &mut String,
 ) {
     lazy_static! {
-        static ref RE: Regex = Regex::new(r"(/?(r|u)/)\w+").unwrap();
+        static ref RE: Regex = Regex::new(r"(^|[\n\t\r-_.+!*'(),%#@?=/;:,+&$])((/?(r|u)/)\w+)").unwrap();
     }
 
     let borrowed_contents = contents.to_string();
-    let matched = RE.find(&borrowed_contents);
+    let matched = match RE.captures(&borrowed_contents) {
+        Some(m) => m,
+        None => return
+    };
     let redditlink;
     let redditlink_start: usize;
     let redditlink_end: usize;
-    match matched {
-        Some(_) => {
-            let m = matched.unwrap();
-            redditlink_start = m.start();
+    match matched.get(2) {
+        Some(m) => {
+            let n = matched.get(1).unwrap();
+            let prior_char_start = n.start();
+            let prior_char_end = n.end();
+            
+            if m.start() != 0 && borrowed_contents[prior_char_start..prior_char_end].as_bytes()[0] == b'/' && (borrowed_contents.chars().nth(m.start()).unwrap() as u8) != b'/' {
+                redditlink_start = prior_char_start;
+            } else {
+                redditlink_start = m.start();
+            }
             redditlink_end = m.end();
+
             redditlink = &borrowed_contents[redditlink_start..redditlink_end]
         },
         _ => return

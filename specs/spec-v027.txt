@@ -1,4 +1,4 @@
-Run this with `cargo run -- -T --spec specs/spec-v027.txt`.
+Run this with `cargo run -- --spec specs/spec-v027.txt`.
 # Introduction
 
 ## What is Markdown?

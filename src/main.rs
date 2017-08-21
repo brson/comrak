@@ -53,6 +53,13 @@ fn render_html(text: &str, opts: parser::ComrakOptions) -> String {
     rendered_html
 }
 
+fn render_rtjson(text: &str, opts: parser::ComrakOptions) -> String {
+    let arena = Arena::new();
+    let root = parser::parse_document(&arena, text, &opts);
+    let rendered_rtjson = rtjson::format_document(root, &parser::ComrakOptions::default());
+    rendered_rtjson
+}
+
 // Tests in the spec (v0.26) are of the form:
 //
 // ```````````````````````````````` example
@@ -129,7 +136,12 @@ fn spec_test (args: &Vec<&str>, opts: parser::ComrakOptions) {
         };
         (first, last)
     };
-    println!("{:?} {:?}",first,last );
+
+    let formatter = if opts.rtjson {
+        render_rtjson
+    } else {
+        render_html
+    };
 
     let spec = Spec::new(&spec_text[..]);
     let mut tests_failed = 0;
@@ -153,13 +165,13 @@ fn spec_test (args: &Vec<&str>, opts: parser::ComrakOptions) {
             print!(" ");
         }
 
-        let our_html = render_html(&test.input, opts);
+        let our_rendering = formatter(&test.input, opts);
 
-        if our_html == test.expected {
+        if our_rendering == test.expected {
             print!(".");
         } else {
             fail_report += format!("\nFAIL {}:\n\n---input---\n{:?}\n\n---wanted---\n{:?}\n\n---got---\n{:?}\n",
-                test.n, test.input, test.expected, our_html).as_str();
+                test.n, test.input, test.expected, our_rendering).as_str();
             print!("X");
             tests_failed += 1;
         }
@@ -259,14 +271,16 @@ fn main() {
         .get_matches();
 
     let options = parser::ComrakOptions {
-        rtjson: false,
-        hardbreaks: false,
-        github_pre_lang: false,
-        width: 0,
+        rtjson: false || matches.is_present("rtjson"),
+        hardbreaks: false || matches.is_present("hardbreaks"),
+        github_pre_lang: false || matches.is_present("github=pre-lang"),
+        width: matches.value_of("width").unwrap_or("0").parse().unwrap_or(
+            0,
+        ),
         ext_strikethrough: true,
         ext_tagfilter: false,
         ext_table: true,
-        ext_autolink: true,
+        ext_autolink: false,
         ext_tasklist: false,
         ext_superscript: false
     };
