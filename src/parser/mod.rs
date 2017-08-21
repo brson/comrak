@@ -1333,7 +1333,16 @@ impl<'a, 'o> Parser<'a, 'o> {
                     format_ranges.push(new_range);
                 }
                 unformatted_text.push_str(text);
-                *current_format = 0;
+                if node.same_node(node.parent().unwrap().last_child().unwrap()){ 
+                    match node.parent().unwrap().data.borrow().value {
+                        NodeValue::Strong => *current_format -= 1,
+                        NodeValue::Emph => *current_format -= 2,
+                        NodeValue::Underline => *current_format -= 4,
+                        NodeValue::Strikethrough => *current_format -= 8,
+                        NodeValue::Superscript => *current_format -= 32,
+                        _ => ()
+                    }
+                }
             },
             NodeValue::Link(_) => {
                 if !unformatted_text.is_empty() {
@@ -1357,8 +1366,17 @@ impl<'a, 'o> Parser<'a, 'o> {
                     self.reset_rtjson_node(unformatted_text, current_format, format_ranges);
                 }
             },
+            NodeValue::Code(ref literal) => {
+                let range_idx = unformatted_text.len() as u8;
+                let range_length = literal.len() as u8;
+                let new_range = [64, range_idx, range_length];
+                format_ranges.push(new_range);
+                unformatted_text.push_str(literal);
+            }
+            NodeValue::HtmlInline(ref literal) => unformatted_text.push_str(literal),
             NodeValue::Strong => *current_format += 1,
             NodeValue::Emph => *current_format += 2,
+            NodeValue::Underline => *current_format += 4,
             NodeValue::Strikethrough => *current_format += 8,
             NodeValue::Superscript => *current_format += 32,
             _ => ()
@@ -1424,7 +1442,10 @@ impl<'a, 'o> Parser<'a, 'o> {
                 NodeValue::Emph |
                 NodeValue::Strong |
                 NodeValue::Strikethrough |
+                NodeValue::Underline |
                 NodeValue::Superscript => node.detach(),
+                NodeValue::Code(_) => node.detach(),
+                NodeValue::HtmlInline(_) => node.detach(),
                 _ => ()
             }
         }
@@ -1441,8 +1462,10 @@ impl<'a, 'o> Parser<'a, 'o> {
 
         if self.options.ext_autolink {
             autolink::process_autolinks(self.arena, node, text);
-            autolink::process_redditlinks(self.arena, node, text);
         }
+        
+        autolink::process_redditlinks(self.arena, node, text);
+
     }
 
     fn process_tasklist(&mut self, node: &'a AstNode<'a>, text: &mut Vec<u8>) {

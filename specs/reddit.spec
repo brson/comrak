@@ -1,4 +1,5 @@
-# Reddit Specific Markdown
+cargo run -- --spec specs/reddit.spec
+# Reddit Specific Markdown 
 
 `18-Nov-2011`: Updated to include the [latest markdown changes.](http://www.reddit.com/r/changelog/comments/mg1j6/reddit_change_new_markdown_interpreter/)
 
@@ -560,13 +561,16 @@ is|now|empty
 <table><thead>
 <tr>
 <th align="left"></th>
+<th align="center"></th>
 </tr>
 </thead><tbody>
 <tr>
 <td align="left">the</td>
+<td align="center"></td>
 </tr>
 <tr>
 <td align="left">is</td>
+<td align="center">now</td>
 </tr>
 </tbody></table>
 ````````````````````````````````
@@ -598,11 +602,11 @@ is|now|empty
 `        line of code`
 `    line of code`
 .
-<p><code>\xc2\xa0\xc2\xa0\xc2\xa0\xc2\xa0line of code</code><br/>
-<code>\xc2\xa0\xc2\xa0\xc2\xa0\xc2\xa0\xc2\xa0\xc2\xa0\xc2\xa0\xc2\xa0line of code</code><br/>
-<code>\xc2\xa0\xc2\xa0\xc2\xa0\xc2\xa0\xc2\xa0\xc2\xa0\xc2\xa0\xc2\xa0\xc2\xa0\xc2\xa0\xc2\xa0\xc2\xa0line of code</code><br/>
-<code>\xc2\xa0\xc2\xa0\xc2\xa0\xc2\xa0\xc2\xa0\xc2\xa0\xc2\xa0\xc2\xa0line of code</code><br/>
-<code>\xc2\xa0\xc2\xa0\xc2\xa0\xc2\xa0line of code</code></p>
+<p><code>    line of code</code>
+<code>        line of code</code>
+<code>            line of code</code>
+<code>        line of code</code>
+<code>    line of code</code></p>
 ````````````````````````````````
 
 ####7\. Headlines & Horizonal Rules
