@@ -60,14 +60,15 @@
 //! # }
 //! ```
 
-#![deny(missing_docs,
-        missing_debug_implementations,
-	missing_copy_implementations,
-	trivial_casts,
-	trivial_numeric_casts,
-	unstable_features,
-	unused_import_braces,
-	unused_qualifications)]
+#![deny(
+    missing_debug_implementations,
+    missing_copy_implementations,
+    trivial_casts,
+    trivial_numeric_casts,
+    unstable_features,
+    unused_import_braces,
+    unused_qualifications
+)]
 
 #![cfg_attr(feature = "dev", allow(unstable_features))]
 #![cfg_attr(feature = "dev", feature(plugin))]
@@ -103,7 +104,9 @@ pub use parser::{parse_document, ComrakOptions};
 pub use typed_arena::Arena;
 
 extern crate libc;
+#[macro_use] extern crate cpython;
 
+use cpython::{PyResult, Python};
 use libc::c_char;
 use std::ffi::{CStr, CString};
 
@@ -117,14 +120,20 @@ pub extern fn markdown_to_html(md: &str, options: &ComrakOptions) -> String {
     format_html(root, options)
 }
 
-/// Entryway for Reddit Python bridge.
-#[no_mangle]
-pub extern fn cm_to_rtjson(s: *const c_char) -> *mut c_char {
-    let cstr = unsafe {
-        assert!(!s.is_null());
-        CStr::from_ptr(s)
-    };
-    let rstr = cstr.to_str().unwrap();
+// add bindings to the generated python module
+// This initializes the Python module and assigns the name `snoomark`,
+// which converts Reddit-flavored CommonMark (or legacy Markdown) to RTJSON.
+py_module_initializer!(snoomark, initsnoomark, PyInit_snoomark, |py, m| {
+    try!(m.add(py, "__doc__", "This module is implemented in Rust."));
+    try!(m.add(py, "cm_to_rtjson", py_fn!(py, cm_to_rtjson_py(cm: String))));
+    Ok(())
+});
+
+// rust-cpython aware function. All of our python interface could be
+// declared in a separate module.
+// Note that the py_fn!() macro automatically converts the arguments from
+// Python objects to Rust values; and the Rust return value back into a Python object.
+fn cm_to_rtjson(cm: String) -> String {
     let arena = Arena::new();
 
     let options = ComrakOptions {
@@ -140,7 +149,13 @@ pub extern fn cm_to_rtjson(s: *const c_char) -> *mut c_char {
         ext_superscript: false
     };
 
-    let root = parse_document(&arena, rstr, &options);
+    let root = parse_document(&arena, &cm, &options);
     let rendered_rtjson = format_rtjson(root, &ComrakOptions::default());
-    CString::new(rendered_rtjson).unwrap().into_raw()
+    rendered_rtjson
+}
+
+// logic implemented as a normal rust function
+fn cm_to_rtjson_py(_: Python, cm: String) -> PyResult<String> {
+    let out = cm_to_rtjson(cm);
+    Ok(out)
 }
