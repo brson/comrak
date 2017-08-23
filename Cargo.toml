@@ -37,5 +37,11 @@ default = ["clap"]
 dev = ["clap", "clippy"]
 
 [lib]
-name = "comrak"
-crate-type = ["rlib", "dylib"]
+name = "snoomark"
+crate-type = ["cdylib"]
+
+[dependencies.cpython]
+git = "https://github.com/dgrunwald/rust-cpython.git"
+version = "0.1"
+default-features = false
+features = ["python27-sys", "extension-module-2-7"]
