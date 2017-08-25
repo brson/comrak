@@ -494,18 +494,17 @@ impl<'a, 'o> CommonMarkFormatter<'a, 'o> {
                     }
                     write!(self, ">").unwrap();
                     return false;
-                }
-<<<<<<< HEAD
-            } else if entering {
+                } else if entering {
                 write!(self, "[").unwrap();
-            } else {
-                write!(self, "](").unwrap();
-                self.output(&nl.url, false, Escaping::URL);
-                if !nl.title.is_empty() {
-                    write!(self, " \"").unwrap();
-                    self.output(&nl.title, false, Escaping::Title);
-                    write!(self, "\"").unwrap();
-=======
+                } else {
+                    write!(self, "](").unwrap();
+                    self.output(&nl.url, false, Escaping::URL);
+                    if !nl.title.is_empty() {
+                        write!(self, " \"").unwrap();
+                        self.output(&nl.title, false, Escaping::Title);
+                        write!(self, "\"").unwrap();
+                    }
+                }
             }
             NodeValue::FormattedLink(_, _, _) => (),
             NodeValue::UnformattedLink(_, _) => (),
@@ -521,7 +520,6 @@ impl<'a, 'o> CommonMarkFormatter<'a, 'o> {
                         write!(self, "\"").unwrap();
                     }
                     write!(self, ")").unwrap();
->>>>>>> Add option and logic to generate RTJSON specific AST
                 }
                 write!(self, ")").unwrap();
             },
