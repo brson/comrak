@@ -122,9 +122,6 @@ lazy_static! {
     static ref PROCESSING_INSTRUCTION: &'static str = r"\?([^?>\x00]+|\?[^>\x00]|>)*\?>";
     static ref DECLARATION: String = format!(r"![A-Z]+{}+[^>\x00]*>", *SPACE_CHAR);
     static ref CDATA: &'static str = r"!\[CDATA\[([^\]\x00]+|\][^\]\x00]|\]\][^>\x00])*\]\]>";
-    static ref HTML_TAG: String = format!(
-        r"(?:{}|{}|{}|{}|{}|{})", *OPEN_TAG, *CLOSE_TAG, *HTML_COMMENT,
-        *PROCESSING_INSTRUCTION, *DECLARATION, *CDATA);
 }
 
 pub fn html_block_start_7(line: &str) -> Option<usize> {
@@ -199,14 +196,6 @@ pub fn autolink_email(line: &str) -> Option<usize> {
             r"(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*",
             r">",
             r")")).unwrap();
-    }
-
-    search(&RE, line)
-}
-
-pub fn html_tag(line: &str) -> Option<usize> {
-    lazy_static! {
-        static ref RE: Regex = Regex::new(&format!(r"\A(?:{})", *HTML_TAG)).unwrap();
     }
 
     search(&RE, line)

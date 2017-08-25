@@ -122,8 +122,7 @@ impl<'o> RTJsonFormatter<'o> {
         if plain {
             match node.data.borrow().value {
                 NodeValue::Text(ref literal) |
-                NodeValue::Code(ref literal) |
-                NodeValue::HtmlInline(ref literal) => self.s += self.escape(literal).as_str(),
+                NodeValue::Code(ref literal) => self.s += self.escape(literal).as_str(),
                 _ => (),
             }
             self.format_children(node, true);
@@ -216,11 +215,6 @@ impl<'o> RTJsonFormatter<'o> {
                     self.s += r#"{"e":"error underline"}"#;
                 }
             }
-            NodeValue::HtmlInline(ref literal) => {
-                if entering {
-                    self.s += r#"{"e":"error inline"}"#;
-                }
-            },
             NodeValue::Strong | NodeValue::Emph | NodeValue::Superscript |
             NodeValue::Strikethrough => unreachable!(),
             NodeValue::Paragraph => {
@@ -236,8 +230,7 @@ impl<'o> RTJsonFormatter<'o> {
                         NodeValue::Link(_) => self.s += self.escape(literal).as_str(),
                         NodeValue::Image(_) => self.s += self.escape(literal).as_str(),
                         NodeValue::Text(ref literal) |
-                        NodeValue::Code(ref literal) |
-                        NodeValue::HtmlInline(ref literal) => self.s += self.escape(literal).as_str(),
+                        NodeValue::Code(ref literal) => self.s += self.escape(literal).as_str(),
                         NodeValue::LineBreak | NodeValue::SoftBreak | NodeValue::ThematicBreak => self.s += r#"{"e":"br"},"#,
                         NodeValue::Heading(_) | NodeValue::CodeBlock(_) => {
                             self.s += format!(r#"{{"e":"raw","t":"{}"}}"#, self.escape(literal)).as_str();
@@ -284,8 +277,8 @@ impl<'o> RTJsonFormatter<'o> {
                         },
                         NodeValue::Link(_) => self.s += self.escape(literal).as_str(),
                         NodeValue::Image(_) => self.s += self.escape(literal).as_str(),
-                        NodeValue::Text(ref literal) | NodeValue::Code(ref literal) |
-                        NodeValue::HtmlInline(ref literal) => self.s += self.escape(literal).as_str(),
+                        NodeValue::Text(ref literal) | 
+                        NodeValue::Code(ref literal) => self.s += self.escape(literal).as_str(),
                         NodeValue::LineBreak | NodeValue::SoftBreak | NodeValue::ThematicBreak => self.s += r#"{"e":"br"},"#,
                         NodeValue::Heading(_) | NodeValue::CodeBlock(_) => {
                             self.s += format!(r#"{{"e":"raw","t":"{}"}}"#, self.escape(literal)).as_str();

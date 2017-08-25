@@ -661,13 +661,6 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
             return inl;
         }
 
-        if let Some(matchlen) = scanners::html_tag(&self.input[self.pos..]) {
-            let contents = &self.input[self.pos - 1..self.pos + matchlen];
-            let inl = make_inline(self.arena, NodeValue::HtmlInline(contents.to_string()));
-            self.pos += matchlen;
-            return inl;
-        }
-
         make_inline(self.arena, NodeValue::Text("<".to_string()))
     }
 

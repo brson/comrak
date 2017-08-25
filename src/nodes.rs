@@ -83,9 +83,6 @@ pub enum NodeValue {
     /// **Inline**.  A [code span](https://github.github.com/gfm/#code-spans).
     Code(String),
 
-    /// **Inline**.  [Raw HTML](https://github.github.com/gfm/#raw-html) contained inline.
-    HtmlInline(String),
-
     /// **Inline**.  [Emphasised](https://github.github.com/gfm/#emphasis-and-strong-emphasis)
     /// text.
     Emph,
@@ -421,8 +418,7 @@ pub fn can_contain_type<'a>(node: &'a AstNode<'a>, child: &NodeValue) -> bool {
                 NodeValue::Strong |
                 NodeValue::Link(..) |
                 NodeValue::Image(..) |
-                NodeValue::Strikethrough |
-                NodeValue::HtmlInline(..) => true,
+                NodeValue::Strikethrough => true,
                 _ => false,
             }
         }

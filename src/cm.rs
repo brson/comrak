@@ -448,11 +448,6 @@ impl<'a, 'o> CommonMarkFormatter<'a, 'o> {
                     }
                 }
             }
-            NodeValue::HtmlInline(ref literal) => {
-                if entering {
-                    self.write_all(literal.as_bytes()).unwrap();
-                }
-            }
             NodeValue::Strong => {
                 if entering {
                     write!(self, "**").unwrap();

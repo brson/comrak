@@ -2032,48 +2032,6 @@ of long tags inside a wrapped paragraph as starting HTML blocks.)
 Some simple examples follow.  Here are some basic HTML blocks
 of type 6:
 
-```````````````````````````````` example
-<table>
-  <tr>
-    <td>
-           hi
-    </td>
-  </tr>
-</table>
-
-okay.
-.
-<table>
-  <tr>
-    <td>
-           hi
-    </td>
-  </tr>
-</table>
-<p>okay.</p>
-````````````````````````````````
-
-
-```````````````````````````````` example
- <div>
-  *hello*
-         <foo><a>
-.
- <div>
-  *hello*
-         <foo><a>
-````````````````````````````````
-
-
-A block can also start with a closing tag:
-
-```````````````````````````````` example
-</div>
-*foo*
-.
-</div>
-*foo*
-````````````````````````````````
 
 
 Here we have two HTML blocks with a Markdown paragraph between them:
@@ -2165,12 +2123,6 @@ tag, as long as it starts like one:
 
 In type 6 blocks, the initial tag need not be on a line by
 itself:
-
-```````````````````````````````` example
-<div><a href="bar">*foo*</a></div>
-.
-<div><a href="bar">*foo*</a></div>
-````````````````````````````````
 
 
 ```````````````````````````````` example
@@ -2289,12 +2241,6 @@ Finally, in this case, the `<del>` tags are interpreted
 as [raw HTML] *inside* the CommonMark paragraph.  (Because
 the tag is not on a line by itself, we get inline HTML
 rather than an [HTML block].)
-
-```````````````````````````````` example
-<del>*foo*</del>
-.
-<p><del><em>foo</em></del></p>
-````````````````````````````````
 
 
 HTML tags designed to contain literal content
@@ -7053,27 +6999,6 @@ _foo [bar_](/url)
 
 
 ```````````````````````````````` example
-*<img src="foo" title="*"/>
-.
-<p>*<img src="foo" title="*"/></p>
-````````````````````````````````
-
-
-```````````````````````````````` example
-**<a href="**">
-.
-<p>**<a href="**"></p>
-````````````````````````````````
-
-
-```````````````````````````````` example
-__<a href="__">
-.
-<p>__<a href="__"></p>
-````````````````````````````````
-
-
-```````````````````````````````` example
 *a `*`*
 .
 <p><em>a <code>*</code></em></p>
@@ -7229,15 +7154,6 @@ bar)
 .
 <p>[link](foo
 bar)</p>
-````````````````````````````````
-
-
-```````````````````````````````` example
-[link](<foo
-bar>)
-.
-<p>[link](<foo
-bar>)</p>
 ````````````````````````````````
 
 Parentheses inside the link destination may be escaped:
@@ -8605,51 +8521,14 @@ or a [CDATA section].
 
 Here are some simple open tags:
 
-```````````````````````````````` example
-<a><bab><c2c>
-.
-<p><a><bab><c2c></p>
-````````````````````````````````
-
-
-Empty elements:
-
-```````````````````````````````` example
-<a/><b2/>
-.
-<p><a/><b2/></p>
-````````````````````````````````
-
 
 [Whitespace] is allowed:
-
-```````````````````````````````` example
-<a  /><b2
-data="foo" >
-.
-<p><a  /><b2
-data="foo" ></p>
-````````````````````````````````
 
 
 With attributes:
 
-```````````````````````````````` example
-<a foo="bar" bam = 'baz <em>"</em>'
-_boolean zoop:33=zoop:33 />
-.
-<p><a foo="bar" bam = 'baz <em>"</em>'
-_boolean zoop:33=zoop:33 /></p>
-````````````````````````````````
-
 
 Custom tag names can be used:
-
-```````````````````````````````` example
-Foo <responsive-image src="foo.jpg" />
-.
-<p>Foo <responsive-image src="foo.jpg" /></p>
-````````````````````````````````
 
 
 Illegal tag names, not parsed as HTML:
@@ -8701,12 +8580,6 @@ Missing [whitespace]:
 
 Closing tags:
 
-```````````````````````````````` example
-</a></foo >
-.
-<p></a></foo ></p>
-````````````````````````````````
-
 
 Illegal attributes in closing tag:
 
@@ -8718,15 +8591,6 @@ Illegal attributes in closing tag:
 
 
 Comments:
-
-```````````````````````````````` example
-foo <!-- this is a
-comment - with hyphen -->
-.
-<p>foo <!-- this is a
-comment - with hyphen --></p>
-````````````````````````````````
-
 
 ```````````````````````````````` example
 foo <!-- not a comment -- two hyphens -->
@@ -8749,48 +8613,14 @@ foo <!-- foo--->
 
 Processing instructions:
 
-```````````````````````````````` example
-foo <?php echo $a; ?>
-.
-<p>foo <?php echo $a; ?></p>
-````````````````````````````````
-
 
 Declarations:
-
-```````````````````````````````` example
-foo <!ELEMENT br EMPTY>
-.
-<p>foo <!ELEMENT br EMPTY></p>
-````````````````````````````````
-
-
-CDATA sections:
-
-```````````````````````````````` example
-foo <![CDATA[>&<]]>
-.
-<p>foo <![CDATA[>&<]]></p>
-````````````````````````````````
 
 
 Entity and numeric character references are preserved in HTML
 attributes:
 
-```````````````````````````````` example
-foo <a href="&ouml;">
-.
-<p>foo <a href="&ouml;"></p>
-````````````````````````````````
-
-
 Backslash escapes do not work in HTML attributes:
-
-```````````````````````````````` example
-foo <a href="\*">
-.
-<p>foo <a href="\*"></p>
-````````````````````````````````
 
 
 ```````````````````````````````` example
@@ -8895,26 +8725,6 @@ span`
 span`
 .
 <p><code>code\ span</code></p>
-````````````````````````````````
-
-
-or HTML tags:
-
-```````````````````````````````` example
-<a href="foo
-bar">
-.
-<p><a href="foo
-bar"></p>
-````````````````````````````````
-
-
-```````````````````````````````` example
-<a href="foo\
-bar">
-.
-<p><a href="foo\
-bar"></p>
 ````````````````````````````````
 
 

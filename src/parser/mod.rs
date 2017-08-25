@@ -1349,7 +1349,7 @@ impl<'a, 'o> Parser<'a, 'o> {
         *text = text[end..].to_string();
         let checkbox = inlines::make_inline(
             self.arena,
-            NodeValue::HtmlInline(
+            NodeValue::Text(
                 (if active {
                      "<input type=\"checkbox\" disabled=\"\" checked=\"\" />"
                  } else {

@@ -176,8 +176,7 @@ impl<'o> HtmlFormatter<'o> {
         if plain {
             match node.data.borrow().value {
                 NodeValue::Text(ref literal) |
-                NodeValue::Code(ref literal) |
-                NodeValue::HtmlInline(ref literal) => self.escape(literal),
+                NodeValue::Code(ref literal) => self.escape(literal),
                 NodeValue::LineBreak | NodeValue::SoftBreak => self.s.push(' '),
                 _ => (),
             }
@@ -320,16 +319,6 @@ impl<'o> HtmlFormatter<'o> {
                     self.s += "<code>";
                     self.escape(literal);
                     self.s += "</code>";
-                }
-            }
-            NodeValue::HtmlInline(ref literal) => {
-                if entering {
-                    if self.options.ext_tagfilter && tagfilter(literal) {
-                        self.s += "&lt;";
-                        self.s += &literal[1..];
-                    } else {
-                        self.s += literal;
-                    }
                 }
             }
             NodeValue::Strong => {
