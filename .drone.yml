@@ -1,0 +1,38 @@
+build:
+  test:
+    image: rust:1.19.0
+    commands:
+      - cargo test
+
+  release:
+    image: rust:1.19.0
+    commands:
+      - cargo build --release
+      - cp target/release/libsnoomark.so target/release/libsnoomark-$${TAG}.so
+      - echo
+      - echo "SHA256 hash of the built libsnoomark release:"
+      - shasum -a 256 target/release/libsnoomark-$${TAG}.so
+      - echo
+    when:
+      event: tag
+
+publish:
+  upload:
+    image: plugins/s3
+    environment:
+      - PLUGIN_SOURCE=/drone/src/github.com/reddit/snoomark/target/release/libsnoomark-$${TAG}.so
+      - PLUGIN_STRIP_PREFIX=/drone/src/github.com/reddit/snoomark/target/release/
+      - PLUGIN_BUCKET=reddit-packages
+      - PLUGIN_TARGET=/amd64/snoomark
+    when:
+      event: tag
+      status: success
+
+notify:
+  slack:
+    webhook_url: $$CI_SLACK_WEBHOOK_URL
+    channel: ci-notifications
+  slack:
+    webhook_url: $$CI_SLACK_WEBHOOK_URL
+    repo: reddit/snoomark
+    channel: rex-salon
