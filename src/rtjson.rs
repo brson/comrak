@@ -321,18 +321,18 @@ impl<'o> RTJsonFormatter<'o> {
                     self.s += format!(r#"{{"e":"link","u":"{}","t":"{}"}}"#, self.escape_href(&nl.url), self.escape(&nl.title)).as_str();
                 }
             }
+            NodeValue::Link(ref nl) => {
+                if entering {
+                    self.s += format!(r#"{{"e":"link","u":"{}","t":"{}"}}"#, self.escape_href(&nl.url), self.escape(&nl.title)).as_str();
+                    self.append_comma(node);
+                }
+            }
             NodeValue::Image(ref nl) => {
                 if entering {
-                    self.s += "<img src=\"";
-                    self.escape_href(&nl.url);
-                    self.s += "\" alt=\"";
-                    return true;
+                    self.s += format!(r#"{{"e":"link","u":"{}","t":""#, self.escape_href(&nl.url)).as_str();
                 } else {
-                    if !nl.title.is_empty() {
-                        self.s += "\" title=\"";
-                        self.escape(&nl.title);
-                    }
-                    self.s += "\" />";
+                    self.s += r#""}"#;
+                    self.append_comma(node);
                 }
             }
             NodeValue::Table(..) => {
