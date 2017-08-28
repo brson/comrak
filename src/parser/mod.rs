@@ -3,7 +3,6 @@ mod table;
 mod autolink;
 mod inlines;
 
-
 use arena_tree::Node;
 use ctype::{isspace, isdigit};
 use entity;
