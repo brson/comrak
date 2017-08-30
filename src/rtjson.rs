@@ -241,9 +241,6 @@ impl<'o> RTJsonFormatter<'o> {
                         NodeValue::LineBreak | NodeValue::SoftBreak | NodeValue::ThematicBreak => self.s += r#"{"e":"br"},"#,
                         NodeValue::Heading(_) | NodeValue::CodeBlock(_) => {
                             self.s += format!(r#"{{"e":"raw","t":"{}"}}"#, self.escape(literal)).as_str();
-                        },
-                        NodeValue::Item(_) => {
-                            self.s += format!(r#"{{"e":"text","t":"{}"}}"#, self.escape(literal)).as_str();
                         }
                         NodeValue::BlockQuote  | NodeValue::Paragraph => {
                             self.s += format!(r#"{{"e":"text","t":"{}"}}"#, self.escape(literal)).as_str();

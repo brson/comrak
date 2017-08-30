@@ -91,16 +91,12 @@ mod html;
 mod rtjson;
 mod cm;
 mod ctype;
-pub mod nodes;
+mod nodes;
 mod entity;
 mod strings;
 
-pub use cm::format_document as format_commonmark;
-pub use html::format_document as format_html;
-pub use rtjson::format_document as format_rtjson;
-
-pub use parser::{parse_document, ComrakOptions};
-pub use typed_arena::Arena;
+use parser::{parse_document, ComrakOptions};
+use typed_arena::Arena;
 
 extern crate libc;
 #[macro_use] extern crate cpython;
@@ -108,6 +104,7 @@ extern crate libc;
 use cpython::{PyResult, Python};
 use libc::c_char;
 use std::ffi::{CStr, CString};
+use nodes::AstNode;
 
 /// Render Markdown to HTML.
 ///
@@ -151,7 +148,7 @@ fn cm_to_rtjson(cm: String) -> String {
     };
 
     let root = parse_document(&arena, &cm, &options);
-    let rendered_rtjson = format_rtjson(root, &ComrakOptions::default());
+    let rendered_rtjson = rtjson::format_document(root, &ComrakOptions::default());
     rendered_rtjson
 }
 
