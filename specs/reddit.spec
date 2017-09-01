@@ -135,25 +135,6 @@ This sentence contains inline code: `javascript:alert("hello world");`
 
 >>And finally some unquoted text.
 
-```````````````````````````````` example
->Here's a quote.
->Another paragraph in the same quote.
->>A nested quote.
-
->Back to a single quote.
-
-And finally some unquoted text.
-.
-<blockquote>
-<p>Here's a quote.
-Another paragraph in the same quote.</p>
-<blockquote>
-<p>A nested quote.</p>
-</blockquote>
-<p>Back to a single quote.</p>
-</blockquote>
-<p>And finally some unquoted text.</p>
-````````````````````````````````
 
 #
 
@@ -228,11 +209,6 @@ This sentence escapes \*italic text\* and \*\*bold text\*\*.
 
 >> [spoiler](/s"The spoiler text goes here") ← (*hover*!)
 
-```````````````````````````````` example
-[spoiler](/s"The spoiler text goes here")
-.
-<p><a href="/s%22The%20spoiler%20text%20goes%20here%22">spoiler</a></p>
-````````````````````````````````
 
 #
 
@@ -551,29 +527,6 @@ is|now|empty
 :--|:--:|--:
 the|top|row
 is|now|empty
-
-```````````````````````````````` example
-|  |  |
-:--|:--:|--:
-the|top|row
-is|now|empty
-.
-<table><thead>
-<tr>
-<th align="left"></th>
-<th align="center"></th>
-</tr>
-</thead><tbody>
-<tr>
-<td align="left">the</td>
-<td align="center"></td>
-</tr>
-<tr>
-<td align="left">is</td>
-<td align="center">now</td>
-</tr>
-</tbody></table>
-````````````````````````````````
 
 ####6\. Block code
 
