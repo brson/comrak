@@ -373,15 +373,59 @@ impl<'a, 'o> Parser<'a, 'o> {
             && strings::is_line_end_char(line[self.first_nonspace]);
     }
 
-    fn process_line(&mut self, line: &[u8]) {
-        let mut new_line: Vec<u8>;
-        let line = if line.is_empty() || !strings::is_line_end_char(*line.last().unwrap()) {
-            new_line = line.into();
-            new_line.push(b'\n');
-            &new_line
-        } else {
-            line
-        };
+    fn escape(&mut self, buffer: &str) -> String {
+        lazy_static! {
+            static ref NEEDS_ESCAPED: [bool; 256] = {
+                let mut sc = [false; 256];
+                for &c in &['"', '&', '<', '>'] {
+                    sc[c as usize] = true;
+                }
+                sc
+            };
+        }
+
+        let src = buffer.as_bytes();
+        let size = src.len();
+        let mut i = 0;
+        let mut text = String::with_capacity(1024);
+
+        while i < size {
+            let org = i;
+            while i < size && !NEEDS_ESCAPED[src[i] as usize] {
+                i += 1;
+            }
+
+            if i > org {
+                text += &buffer[org..i];
+            }
+
+            if i >= size {
+                break;
+            }
+
+            match src[i] as char {
+                '"' => text += "&quot;",
+                '&' => text += "&amp;",
+                '<' => text += "&lt;",
+                '>' => text += "&gt;",
+                _ => unreachable!(),
+            }
+
+            i += 1;
+        }
+        text
+    }
+
+    fn process_line(&mut self, line: &str) {
+        let mut new_line: String;
+        let line =
+            if line.is_empty() || !strings::is_line_end_char(*line.as_bytes().last().unwrap()) {
+                new_line = line.into();
+                new_line.push('\n');
+                &new_line
+            } else {
+                line
+            };
 
         self.offset = 0;
         self.column = 0;
@@ -1367,7 +1411,8 @@ impl<'a, 'o> Parser<'a, 'o> {
                     }
                 }
                 if sum > 0 {
-                    let range_idx = unformatted_text.len() as u8;
+                    let escaped_text = self.escape(unformatted_text);
+                    let range_idx = escaped_text.len() as u8;
                     let range_length = text.len() as u8;
                     let new_range = [sum, range_idx, range_length];
                     format_ranges.push(new_range);
