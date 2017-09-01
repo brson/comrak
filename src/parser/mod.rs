@@ -322,6 +322,49 @@ impl<'a, 'o> Parser<'a, 'o> {
             strings::is_line_end_char(line.as_bytes()[self.first_nonspace]);
     }
 
+    fn escape(&mut self, buffer: &str) -> String {
+        lazy_static! {
+            static ref NEEDS_ESCAPED: [bool; 256] = {
+                let mut sc = [false; 256];
+                for &c in &['"', '&', '<', '>'] {
+                    sc[c as usize] = true;
+                }
+                sc
+            };
+        }
+
+        let src = buffer.as_bytes();
+        let size = src.len();
+        let mut i = 0;
+        let mut text = String::with_capacity(1024);
+
+        while i < size {
+            let org = i;
+            while i < size && !NEEDS_ESCAPED[src[i] as usize] {
+                i += 1;
+            }
+
+            if i > org {
+                text += &buffer[org..i];
+            }
+
+            if i >= size {
+                break;
+            }
+
+            match src[i] as char {
+                '"' => text += "&quot;",
+                '&' => text += "&amp;",
+                '<' => text += "&lt;",
+                '>' => text += "&gt;",
+                _ => unreachable!(),
+            }
+
+            i += 1;
+        }
+        text
+    }
+
     fn process_line(&mut self, line: &str) {
         let mut new_line: String;
         let line =
@@ -1242,7 +1285,8 @@ impl<'a, 'o> Parser<'a, 'o> {
                     }
                 }
                 if sum > 0 {
-                    let range_idx = unformatted_text.len() as u8;
+                    let escaped_text = self.escape(unformatted_text);
+                    let range_idx = escaped_text.len() as u8;
                     let range_length = text.len() as u8;
                     let new_range = [sum, range_idx, range_length];
                     format_ranges.push(new_range);

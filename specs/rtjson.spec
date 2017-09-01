@@ -185,3 +185,18 @@ Lets try the same thing with links
 [**This is some __bold__ text.**](www.reddit.com)
 .
 {"document":[{"e":"par","c":[{"e":"link","u":"www.reddit.com","t":"This is some bold text.","f":[[1, 0, 23]]},{"e":"text","t":""}]}]}````````````````````````````````
+
+```````````````````````````````` example
+Raw "quotes", &ampersands, and <lt & gt> should be escaped.
+.
+{"document":[{"e":"par","c":[{"e":"text","t":"Raw &quot;quotes&quot;, &amp;ampersands, and &lt;lt &amp; gt&gt; should be escaped."}]}]}````````````````````````````````
+
+```````````````````````````````` example
+HTML entities like &amp; &quot; &lt; and &gt; should not be escaped, unless they are malformed like &amp or &quot".
+.
+{"document":[{"e":"par","c":[{"e":"text","t":"HTML entities like &amp; &quot; &lt; and &gt; should not be escaped, unless they are malformed like &amp;amp or &amp;quot&quot;."}]}]}````````````````````````````````
+
+```````````````````````````````` example
+Escaping to HTML entities like & and " shouldn't impact format ranges like **this** or ~~*this*~~.
+.
+{"document":[{"e":"par","c":[{"e":"text","t":"Escaping to HTML entities like &amp; and &quot; shouldn't impact format ranges like this or this.","f":[[1, 84, 4], [10, 92, 4]]}]}]}````````````````````````````````
