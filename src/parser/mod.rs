@@ -1248,7 +1248,6 @@ impl<'a, 'o> Parser<'a, 'o> {
                 format_ranges.push(new_range);
                 unformatted_text.push_str(literal);
             }
-            NodeValue::HtmlInline(ref literal) => unformatted_text.push_str(literal),
             NodeValue::Strong => *current_format += 1,
             NodeValue::Emph => *current_format += 2,
             NodeValue::Underline => *current_format += 4,
@@ -1320,7 +1319,6 @@ impl<'a, 'o> Parser<'a, 'o> {
                 NodeValue::Underline |
                 NodeValue::Superscript => node.detach(),
                 NodeValue::Code(_) => node.detach(),
-                NodeValue::HtmlInline(_) => node.detach(),
                 _ => ()
             }
         }
