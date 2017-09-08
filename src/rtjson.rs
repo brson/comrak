@@ -200,11 +200,7 @@ impl<'o> RTJsonFormatter<'o> {
             }
             NodeValue::HtmlBlock(_) => unreachable!(),
             NodeValue::ThematicBreak | NodeValue::LineBreak |
-            NodeValue:: SoftBreak => {
-                if entering {
-                    self.s += r#"{"e":"br"}"#
-                }
-            }
+            NodeValue:: SoftBreak => (),
             NodeValue::Code(_) => {
                 if entering {
                     self.s += r#"{"e":"error code"}"#;
@@ -231,7 +227,7 @@ impl<'o> RTJsonFormatter<'o> {
                         NodeValue::Image(_) => self.s += self.escape(literal).as_str(),
                         NodeValue::Text(ref literal) |
                         NodeValue::Code(ref literal) => self.s += self.escape(literal).as_str(),
-                        NodeValue::LineBreak | NodeValue::SoftBreak | NodeValue::ThematicBreak => self.s += r#"{"e":"br"},"#,
+                        NodeValue::LineBreak | NodeValue::SoftBreak | NodeValue::ThematicBreak => (),
                         NodeValue::Heading(_) | NodeValue::CodeBlock(_) => {
                             self.s += format!(r#"{{"e":"raw","t":"{}"}}"#, self.escape(literal)).as_str();
                         }
@@ -239,16 +235,7 @@ impl<'o> RTJsonFormatter<'o> {
                             self.s += format!(r#"{{"e":"text","t":"{}"}}"#, self.escape(literal)).as_str();
                         }
                         NodeValue::TableCell  => {
-                            let row = &node.parent().unwrap().parent().unwrap().data.borrow().value;
-                            let in_header = match *row {
-                                NodeValue::TableRow(header) => header,
-                                _ => panic!(),
-                            };
-                            if in_header {
-                                self.s += format!( r#""e":"text","t":"{}"}}"#, self.escape(literal)).as_str();
-                            } else {
-                                self.s += format!( r#"{{"e":"text","t":"{}"}}"#, self.escape(literal)).as_str();
-                            }
+                            self.s += format!( r#"{{"e":"text","t":"{}"}}"#, self.escape(literal)).as_str();
                         }
                         NodeValue::Document | NodeValue::Strong | NodeValue::Emph |
                         NodeValue::Underline | NodeValue::Superscript |
@@ -264,22 +251,13 @@ impl<'o> RTJsonFormatter<'o> {
                 if entering {
                     match node.parent().unwrap().data.borrow().value {
                         NodeValue::TableCell  => {
-                            let row = &node.parent().unwrap().parent().unwrap().data.borrow().value;
-                            let in_header = match *row {
-                                NodeValue::TableRow(header) => header,
-                                _ => panic!(),
-                            };
-                            if in_header {
-                                self.s += format!( r#""e":"text","t":"{}","f":{:?}}}"#, self.escape(literal), format_ranges).as_str();
-                            } else {
-                                self.s += format!( r#"{{"e":"text","t":"{}","f":{:?}}}"#, self.escape(literal), format_ranges).as_str();
-                            }
+                            self.s += format!( r#"{{"e":"text","t":"{}","f":{:?}}}"#, self.escape(literal), format_ranges).as_str();
                         },
                         NodeValue::Link(_) => self.s += self.escape(literal).as_str(),
                         NodeValue::Image(_) => self.s += self.escape(literal).as_str(),
                         NodeValue::Text(ref literal) | 
                         NodeValue::Code(ref literal) => self.s += self.escape(literal).as_str(),
-                        NodeValue::LineBreak | NodeValue::SoftBreak | NodeValue::ThematicBreak => self.s += r#"{"e":"br"},"#,
+                        NodeValue::LineBreak | NodeValue::SoftBreak | NodeValue::ThematicBreak => (),
                         NodeValue::Heading(_) | NodeValue::CodeBlock(_) => {
                             self.s += format!(r#"{{"e":"raw","t":"{}"}}"#, self.escape(literal)).as_str();
                         },
@@ -311,18 +289,11 @@ impl<'o> RTJsonFormatter<'o> {
                     self.s += format!(r#"{{"e":"link","u":"{}","t":"{}"}}"#, self.escape_href(&nl.url), self.escape(&nl.title)).as_str();
                 }
             }
-            NodeValue::Link(ref nl) => {
-                if entering {
-                    self.s += format!(r#"{{"e":"link","u":"{}","t":"{}"}}"#, self.escape_href(&nl.url), self.escape(&nl.title)).as_str();
-                    self.append_comma(node);
-                }
-            }
             NodeValue::Image(ref nl) => {
                 if entering {
                     self.s += format!(r#"{{"e":"link","u":"{}","t":""#, self.escape_href(&nl.url)).as_str();
                 } else {
                     self.s += r#""}"#;
-                    self.append_comma(node);
                 }
             }
             NodeValue::Table(..) => {
@@ -341,15 +312,16 @@ impl<'o> RTJsonFormatter<'o> {
                 if entering {
                     if header {
                         self.s += r#""h":["#;
+                    } else {
+                        self.s += "[";
                     }
-                    self.s += "[";
                 } else {
                     self.s += "]";
                     if node.next_sibling().is_some() && !header {
                         self.s += ",";
                     }
                     if header {
-                        self.s += "],";
+                        self.s += ",";
                         self.s += r#""c":["#;
                     }
                 }
@@ -382,8 +354,8 @@ impl<'o> RTJsonFormatter<'o> {
                         start = start.next_sibling().unwrap();
                     }
 
+                    self.s += "{";
                     if in_header {
-                        self.s += "{";
 
                         match alignments[i] {
                             TableAlignment::Left => self.s += r#""a":"L","#,
@@ -391,17 +363,24 @@ impl<'o> RTJsonFormatter<'o> {
                             TableAlignment::Center => self.s += r#""a":"C","#,
                             TableAlignment::None => (),
                         }
-                    } else {
-                        self.s += r#"{"c":["#;
                     }
-
-                } else if !in_header {
+                    
+                    self.s += r#""c":["#;
+                } else {
                     self.s += "]}";
                 }
             }
         }
-        if !entering {
-            self.append_comma(node);
+        
+        match node.data.borrow().value {
+            NodeValue::TableRow(..) |
+            NodeValue::LineBreak | NodeValue::SoftBreak | 
+            NodeValue::ThematicBreak  => (),
+            _ => {
+                if !entering {
+                    self.append_comma(node);
+                }
+            }
         }
         false
     }

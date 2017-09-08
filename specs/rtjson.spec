@@ -35,15 +35,17 @@ This post has a paragraph in the middle.
 // TODO: This utilizes one of the breaks.
 
 ```````````````````````````````` example
->Line proceeding; this line has a [link](https://reddit.com) and a r/redditlink  
+>Line proceeding; this line has a [link](https://reddit.com) and a r/redditlink.
+>  
 >Line preceding; no line proceeding  
 >  
 >No line preceding; no line proceeding  
 >  
->No line preceding; line proceeding  
+>No line preceding; line proceeding
+>
 >Line preceding
 .
-{"document":[{"e":"blockquote","c":[{"e":"par","c":[{"e":"text","t":"Line proceeding; this line has a "},{"e":"link","u":"https://reddit.com","t":"link"},{"e":"text","t":" and a "},{"e":"link","u":"/r/redditlink","t":"r/redditlink"},{"e":"br"},{"e":"text","t":"Line preceding; no line proceeding"}]},{"e":"par","c":[{"e":"text","t":"No line preceding; no line proceeding"}]},{"e":"par","c":[{"e":"br"},{"e":"text","t":"No line preceding; line proceedingLine preceding"}]}]}]}````````````````````````````````
+{"document":[{"e":"blockquote","c":[{"e":"par","c":[{"e":"text","t":"Line proceeding; this line has a "},{"e":"link","u":"https://reddit.com","t":"link"},{"e":"text","t":" and a "},{"e":"link","u":"/r/redditlink","t":"r/redditlink"},{"e":"text","t":"."}]},{"e":"par","c":[{"e":"text","t":"Line preceding; no line proceeding"}]},{"e":"par","c":[{"e":"text","t":"No line preceding; no line proceeding"}]},{"e":"par","c":[{"e":"text","t":"No line preceding; line proceeding"}]},{"e":"par","c":[{"e":"text","t":"Line preceding"}]}]}]}````````````````````````````````
 
 ```````````````````````````````` example
 >This post ends with a blockquote\n\nwith embedded newlines.
@@ -53,7 +55,7 @@ This post has a paragraph in the middle.
 ```````````````````````````````` example
 Hello, **this is bold**, *this is italic*, ***this is both***. And this is a u/username and a r/subreddit.
 .
-{"document":[{"e":"par","c":[{"e":"text","t":"Hello, this is bold, this is italic, this is both. And this is a ","f":[[1, 7, 12], [2, 21, 14], [3, 37, 12], [2, 49, 16]]},{"e":"link","u":"/u/username","t":"u/username"},{"e":"text","t":" and a "},{"e":"link","u":"/r/subreddit","t":"r/subreddit"},{"e":"text","t":"."}]}]}````````````````````````````````
+{"document":[{"e":"par","c":[{"e":"text","t":"Hello, this is bold, this is italic, this is both. And this is a ","f":[[1, 7, 12], [2, 21, 14], [3, 37, 12]]},{"e":"link","u":"/u/username","t":"u/username"},{"e":"text","t":" and a "},{"e":"link","u":"/r/subreddit","t":"r/subreddit"},{"e":"text","t":"."}]}]}````````````````````````````````
 
 ```````````````````````````````` example
 Below this is a list:
@@ -79,9 +81,9 @@ Above this is a list.
 ```````````````````````````````` example
 |Col 1|Col 2|Col 3|
 |:-|:-:|-:|
-|a |**bold*****bold+italic****italic*|a |
+|a |**bold**&#8203;***bold+italic***&#8203;*italic*|a |
 .
-{"document":[{"e":"table","h":[[{"a":"L","e":"text","t":"Col 1"},{"a":"C","e":"text","t":"Col 2"},{"a":"R","e":"text","t":"Col 3"}]],"c":[,[{"c":[{"e":"text","t":"a"}]},{"c":[{"e":"text","t":"boldbold+italic**italic","f":[[1, 0, 4], [3, 4, 11], [2, 15, 8]]}]},{"c":[{"e":"text","t":"a"}]}]]}]}````````````````````````````````
+{"document":[{"e":"table","h":[{"a":"L","c":[{"e":"text","t":"Col 1"}]},{"a":"C","c":[{"e":"text","t":"Col 2"}]},{"a":"R","c":[{"e":"text","t":"Col 3"}]}],"c":[[{"c":[{"e":"text","t":"a"}]},{"c":[{"e":"text","t":"bold​bold+italic​italic","f":[[1, 0, 4], [3, 7, 11], [2, 21, 6]]}]},{"c":[{"e":"text","t":"a"}]}]]}]}````````````````````````````````
 
 ```````````````````````````````` example
 These are two tables:
@@ -94,7 +96,7 @@ These are two tables:
 |:-|:-|
 |c1:r2|c2:r2|
 .
-{"document":[{"e":"par","c":[{"e":"text","t":"These are two tables:"}]},{"e":"table","h":[[{"a":"L","e":"text","t":"Table"},{"a":"L","e":"text","t":"1"}]],"c":[,[{"c":[{"e":"text","t":"c1:r1"}]},{"c":[{"e":"text","t":"c2:r1"}]}]]},{"e":"table","h":[[{"a":"L","e":"text","t":"Table"},{"a":"L","e":"text","t":"2"}]],"c":[,[{"c":[{"e":"text","t":"c1:r2"}]},{"c":[{"e":"text","t":"c2:r2"}]}]]}]}````````````````````````````````
+{"document":[{"e":"par","c":[{"e":"text","t":"These are two tables:"}]},{"e":"table","h":[{"a":"L","c":[{"e":"text","t":"Table"}]},{"a":"L","c":[{"e":"text","t":"1"}]}],"c":[[{"c":[{"e":"text","t":"c1:r1"}]},{"c":[{"e":"text","t":"c2:r1"}]}]]},{"e":"table","h":[{"a":"L","c":[{"e":"text","t":"Table"}]},{"a":"L","c":[{"e":"text","t":"2"}]}],"c":[[{"c":[{"e":"text","t":"c1:r2"}]},{"c":[{"e":"text","t":"c2:r2"}]}]]}]}````````````````````````````````
 
 ```````````````````````````````` example
 Hello reddit, \*\***this should be bold,**\*\* the stars around it should not be.
@@ -154,3 +156,12 @@ www.thisisalink.com
     }
 .
 {"document":[{"e":"code","c":[{"e":"raw","t":"function test() {"},{"e":"raw","t":"  console.log(&quot;notice the blank line before this function?&quot;);"},{"e":"raw","t":"}"},{"e":"raw","t":""}]}]}````````````````````````````````
+
+Say I have many formats nested in one format range. We would want to keep that 
+overall format through the whole thing, while also getting rid of the old format
+each time we went on.
+
+```````````````````````````````` example
+*__bold__ ~underline~ ~~strikethrough~~*
+.
+{"document":[{"e":"par","c":[{"e":"text","t":"bold underline strikethrough","f":[[3, 0, 4], [2, 4, 1], [6, 5, 9], [2, 14, 1], [10, 15, 13]]}]}]}````````````````````````````````
