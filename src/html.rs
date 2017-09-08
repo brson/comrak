@@ -371,6 +371,7 @@ impl<'o> HtmlFormatter<'o> {
             }
             NodeValue::FormattedLink(_, _, _) => (),
             NodeValue::UnformattedLink(_, _) => (),
+            NodeValue::RedditLink(_, _) => (),
             NodeValue::Image(ref nl) => {
                 if entering {
                     self.s += "<img src=\"";

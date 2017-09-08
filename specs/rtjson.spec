@@ -16,7 +16,7 @@ this is a link with **bold** and *italic*
 
 Hello, this is a paragraph.
 .
-{"document":[{"e":"h","l":3,"c":[{"e":"raw","t":"This heading contains plain text, "},{"e":"link","u":"https://reddit.com","t":"a link"},{"e":"raw","t":", and a "},{"e":"link","u":"/u/username","t":"u/username"},{"e":"raw","t":"."}]},{"e":"par","c":[{"e":"text","t":"Hello, this is a paragraph."}]}]}````````````````````````````````
+{"document":[{"e":"h","l":3,"c":[{"e":"raw","t":"This heading contains plain text, "},{"e":"link","u":"https://reddit.com","t":"a link"},{"e":"raw","t":", and a "},{"e":"u/","t":"username"},{"e":"raw","t":"."}]},{"e":"par","c":[{"e":"text","t":"Hello, this is a paragraph."}]}]}````````````````````````````````
 
 ```````````````````````````````` example
 >This post begins with a blockquote.
@@ -45,7 +45,7 @@ This post has a paragraph in the middle.
 >
 >Line preceding
 .
-{"document":[{"e":"blockquote","c":[{"e":"par","c":[{"e":"text","t":"Line proceeding; this line has a "},{"e":"link","u":"https://reddit.com","t":"link"},{"e":"text","t":" and a "},{"e":"link","u":"/r/redditlink","t":"r/redditlink"},{"e":"text","t":"."}]},{"e":"par","c":[{"e":"text","t":"Line preceding; no line proceeding"}]},{"e":"par","c":[{"e":"text","t":"No line preceding; no line proceeding"}]},{"e":"par","c":[{"e":"text","t":"No line preceding; line proceeding"}]},{"e":"par","c":[{"e":"text","t":"Line preceding"}]}]}]}````````````````````````````````
+{"document":[{"e":"blockquote","c":[{"e":"par","c":[{"e":"text","t":"Line proceeding; this line has a "},{"e":"link","u":"https://reddit.com","t":"link"},{"e":"text","t":" and a "},{"e":"r/","t":"redditlink"},{"e":"text","t":"."}]},{"e":"par","c":[{"e":"text","t":"Line preceding; no line proceeding"}]},{"e":"par","c":[{"e":"text","t":"No line preceding; no line proceeding"}]},{"e":"par","c":[{"e":"text","t":"No line preceding; line proceeding"}]},{"e":"par","c":[{"e":"text","t":"Line preceding"}]}]}]}````````````````````````````````
 
 ```````````````````````````````` example
 >This post ends with a blockquote\n\nwith embedded newlines.
@@ -53,9 +53,9 @@ This post has a paragraph in the middle.
 {"document":[{"e":"blockquote","c":[{"e":"par","c":[{"e":"text","t":"This post ends with a blockquote\n\nwith embedded newlines."}]}]}]}````````````````````````````````
 
 ```````````````````````````````` example
-Hello, **this is bold**, *this is italic*, ***this is both***. And this is a u/username and a r/subreddit.
+Hello, **this is bold**, *this is italic*, ***this is both***. And this is a u/username and a /r/subreddit.
 .
-{"document":[{"e":"par","c":[{"e":"text","t":"Hello, this is bold, this is italic, this is both. And this is a ","f":[[1, 7, 12], [2, 21, 14], [3, 37, 12]]},{"e":"link","u":"/u/username","t":"u/username"},{"e":"text","t":" and a "},{"e":"link","u":"/r/subreddit","t":"r/subreddit"},{"e":"text","t":"."}]}]}````````````````````````````````
+{"document":[{"e":"par","c":[{"e":"text","t":"Hello, this is bold, this is italic, this is both. And this is a ","f":[[1, 7, 12], [2, 21, 14], [3, 37, 12]]},{"e":"u/","t":"username"},{"e":"text","t":" and a "},{"e":"r/","t":"subreddit"},{"e":"text","t":"."}]}]}````````````````````````````````
 
 ```````````````````````````````` example
 Below this is a list:
@@ -76,7 +76,7 @@ Above this is a list.
       * First item
       * Second item
 .
-{"document":[{"e":"list","o":false,"c":[{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"First item"}]}]},{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"Second item with "},{"e":"link","u":"https://reddit.com","t":"a link with bold and italic","f":[[1, 12, 4], [2, 21, 6]]},{"e":"text","t":" and a "},{"e":"link","u":"/u/username","t":"u/username"},{"e":"text","t":""}]},{"e":"list","o":true,"c":[{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"First item"}]}]},{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"Second item"}]},{"e":"list","o":false,"c":[{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"First item"}]}]},{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"Second item"}]}]}]}]}]}]}]}]}````````````````````````````````
+{"document":[{"e":"list","o":false,"c":[{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"First item"}]}]},{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"Second item with "},{"e":"link","u":"https://reddit.com","t":"a link with bold and italic","f":[[1, 12, 4], [2, 21, 6]]},{"e":"text","t":" and a "},{"e":"u/","t":"username"},{"e":"text","t":""}]},{"e":"list","o":true,"c":[{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"First item"}]}]},{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"Second item"}]},{"e":"list","o":false,"c":[{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"First item"}]}]},{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"Second item"}]}]}]}]}]}]}]}]}````````````````````````````````
 
 ```````````````````````````````` example
 |Col 1|Col 2|Col 3|
@@ -148,7 +148,7 @@ www.thisisalink.com
       * First item
       * Second item
 .
-{"document":[{"e":"list","o":false,"c":[{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"First item"}]}]},{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"Second item with "},{"e":"link","u":"https://reddit.com","t":"a link with bold and italic","f":[[1, 12, 4], [2, 21, 6]]},{"e":"text","t":" and a "},{"e":"link","u":"/u/username","t":"u/username"},{"e":"text","t":""}]},{"e":"list","o":true,"c":[{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"First item"}]}]},{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"Second item"}]},{"e":"list","o":false,"c":[{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"First item"}]}]},{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"Second item"}]}]}]}]}]}]}]}]}````````````````````````````````
+{"document":[{"e":"list","o":false,"c":[{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"First item"}]}]},{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"Second item with "},{"e":"link","u":"https://reddit.com","t":"a link with bold and italic","f":[[1, 12, 4], [2, 21, 6]]},{"e":"text","t":" and a "},{"e":"u/","t":"username"},{"e":"text","t":""}]},{"e":"list","o":true,"c":[{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"First item"}]}]},{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"Second item"}]},{"e":"list","o":false,"c":[{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"First item"}]}]},{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"Second item"}]}]}]}]}]}]}]}]}````````````````````````````````
 
 ```````````````````````````````` example
     function test() {

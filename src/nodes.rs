@@ -101,6 +101,9 @@ pub enum NodeValue {
     /// title.
     Link(NodeLink),
 
+    /// **Inline**. A RedditLink
+    RedditLink(String, String),
+
     /// **Inline**.  FormattedLink
     FormattedLink(String, String, Vec<[u8; 3]>),
 
@@ -394,6 +397,7 @@ pub fn can_contain_type<'a>(node: &'a AstNode<'a>, child: &NodeValue) -> bool {
         NodeValue::Emph |
         NodeValue::Strong |
         NodeValue::Link(..) |
+        NodeValue::RedditLink(..) |
         NodeValue::Image(..) => !child.block(),
 
         NodeValue::Table(..) => {
@@ -417,6 +421,7 @@ pub fn can_contain_type<'a>(node: &'a AstNode<'a>, child: &NodeValue) -> bool {
                 NodeValue::Emph |
                 NodeValue::Strong |
                 NodeValue::Link(..) |
+                NodeValue::RedditLink(..) |
                 NodeValue::Image(..) |
                 NodeValue::Strikethrough => true,
                 _ => false,
