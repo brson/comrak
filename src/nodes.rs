@@ -108,6 +108,9 @@ pub enum NodeValue {
     /// title.
     Link(NodeLink),
 
+    /// **Inline**. A RedditLink
+    RedditLink(String, String),
+
     /// **Inline**.  FormattedLink
     FormattedLink(String, String, Vec<[u8; 3]>),
 

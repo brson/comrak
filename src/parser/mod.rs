@@ -1290,7 +1290,7 @@ impl<'a, 'o> Parser<'a, 'o> {
                             }
                         }
                     }
-                    NodeValue::Link(..) | NodeValue::Image(..) => {
+                    NodeValue::Link(..) | NodeValue::RedditLink(..) | NodeValue::Image(..) => {
                         this_bracket = true;
                         break;
                     }
@@ -1334,7 +1334,8 @@ impl<'a, 'o> Parser<'a, 'o> {
                 }
                 unformatted_text.push_str(text);
             },
-            NodeValue::Link(_) => {
+            NodeValue::Link(_) |
+            NodeValue::RedditLink(..) => {
                 if !unformatted_text.is_empty() {
 
                     let text_node = if format_ranges.is_empty() {
@@ -1460,9 +1461,8 @@ impl<'a, 'o> Parser<'a, 'o> {
         if self.options.ext_autolink {
             autolink::process_autolinks(self.arena, node, text);
         }
-        
-        autolink::process_redditlinks(self.arena, node, text);
 
+        autolink::process_redditlinks(self.arena, node, text);
     }
 
     fn process_tasklist(&mut self, node: &'a AstNode<'a>, text: &mut Vec<u8>) {

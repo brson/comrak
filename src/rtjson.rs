@@ -224,6 +224,7 @@ impl<'o> RTJsonFormatter<'o> {
                 if entering {
                     match node.parent().unwrap().data.borrow().value {
                         NodeValue::Link(_) => self.s += self.escape(literal).as_str(),
+                        NodeValue::RedditLink(_, _) => self.s += self.escape(literal).as_str(),
                         NodeValue::Image(_) => self.s += self.escape(literal).as_str(),
                         NodeValue::Text(ref literal) |
                         NodeValue::Code(ref literal) => self.s += self.escape(literal).as_str(),
@@ -264,13 +265,22 @@ impl<'o> RTJsonFormatter<'o> {
                         NodeValue::Paragraph  => {
                             self.s += format!(r#"{{"e":"text","t":"{}","f":{:?}}}"#, self.escape(literal), format_ranges).as_str();
                         }
-                        NodeValue::Document | NodeValue::Strong | NodeValue::Emph|
-                        NodeValue::Underline | NodeValue::Superscript |
-                        NodeValue::Strikethrough | NodeValue::BlockQuote => unreachable!(),
-                        NodeValue::List(_) | NodeValue::Item(_) | NodeValue::HtmlBlock(_) |
-                        NodeValue::Table(_) | NodeValue::TableRow(_) => unreachable!(),
-                        NodeValue::FormattedText(_, _) | NodeValue::UnformattedLink(_, _) => unreachable!(),
-                        NodeValue::FormattedLink(_,_,_) => unreachable!(),
+                        NodeValue::Document |
+                        NodeValue::Strong |
+                        NodeValue::Emph |
+                        NodeValue::Underline |
+                        NodeValue::Superscript |
+                        NodeValue::Strikethrough |
+                        NodeValue::BlockQuote |
+                        NodeValue::List(..) |
+                        NodeValue::Item(..) |
+                        NodeValue::HtmlBlock(..) |
+                        NodeValue::Table(..) |
+                        NodeValue::TableRow(..) |
+                        NodeValue::FormattedText(..) |
+                        NodeValue::UnformattedLink(..) |
+                        NodeValue::FormattedLink(..) |
+                        NodeValue::RedditLink(..) => unreachable!()
                     }
                 }
             }
@@ -287,6 +297,11 @@ impl<'o> RTJsonFormatter<'o> {
             NodeValue::Link(ref nl) => {
                 if entering {
                     self.s += format!(r#"{{"e":"link","u":"{}","t":"{}"}}"#, self.escape_href(&nl.url), self.escape(&nl.title)).as_str();
+                }
+            }
+            NodeValue::RedditLink(ref variety, ref name) => {
+                if entering {
+                    self.s += format!(r#"{{"e":"{}","t":"{}"}}"#, self.escape_href(variety), self.escape(name)).as_str();
                 }
             }
             NodeValue::Image(ref nl) => {

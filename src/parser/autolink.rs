@@ -343,7 +343,7 @@ pub fn process_redditlinks<'a>(
     contents: &mut String,
 ) {
     lazy_static! {
-        static ref RE: Regex = Regex::new(r"(^|[\n\t\r-_.+!*'(),%#@?=/;:,+&$])((/?(r|u)/)\w+)").unwrap();
+        static ref RE: Regex = Regex::new(r"(^|[\n\t\r-_.+!*'(),%#@?=/;:,+&$])((/?(r|u)/)(\w+))").unwrap();
     }
 
     let borrowed_contents = contents.to_string();
@@ -351,59 +351,28 @@ pub fn process_redditlinks<'a>(
         Some(m) => m,
         None => return
     };
-    let redditlink;
-    let redditlink_start: usize;
-    let redditlink_end: usize;
-    match matched.get(2) {
-        Some(m) => {
-            let n = matched.get(1).unwrap();
-            let prior_char_start = n.start();
-            let prior_char_end = n.end();
-            
-            if m.start() != 0 && borrowed_contents[prior_char_start..prior_char_end].as_bytes()[0] == b'/' && (borrowed_contents.chars().nth(m.start()).unwrap() as u8) != b'/' {
-                redditlink_start = prior_char_start;
-            } else {
-                redditlink_start = m.start();
-            }
-            redditlink_end = m.end();
 
-            redditlink = &borrowed_contents[redditlink_start..redditlink_end]
-        },
-        _ => return
+    let prefix_match = matched.get(3).unwrap();
+    let mut prefix = &borrowed_contents[prefix_match.start()..prefix_match.end()];
+    if prefix.len() > 2 {
+        prefix = &prefix[1..];
     }
-
-    let with_preceding_slash;
-    let full_redditlink = match redditlink.as_bytes()[0] {
-        b'/' => redditlink,
-        _ => {
-            with_preceding_slash = format!("/{}", redditlink).to_owned();
-            &with_preceding_slash
-        }
-    };
-
-    let owned_redditlink = full_redditlink.to_owned();
+    let name_match = matched.get(5).unwrap();
+    let name = &borrowed_contents[name_match.start()..name_match.end()];
 
     let inl = make_inline(
         arena,
-        NodeValue::Link(NodeLink {
-            url: owned_redditlink.clone(),
-            title: redditlink.to_string(),
-        })
+        NodeValue::RedditLink(
+            prefix.to_string(),
+            name.to_string()
+        )
     );
 
-    inl.append(make_inline(
-        arena,
-        NodeValue::Text(
-            // Use redditlink to respect wheher there's a preceding slash
-            redditlink.to_string()
-        )
-    ));
-
     node.insert_after(inl);
-    let remain = contents[redditlink_end..].to_string();
+    let remain = contents[name_match.end()..].to_string();
     inl.insert_after(make_inline(arena, NodeValue::Text(remain)));
 
-    contents.truncate(redditlink_start);
+    contents.truncate(prefix_match.start());
 
     ()
 }
