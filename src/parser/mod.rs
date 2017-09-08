@@ -1208,16 +1208,6 @@ impl<'a, 'o> Parser<'a, 'o> {
                     format_ranges.push(new_range);
                 }
                 unformatted_text.push_str(text);
-                if node.same_node(node.parent().unwrap().last_child().unwrap()){ 
-                    match node.parent().unwrap().data.borrow().value {
-                        NodeValue::Strong => *current_format -= 1,
-                        NodeValue::Emph => *current_format -= 2,
-                        NodeValue::Underline => *current_format -= 4,
-                        NodeValue::Strikethrough => *current_format -= 8,
-                        NodeValue::Superscript => *current_format -= 32,
-                        _ => ()
-                    }
-                }
             },
             NodeValue::Link(_) => {
                 if !unformatted_text.is_empty() {
@@ -1263,6 +1253,15 @@ impl<'a, 'o> Parser<'a, 'o> {
                 current_format,
                 format_ranges
             );
+        }
+        
+        match node.data.borrow().value {
+            NodeValue::Strong => *current_format -= 1,
+            NodeValue::Emph => *current_format -= 2,
+            NodeValue::Underline => *current_format -= 4,
+            NodeValue::Strikethrough => *current_format -= 8,
+            NodeValue::Superscript => *current_format -= 32,
+            _ => ()
         }
 
         if node.data.borrow_mut().value.contains_inlines() {

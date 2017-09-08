@@ -118,10 +118,6 @@ lazy_static! {
     static ref ATTRIBUTE: String = format!(
         r"(?:{}+{}{}?)", *SPACE_CHAR, *ATTRIBUTE_NAME, *ATTRIBUTE_VALUE_SPEC);
     static ref OPEN_TAG: String = format!(r"(?:{}{}*{}*/?>)", *TAG_NAME, *ATTRIBUTE, *SPACE_CHAR);
-    static ref HTML_COMMENT: &'static str = r"(?:!---->|!---?[^\x00>-](-?[^\x00-])*-->)";
-    static ref PROCESSING_INSTRUCTION: &'static str = r"\?([^?>\x00]+|\?[^>\x00]|>)*\?>";
-    static ref DECLARATION: String = format!(r"![A-Z]+{}+[^>\x00]*>", *SPACE_CHAR);
-    static ref CDATA: &'static str = r"!\[CDATA\[([^\]\x00]+|\][^\]\x00]|\]\][^>\x00])*\]\]>";
 }
 
 pub fn html_block_start_7(line: &str) -> Option<usize> {

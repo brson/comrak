@@ -103,9 +103,6 @@ extern crate libc;
 #[macro_use] extern crate cpython;
 
 use cpython::{PyResult, Python};
-use libc::c_char;
-use std::ffi::{CStr, CString};
-use nodes::AstNode;
 
 /// Render Markdown to HTML.
 ///
