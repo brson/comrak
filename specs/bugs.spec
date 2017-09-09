@@ -8,28 +8,28 @@ This should be used with rtjson.
 ```````````````````````````````` example
 nonoe www.reddit.com /r/or r/or either/or
 .
-{"document":[{"e":"par","c":[{"e":"text","t":"nonoe www.reddit.com "},{"e":"link","u":"/r/or","t":"/r/or"},{"e":"text","t":" "},{"e":"link","u":"/r/or","t":"r/or"},{"e":"text","t":" either/or"}]}]}````````````````````````````````
+{"document":[{"e":"par","c":[{"e":"text","t":"nonoe www.reddit.com "},{"e":"r/","t":"or"},{"e":"text","t":" "},{"e":"r/","t":"or"},{"e":"text","t":" either/or"}]}]}````````````````````````````````
 
-We also need to check links at the beggining 
+We also need to check links at the beginning 
 
 ```````````````````````````````` example
 www.reddit.com nonoe /r/or r/or either/or
 .
-{"document":[{"e":"par","c":[{"e":"text","t":"www.reddit.com nonoe "},{"e":"link","u":"/r/or","t":"/r/or"},{"e":"text","t":" "},{"e":"link","u":"/r/or","t":"r/or"},{"e":"text","t":" either/or"}]}]}````````````````````````````````
+{"document":[{"e":"par","c":[{"e":"text","t":"www.reddit.com nonoe "},{"e":"r/","t":"or"},{"e":"text","t":" "},{"e":"r/","t":"or"},{"e":"text","t":" either/or"}]}]}````````````````````````````````
 
 ...and end of lines.
 
 ```````````````````````````````` example
 nonoe /r/or r/or either/or www.reddit.com
 .
-{"document":[{"e":"par","c":[{"e":"text","t":"nonoe "},{"e":"link","u":"/r/or","t":"/r/or"},{"e":"text","t":" "},{"e":"link","u":"/r/or","t":"r/or"},{"e":"text","t":" either/or www.reddit.com"}]}]}````````````````````````````````
+{"document":[{"e":"par","c":[{"e":"text","t":"nonoe "},{"e":"r/","t":"or"},{"e":"text","t":" "},{"e":"r/","t":"or"},{"e":"text","t":" either/or www.reddit.com"}]}]}````````````````````````````````
 
 We should also make sure that user redditlinks are being covered
 
 ```````````````````````````````` example
 nonoe /u/or u/or eu/au
 .
-{"document":[{"e":"par","c":[{"e":"text","t":"nonoe "},{"e":"link","u":"/u/or","t":"/u/or"},{"e":"text","t":" "},{"e":"link","u":"/u/or","t":"u/or"},{"e":"text","t":" eu/au"}]}]}````````````````````````````````
+{"document":[{"e":"par","c":[{"e":"text","t":"nonoe "},{"e":"u/","t":"or"},{"e":"text","t":" "},{"e":"u/","t":"or"},{"e":"text","t":" eu/au"}]}]}````````````````````````````````
 
 We have to make sure that nested styles get the proper rendering
 
@@ -59,12 +59,12 @@ The test above account for known bugs and fixes.
 u/reddit
 /u/reddit
 .
-{"document":[{"e":"par","c":[{"e":"br"},{"e":"text","t":"a。u/reddit"},{"e":"link","u":"/u/reddit","t":"u/reddit"},{"e":"br"},{"e":"link","u":"/u/reddit","t":"/u/reddit"},{"e":"text","t":""}]}]}````````````````````````````````
+{"document":[{"e":"par","c":[{"e":"text","t":"a。u/reddit"},{"e":"u/","t":"reddit"},{"e":"u/","t":"reddit"},{"e":"text","t":""}]}]}````````````````````````````````
 
 The redditlink should always be rendered if it starts with a slash.
 
 ```````````````````````````````` example
 。/u/reddit
-。//u/reddit  
+。//u/reddit
 .
-{"document":[{"e":"par","c":[{"e":"text","t":"。"},{"e":"link","u":"/u/reddit","t":"/u/reddit"},{"e":"br"},{"e":"text","t":"。/"},{"e":"link","u":"/u/reddit","t":"/u/reddit"},{"e":"text","t":""}]}]}````````````````````````````````
+{"document":[{"e":"par","c":[{"e":"text","t":"。/"},{"e":"u/","t":"reddit"},{"e":"text","t":"。/"},{"e":"u/","t":"reddit"},{"e":"text","t":""}]}]}````````````````````````````````
