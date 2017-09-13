@@ -165,3 +165,11 @@ each time we went on.
 *__bold__ ~underline~ ~~strikethrough~~*
 .
 {"document":[{"e":"par","c":[{"e":"text","t":"bold underline strikethrough","f":[[3, 0, 4], [2, 4, 1], [6, 5, 9], [2, 14, 1], [10, 15, 13]]}]}]}````````````````````````````````
+
+In the case that we have two of the same styles nested within one another we want
+the ranges to all be the same. This will likely only result from the legacy client.
+
+```````````````````````````````` example
+**This is some __bold__ text.**
+.
+{"document":[{"e":"par","c":[{"e":"text","t":"This is some bold text.","f":[[1, 0, 13], [1, 13, 4], [1, 17, 6]]}]}]}````````````````````````````````

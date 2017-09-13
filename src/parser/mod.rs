@@ -963,7 +963,7 @@ impl<'a, 'o> Parser<'a, 'o> {
             self.postprocess_rtjson_ast(
                 self.root,
                 &mut String::new(),
-                &mut 0,
+                &mut HashMap::new(),
                 &mut vec![]
             );
         }
@@ -1184,27 +1184,41 @@ impl<'a, 'o> Parser<'a, 'o> {
     fn reset_rtjson_node(
         &mut self,
         unformatted_text: &mut String,
-        current_format: &mut u8,
+        current_format: &mut HashMap<u8, u8>,
         format_ranges: &mut Vec<[u8; 3]>,
     ) {
         unformatted_text.truncate(0);
-        *current_format = 0;
+        current_format.clear();
         format_ranges.clear();
+    }
+    
+    fn insert_format(&mut self, current_format: &mut HashMap<u8, u8>, val: u8) {
+        *current_format.entry(val).or_insert(0) += 1;
+    }
+    
+    fn remove_format(&mut self, current_format: &mut HashMap<u8, u8>, val: u8) {
+        *current_format.entry(val).or_insert(1) -= 1;
     }
 
     fn postprocess_rtjson_ast(
         &mut self,
         node: &'a AstNode<'a>,
         unformatted_text: &mut String,
-        current_format: &mut u8,
+        current_format: &mut HashMap<u8, u8>,
         format_ranges: &mut Vec<[u8; 3]>,
     ) {
         match node.data.borrow_mut().value {
             NodeValue::Text(ref text) => {
-                if *current_format != 0 {
+                let mut sum: u8 = 0;
+                for (key, val) in current_format.iter() {
+                    if *val > 0 {
+                        sum += *key;
+                    }
+                }
+                if sum > 0 {
                     let range_idx = unformatted_text.len() as u8;
                     let range_length = text.len() as u8;
-                    let new_range = [*current_format, range_idx, range_length];
+                    let new_range = [sum, range_idx, range_length];
                     format_ranges.push(new_range);
                 }
                 unformatted_text.push_str(text);
@@ -1239,11 +1253,11 @@ impl<'a, 'o> Parser<'a, 'o> {
                 format_ranges.push(new_range);
                 unformatted_text.push_str(literal);
             }
-            NodeValue::Strong => *current_format += 1,
-            NodeValue::Emph => *current_format += 2,
-            NodeValue::Underline => *current_format += 4,
-            NodeValue::Strikethrough => *current_format += 8,
-            NodeValue::Superscript => *current_format += 32,
+            NodeValue::Strong => self.insert_format(current_format, 1),
+            NodeValue::Emph => self.insert_format(current_format, 2),
+            NodeValue::Underline => self.insert_format(current_format, 4),
+            NodeValue::Strikethrough => self.insert_format(current_format, 8),
+            NodeValue::Superscript => self.insert_format(current_format, 32),
             _ => ()
         }
 
@@ -1257,11 +1271,11 @@ impl<'a, 'o> Parser<'a, 'o> {
         }
         
         match node.data.borrow().value {
-            NodeValue::Strong => *current_format -= 1,
-            NodeValue::Emph => *current_format -= 2,
-            NodeValue::Underline => *current_format -= 4,
-            NodeValue::Strikethrough => *current_format -= 8,
-            NodeValue::Superscript => *current_format -= 32,
+            NodeValue::Strong => self.remove_format(current_format, 1),
+            NodeValue::Emph => self.remove_format(current_format, 2),
+            NodeValue::Underline => self.remove_format(current_format, 4),
+            NodeValue::Strikethrough => self.remove_format(current_format, 8),
+            NodeValue::Superscript => self.remove_format(current_format, 32),
             _ => ()
         }
 
