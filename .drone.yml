@@ -20,7 +20,7 @@ publish:
   upload:
     image: plugins/s3
     environment:
-      - PLUGIN_SOURCE=/drone/src/github.com/reddit/snoomark/target/release/libsnoomark-$${TAG}.so
+      - PLUGIN_SOURCE=/drone/src/github.com/reddit/snoomark/target/release/libsnoomark*.so
       - PLUGIN_STRIP_PREFIX=/drone/src/github.com/reddit/snoomark/target/release/
       - PLUGIN_BUCKET=reddit-packages
       - PLUGIN_TARGET=/amd64/snoomark
