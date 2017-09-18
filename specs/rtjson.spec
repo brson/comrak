@@ -172,4 +172,16 @@ the ranges to all be the same. This will likely only result from the legacy clie
 ```````````````````````````````` example
 **This is some __bold__ text.**
 .
-{"document":[{"e":"par","c":[{"e":"text","t":"This is some bold text.","f":[[1, 0, 13], [1, 13, 4], [1, 17, 6]]}]}]}````````````````````````````````
+{"document":[{"e":"par","c":[{"e":"text","t":"This is some bold text.","f":[[1, 0, 23]]}]}]}````````````````````````````````
+
+```````````````````````````````` example
+foo^^^bar
+.
+{"document":[{"e":"par","c":[{"e":"text","t":"foobar","f":[[32, 3, 3]]}]}]}````````````````````````````````
+
+Lets try the same thing with links
+
+```````````````````````````````` example
+[**This is some __bold__ text.**](www.reddit.com)
+.
+{"document":[{"e":"par","c":[{"e":"link","u":"www.reddit.com","t":"This is some bold text.","f":[[1, 0, 23]]},{"e":"text","t":""}]}]}````````````````````````````````
