@@ -1200,6 +1200,32 @@ impl<'a, 'o> Parser<'a, 'o> {
         *current_format.entry(val).or_insert(1) -= 1;
     }
 
+    fn consolidate_format(&mut self, format_ranges: &mut Vec<[u8; 3]>) {
+        let mut prev_end = format_ranges[0][1] + format_ranges[0][2];
+        let mut prev_style = format_ranges[0][0];
+        let mut new_format: Vec<[u8; 3]> = vec![];
+        let mut buffer_range = format_ranges[0];
+        buffer_range[2] = 0;
+        for (i, range) in format_ranges.iter().enumerate() {
+            if i == 0 {
+                buffer_range[2] += range[2];
+                continue;
+            }
+            let curr_style = range[0];
+            let curr_beg = range[1];
+            if !(prev_style == range[0] && prev_end == curr_beg) {
+                new_format.push(buffer_range);
+                buffer_range = *range;
+            } else {
+                buffer_range[2] += range[2];
+            }
+            prev_end = curr_beg + range[2];
+            prev_style = curr_style;
+        }
+        new_format.push(buffer_range);
+        *format_ranges = new_format;
+    }
+
     fn postprocess_rtjson_ast(
         &mut self,
         node: &'a AstNode<'a>,
@@ -1232,6 +1258,7 @@ impl<'a, 'o> Parser<'a, 'o> {
                             unformatted_text.to_string(),
                         )
                     } else {
+                        self.consolidate_format(format_ranges);
                         NodeValue::FormattedText(
                             unformatted_text.to_string(),
                             format_ranges.to_owned()
@@ -1288,6 +1315,7 @@ impl<'a, 'o> Parser<'a, 'o> {
                             unformatted_text.to_string()
                         )
                     } else {
+                        self.consolidate_format(format_ranges);
                         NodeValue::FormattedLink(
                             nl.to_owned().url,
                             unformatted_text.to_string(),
@@ -1304,6 +1332,7 @@ impl<'a, 'o> Parser<'a, 'o> {
                 }
                 _ => {
                     let formatted_text_node = if !format_ranges.is_empty() {
+                        self.consolidate_format(format_ranges);
                         inlines::make_inline(
                             self.arena,
                             NodeValue::FormattedText(
