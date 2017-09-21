@@ -223,55 +223,57 @@ impl<'o> RTJsonFormatter<'o> {
             NodeValue::Text(ref literal) => {
                 if entering {
                     match node.parent().unwrap().data.borrow().value {
-                        NodeValue::Link(_) => self.s += self.escape(literal).as_str(),
-                        NodeValue::RedditLink(_, _) => self.s += self.escape(literal).as_str(),
-                        NodeValue::Image(_) => self.s += self.escape(literal).as_str(),
-                        NodeValue::Text(ref literal) |
-                        NodeValue::Code(ref literal) => self.s += self.escape(literal).as_str(),
-                        NodeValue::LineBreak | NodeValue::SoftBreak | NodeValue::ThematicBreak => (),
-                        NodeValue::Heading(_) | NodeValue::CodeBlock(_) => {
+                        NodeValue::Heading(..) | NodeValue::CodeBlock(..) => {
                             self.s += format!(r#"{{"e":"raw","t":"{}"}}"#, self.escape(literal)).as_str();
                         }
-                        NodeValue::BlockQuote  | NodeValue::Paragraph => {
-                            self.s += format!(r#"{{"e":"text","t":"{}"}}"#, self.escape(literal)).as_str();
-                        }
+                        NodeValue::BlockQuote  | NodeValue::Paragraph |
                         NodeValue::TableCell  => {
                             self.s += format!( r#"{{"e":"text","t":"{}"}}"#, self.escape(literal)).as_str();
                         }
-                        NodeValue::Document | NodeValue::Strong | NodeValue::Emph |
-                        NodeValue::Underline | NodeValue::Superscript |
-                        NodeValue::Strikethrough => unreachable!(),
-                        NodeValue::List(_) | NodeValue::Item(_) | NodeValue::HtmlBlock(_) |
-                        NodeValue::Table(_) | NodeValue::TableRow(_) => unreachable!(),
-                        NodeValue::FormattedText(_, _) | NodeValue::UnformattedLink(_, _) => unreachable!(),
-                        NodeValue::FormattedLink(_,_,_) => unreachable!(),
-                    }
-                }
-            }
-            NodeValue::FormattedText(ref literal, ref format_ranges) => {
-                if entering {
-                    match node.parent().unwrap().data.borrow().value {
-                        NodeValue::TableCell  => {
-                            self.s += format!( r#"{{"e":"text","t":"{}","f":{:?}}}"#, self.escape(literal), format_ranges).as_str();
-                        },
-                        NodeValue::Link(_) => self.s += self.escape(literal).as_str(),
-                        NodeValue::Image(_) => self.s += self.escape(literal).as_str(),
-                        NodeValue::Text(ref literal) | 
-                        NodeValue::Code(ref literal) => self.s += self.escape(literal).as_str(),
+                        NodeValue::Image(..) | NodeValue::Link(..) | NodeValue::Image(..) |
+                        NodeValue::Text(..) | NodeValue::Code(..) => self.s += self.escape(literal).as_str(),
                         NodeValue::LineBreak | NodeValue::SoftBreak | NodeValue::ThematicBreak => (),
-                        NodeValue::Heading(_) | NodeValue::CodeBlock(_) => {
-                            self.s += format!(r#"{{"e":"raw","t":"{}"}}"#, self.escape(literal)).as_str();
-                        },
-                        NodeValue::Paragraph  => {
-                            self.s += format!(r#"{{"e":"text","t":"{}","f":{:?}}}"#, self.escape(literal), format_ranges).as_str();
-                        }
                         NodeValue::Document |
                         NodeValue::Strong |
                         NodeValue::Emph |
                         NodeValue::Underline |
                         NodeValue::Superscript |
                         NodeValue::Strikethrough |
-                        NodeValue::BlockQuote |
+                        NodeValue::Link(..) |
+                        NodeValue::List(..) | 
+                        NodeValue::Item(..) | 
+                        NodeValue::HtmlBlock(..) |
+                        NodeValue::FormattedText(..) |
+                        NodeValue::Table(..) |
+                        NodeValue::TableRow(..) |
+                        NodeValue::UnformattedLink(..) |
+                        NodeValue::FormattedLink(..) |
+                        NodeValue::RedditLink(..) => unreachable!(),
+                    }
+                }
+            }
+            NodeValue::FormattedText(ref literal, ref format_ranges) => {
+                if entering {
+                    match node.parent().unwrap().data.borrow().value {
+                        NodeValue::TableCell | NodeValue::Paragraph | NodeValue::BlockQuote => {
+                            self.s += format!(
+                                r#"{{"e":"text","t":"{}","f":{:?}}}"#,
+                                self.escape(literal),
+                                format_ranges
+                            ).as_str();
+                        }
+                        NodeValue::Heading(..) | NodeValue::CodeBlock(..) => {
+                            self.s += format!(r#"{{"e":"raw","t":"{}"}}"#, self.escape(literal)).as_str();
+                        }
+                        NodeValue::Image(..) | NodeValue::Link(..) | NodeValue::Image(..) |
+                        NodeValue::Text(..) | NodeValue::Code(..) => self.s += self.escape(literal).as_str(),
+                        NodeValue::LineBreak | NodeValue::SoftBreak | NodeValue::ThematicBreak => (),
+                        NodeValue::Document |
+                        NodeValue::Strong |
+                        NodeValue::Emph |
+                        NodeValue::Underline |
+                        NodeValue::Superscript |
+                        NodeValue::Strikethrough |
                         NodeValue::List(..) |
                         NodeValue::Item(..) |
                         NodeValue::HtmlBlock(..) |
@@ -280,35 +282,72 @@ impl<'o> RTJsonFormatter<'o> {
                         NodeValue::FormattedText(..) |
                         NodeValue::UnformattedLink(..) |
                         NodeValue::FormattedLink(..) |
-                        NodeValue::RedditLink(..) => unreachable!()
+                        NodeValue::RedditLink(..) => unreachable!(),
                     }
                 }
             }
-            NodeValue::FormattedLink(ref url, ref literal, ref format_ranges) => {
+            NodeValue::FormattedLink(ref nl) => {
                 if entering {
-                    self.s += format!(r#"{{"e":"link","u":"{}","t":"{}","f":{:?}}}"#, self.escape_href(url), self.escape(literal), format_ranges).as_str();
+                    if !&nl.element.is_empty() {
+                        self.s += format!(r#"{{"e":"link","u":"{}","t":"{}","f":{:?},"a":"{}"}}"#,
+                            self.escape_href(&nl.url),
+                            self.escape(&nl.caption),
+                            &nl.format_range,
+                            self.escape(&nl.element)
+                        ).as_str();
+                    } else {
+                        self.s += format!(r#"{{"e":"link","u":"{}","t":"{}","f":{:?}}}"#,
+                            self.escape_href(&nl.url),
+                            self.escape(&nl.caption),
+                            &nl.format_range
+                        ).as_str();
+                    }
                 }
             }
-            NodeValue::UnformattedLink(ref url, ref literal) => {
+            NodeValue::UnformattedLink(ref nl) => {
                 if entering {
-                    self.s += format!(r#"{{"e":"link","u":"{}","t":"{}"}}"#, self.escape_href(url), self.escape(literal)).as_str();
+                    if !&nl.element.is_empty() {
+                        self.s += format!(r#"{{"e":"link","u":"{}","t":"{}", "a":"{}"}}"#,
+                            self.escape_href(&nl.url),
+                            self.escape(&nl.caption),
+                            self.escape(&nl.element)
+                        ).as_str();
+                    } else {
+                        self.s += format!(r#"{{"e":"link","u":"{}","t":"{}"}}"#,
+                            self.escape_href(&nl.url),
+                            self.escape(&nl.caption)
+                        ).as_str();
+                    }
                 }
             }
             NodeValue::Link(ref nl) => {
                 if entering {
-                    self.s += format!(r#"{{"e":"link","u":"{}","t":"{}"}}"#, self.escape_href(&nl.url), self.escape(&nl.title)).as_str();
+                    self.s += format!(r#"{{"e":"link","u":"{}","t":"{}"}}"#,
+                        self.escape_href(&nl.url),
+                        self.escape(&nl.title)
+                    ).as_str();
                 }
             }
-            NodeValue::RedditLink(ref variety, ref name) => {
+            NodeValue::RedditLink(ref nl) => {
                 if entering {
-                    self.s += format!(r#"{{"e":"{}","t":"{}"}}"#, self.escape_href(variety), self.escape(name)).as_str();
+                    self.s += format!(r#"{{"e":"{}","t":"{}"}}"#,
+                        self.escape_href(&nl.url),
+                        self.escape(&nl.title)
+                    ).as_str();
                 }
             }
             NodeValue::Image(ref nl) => {
                 if entering {
-                    self.s += format!(r#"{{"e":"link","u":"{}","t":""#, self.escape_href(&nl.url)).as_str();
+                    self.s += r#"{"e":""#;
                 } else {
-                    self.s += r#""}"#;
+                    if !&nl.title.is_empty() {
+                        self.s += format!(r#"","id":"{}","c":"{}"}}"#,
+                            self.escape_href(&nl.url),
+                            self.escape(&nl.title)
+                        ).as_str();
+                    } else {
+                        self.s += format!(r#"","id":"{}"}}"#, self.escape_href(&nl.url)).as_str();
+                    }
                 }
             }
             NodeValue::Table(..) => {

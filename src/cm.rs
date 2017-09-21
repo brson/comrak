@@ -520,9 +520,9 @@ impl<'a, 'o> CommonMarkFormatter<'a, 'o> {
                     write!(self, ")").unwrap();
                 }
             }
-            NodeValue::FormattedLink(_, _, _) => (),
-            NodeValue::UnformattedLink(_, _) => (),
-            NodeValue::RedditLink(_, _) => (),
+            NodeValue::FormattedLink(..) => (),
+            NodeValue::UnformattedLink(..) => (),
+            NodeValue::RedditLink(..) => (),
             NodeValue::Image(ref nl) => {
                 if entering {
                     write!(self, "![").unwrap();

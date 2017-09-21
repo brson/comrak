@@ -7,7 +7,7 @@ use arena_tree::Node;
 use ctype::{isspace, isdigit};
 use entity;
 use nodes;
-use nodes::{NodeValue, Ast, NodeCodeBlock, NodeHeading, NodeList, ListType, ListDelimType,
+use nodes::{NodeValue, Ast, NodeFormatLink, NodeCodeBlock, NodeHeading, NodeList, ListType, ListDelimType,
             NodeHtmlBlock, make_block, AstNode};
 use regex::Regex;
 use scanners;
@@ -1293,8 +1293,10 @@ impl<'a, 'o> Parser<'a, 'o> {
                 }
                 unformatted_text.push_str(text);
             },
-            NodeValue::Link(_) |
-            NodeValue::RedditLink(..) => {
+            NodeValue::Link(..) |
+            NodeValue::UnformattedLink(..) |
+            NodeValue::RedditLink(..) |
+            NodeValue::Image(..) => {
                 if !unformatted_text.is_empty() {
 
                     let text_node = if format_ranges.is_empty() {
@@ -1354,17 +1356,20 @@ impl<'a, 'o> Parser<'a, 'o> {
             match node.data.borrow_mut().value {
                 NodeValue::Link(ref nl) => {
                     let link_node = if format_ranges.is_empty() {
-                        NodeValue::UnformattedLink(
-                            nl.to_owned().url,
-                            unformatted_text.to_string()
-                        )
+                        NodeValue::UnformattedLink(NodeFormatLink{
+                            url: nl.to_owned().url,
+                            caption: unformatted_text.to_string(),
+                            element: nl.to_owned().title,
+                            format_range: format_ranges.to_owned(),
+                        })
                     } else {
                         self.consolidate_format(format_ranges);
-                        NodeValue::FormattedLink(
-                            nl.to_owned().url,
-                            unformatted_text.to_string(),
-                            format_ranges.to_owned()
-                        )
+                        NodeValue::FormattedLink(NodeFormatLink{
+                            url: nl.to_owned().url,
+                            caption: unformatted_text.to_string(),
+                            format_range: format_ranges.to_owned(),
+                            element: nl.to_owned().title,
+                        })
                     };
                     let inline_text_node = inlines::make_inline(
                         self.arena,
@@ -1375,37 +1380,48 @@ impl<'a, 'o> Parser<'a, 'o> {
                     node.detach();
                 }
                 _ => {
-                    let formatted_text_node = if !format_ranges.is_empty() {
-                        self.consolidate_format(format_ranges);
-                        inlines::make_inline(
-                            self.arena,
-                            NodeValue::FormattedText(
-                                unformatted_text.to_string(),
-                                format_ranges.to_owned()
-                            ),
-                        )
-                    } else {
-                        inlines::make_inline(
-                            self.arena,
-                            NodeValue::Text(
-                                unformatted_text.to_string()
-                            ),
-                        )
-                    };
-                    node.append(formatted_text_node);
-                    self.reset_rtjson_node(unformatted_text, current_format, format_ranges);
+                    if !unformatted_text.is_empty() {
+                        let formatted_text_node = if !format_ranges.is_empty() {
+                            self.consolidate_format(format_ranges);
+                            inlines::make_inline(
+                                self.arena,
+                                NodeValue::FormattedText(
+                                    unformatted_text.to_string(),
+                                    format_ranges.to_owned()
+                                ),
+                            )
+                        } else {
+                            inlines::make_inline(
+                                self.arena,
+                                NodeValue::Text(
+                                    unformatted_text.to_string()
+                                ),
+                            )
+                        };
+                        node.append(formatted_text_node);
+                        self.reset_rtjson_node(unformatted_text, current_format, format_ranges);
+                    }
                 }
             }
         } else {
             match node.data.borrow_mut().value {
                 NodeValue::Text(..) |
-                NodeValue::Link(..) |
                 NodeValue::Emph |
                 NodeValue::Strong |
                 NodeValue::Strikethrough |
                 NodeValue::Underline |
                 NodeValue::Superscript => node.detach(),
-                NodeValue::Code(_) => node.detach(),
+                NodeValue::Code(..) => node.detach(),
+                NodeValue::Image(..) => {
+                    let formatted_text_node = inlines::make_inline(
+                        self.arena,
+                        NodeValue::Text(
+                            unformatted_text.to_string()
+                        ),
+                    );
+                    node.append(formatted_text_node);
+                    self.reset_rtjson_node(unformatted_text, current_format, format_ranges);
+                }
                 _ => ()
             }
         }
