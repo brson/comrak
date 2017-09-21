@@ -362,10 +362,10 @@ pub fn process_redditlinks<'a>(
 
     let inl = make_inline(
         arena,
-        NodeValue::RedditLink(
-            prefix.to_string(),
-            name.to_string()
-        )
+        NodeValue::RedditLink(NodeLink{
+            url: prefix.to_string(),
+            title: name.to_string()
+        })
     );
 
     node.insert_after(inl);

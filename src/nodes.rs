@@ -109,13 +109,13 @@ pub enum NodeValue {
     Link(NodeLink),
 
     /// **Inline**. A RedditLink
-    RedditLink(String, String),
+    RedditLink(NodeLink),
 
     /// **Inline**.  FormattedLink
-    FormattedLink(String, String, Vec<[u8; 3]>),
+    FormattedLink(NodeFormatLink),
 
     /// **Inline**.  UnformattedLink
-    UnformattedLink(String, String),
+    UnformattedLink(NodeFormatLink),
 
     /// **Inline**.  An [image](https://github.github.com/gfm/#images).
     Image(NodeLink),
@@ -154,6 +154,25 @@ pub struct NodeLink {
     /// Note this field is used for the `title` attribute by the HTML formatter even for images;
     /// `alt` text is supplied in the image inline text.
     pub title: Vec<u8>,
+}
+
+/// The details of a link's destination with formatting, or an image's source.
+#[derive(Debug, Clone)]
+pub struct NodeFormatLink {
+    /// The URL for the link destination or image source.
+    pub url: String,
+
+    /// The title for the link or image.
+    ///
+    /// Note this field is used for the `title` attribute by the HTML formatter even for images;
+    /// `alt` text is supplied in the image inline text.
+    pub element: String,
+ 
+    /// The Formatted link that is described by our parser
+    pub format_range: Vec<[u8; 3]>,
+
+    /// The caption, if there is one, that is associated with this text node
+    pub caption: String,
 }
 
 /// The metadata of a list; the kind of list, the delimiter used and so on.
