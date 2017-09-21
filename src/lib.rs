@@ -139,7 +139,7 @@ fn cm_to_rtjson(cm: String) -> String {
         ext_strikethrough: true,
         ext_tagfilter: false,
         ext_table: true,
-        ext_autolink: true,
+        ext_autolink: false,
         ext_tasklist: false,
         ext_superscript: false
     };
