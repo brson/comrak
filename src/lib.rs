@@ -74,6 +74,7 @@ extern crate unicode_categories;
 extern crate typed_arena;
 extern crate regex;
 extern crate entities;
+extern crate itertools;
 #[macro_use]
 extern crate lazy_static;
 extern crate pest;

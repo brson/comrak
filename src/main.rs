@@ -13,7 +13,10 @@
 extern crate entities;
 #[macro_use]
 extern crate clap;
-extern crate entities;
+extern crate unicode_categories;
+extern crate typed_arena;
+extern crate regex;
+extern crate itertools;
 #[macro_use]
 extern crate lazy_static;
 extern crate pest;
@@ -161,7 +164,6 @@ fn spec_test (args: &Vec<&str>, opts: parser::ComrakOptions) {
         }
 
         let our_rendering = formatter(&test.input, opts);
-<<<<<<< HEAD
         let mut value = serde_json::Value::Null;
         let mut compare = serde_json::Value::Null;
         if opts.rtjson {
@@ -187,13 +189,6 @@ fn spec_test (args: &Vec<&str>, opts: parser::ComrakOptions) {
             print!(".");
         } else {
             fail_report += format!("\nFAIL {}:\n\n---input---\n{}\n\n---wanted---\n{}\n\n---got---\n{}\n",
-=======
-
-        if our_rendering == test.expected {
-            print!(".");
-        } else {
-            fail_report += format!("\nFAIL {}:\n\n---input---\n{:?}\n\n---wanted---\n{:?}\n\n---got---\n{:?}\n",
->>>>>>> Fix parser bugs
                 test.n, test.input, test.expected, our_rendering).as_str();
             print!("X");
             tests_failed += 1;

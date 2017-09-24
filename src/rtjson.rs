@@ -1,6 +1,7 @@
 use ctype::isspace;
 use nodes::{TableAlignment, NodeValue, ListType, AstNode};
 use parser::ComrakOptions;
+use itertools::Itertools;
 
 /// Formats an AST as HTML, modified by the given options.
 pub fn format_document<'a>(root: &'a AstNode<'a>, options: &ComrakOptions) -> String {
@@ -134,6 +135,16 @@ impl<'o> RTJsonFormatter<'o> {
     }
 
     fn format_node<'a>(&mut self, node: &'a AstNode<'a>, entering: bool) -> bool {
+        fn _format_ranges(ranges: &Vec<[u8; 3]>) -> String {
+            format!("[{}]", ranges.iter().format_with(
+                ", ", |row, f| {
+                    f(
+                        &format!("[{}]",&row.iter().format_with(", ", |elt, g| g(&elt)))
+                    )
+                }
+            ))
+        }
+        
         match node.data.borrow().value {
             NodeValue::Document => {
                 if entering {
@@ -257,9 +268,9 @@ impl<'o> RTJsonFormatter<'o> {
                     match node.parent().unwrap().data.borrow().value {
                         NodeValue::TableCell | NodeValue::Paragraph | NodeValue::BlockQuote => {
                             self.s += format!(
-                                r#"{{"e":"text","t":"{}","f":{:?}}}"#,
+                                r#"{{"e":"text","t":"{}","f":{}}}"#,
                                 self.escape(literal),
-                                format_ranges
+                                _format_ranges(format_ranges)
                             ).as_str();
                         }
                         NodeValue::Heading(..) | NodeValue::CodeBlock(..) => {
@@ -289,17 +300,17 @@ impl<'o> RTJsonFormatter<'o> {
             NodeValue::FormattedLink(ref nl) => {
                 if entering {
                     if !&nl.element.is_empty() {
-                        self.s += format!(r#"{{"e":"link","u":"{}","t":"{}","f":{:?},"a":"{}"}}"#,
+                        self.s += format!(r#"{{"e":"link","u":"{}","t":"{}","f":{},"a":"{}"}}"#,
                             self.escape_href(&nl.url),
                             self.escape(&nl.caption),
-                            &nl.format_range,
+                            _format_ranges(&nl.format_range),
                             self.escape(&nl.element)
                         ).as_str();
                     } else {
-                        self.s += format!(r#"{{"e":"link","u":"{}","t":"{}","f":{:?}}}"#,
+                        self.s += format!(r#"{{"e":"link","u":"{}","t":"{}","f":{}}}"#,
                             self.escape_href(&nl.url),
                             self.escape(&nl.caption),
-                            &nl.format_range
+                            _format_ranges(&nl.format_range)
                         ).as_str();
                     }
                 }
