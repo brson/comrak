@@ -59,7 +59,7 @@ The test above account for known bugs and fixes.
 u/reddit
 /u/reddit
 .
-{"document":[{"e":"par","c":[{"e":"text","t":"a。u/reddit"},{"e":"u/","t":"reddit"},{"e":"u/","t":"reddit"},{"e":"text","t":""}]}]}````````````````````````````````
+{"document":[{"e":"par","c":[{"e":"text","t":"a。u/reddit"},{"e":"u/","t":"reddit"},{"e":"u/","t":"reddit"}]}]}````````````````````````````````
 
 The redditlink should always be rendered if it starts with a slash.
 
@@ -67,4 +67,11 @@ The redditlink should always be rendered if it starts with a slash.
 。/u/reddit
 。//u/reddit
 .
-{"document":[{"e":"par","c":[{"e":"text","t":"。/"},{"e":"u/","t":"reddit"},{"e":"text","t":"。/"},{"e":"u/","t":"reddit"},{"e":"text","t":""}]}]}````````````````````````````````
+{"document":[{"e":"par","c":[{"e":"text","t":"。/"},{"e":"u/","t":"reddit"},{"e":"text","t":"。/"},{"e":"u/","t":"reddit"}]}]}````````````````````````````````
+
+There was a bug where we were getting a panic on the malformed strings
+
+```````````````````````````````` example
+[If we don't end correctly](/reddit.com "Then the test shouldn't break"
+.
+{"document":[{"e":"par","c":[{"e":"text","t":"[If we don't end correctly](/reddit.com &quot;Then the test shouldn't break&quot;"}]}]}````````````````````````````````
