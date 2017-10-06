@@ -40,20 +40,20 @@ ARGS:
 And there's a Rust interface.  You can use `comrak::markdown_to_html` directly:
 
 ``` rust
-use comrak::{markdown_to_html, ComrakOptions};
-assert_eq!(markdown_to_html("Hello, **世界**!", &ComrakOptions::default()),
-           "<p>Hello, <strong>世界</strong>!</p>\n");
+use snoomark::{cm_to_rtjson, ComrakOptions};
+assert_eq!(cm_to_rtjson("Hello, **世界**!", &ComrakOptions::default()),
+           "{\"document\":[{\"e\":\"par\",\"c\":[{\"e\":\"text\",\"t\":\"Hello, 世界!\",\"f\":[[1, 7, 6]]}]}]}");
 ```
 
 Or you can parse the input into an AST yourself, manipulate it, and then use your desired
 formatter:
 
 ``` rust
-extern crate comrak;
+extern crate snoomark;
 extern crate typed_arena;
 use typed_arena::Arena;
-use comrak::{parse_document, format_html, ComrakOptions};
-use comrak::nodes::{AstNode, NodeValue};
+use snoomark::{parse_document, format_html, ComrakOptions};
+use snoomark::nodes::{AstNode, NodeValue};
 
 // The returned nodes are created in the supplied Arena, and are bound by its lifetime.
 let arena = Arena::new();
@@ -89,6 +89,18 @@ assert_eq!(
      <li>Also your input.</li>\n\
      <li>Certainly your input.</li>\n\
      </ol>\n");
+```
+
+## Testing 
+
+Testing is done through the main.rs function and uses flags to enable or disable
+functionality. We can turn on rtjson parsing by passing in the flag `--rtjson` 
+so that the parser uses this. Alternativly we can disable this if we want to aswell.
+
+Testing relies on the spec testing format, defined in main.
+
+``` rust
+cargo run -- --rtjson --spec specs/rtjson/rtjson.spec
 ```
 
 ## Extensions
