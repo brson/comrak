@@ -241,7 +241,7 @@ impl<'o> RTJsonFormatter<'o> {
                         NodeValue::TableCell  => {
                             self.s += format!( r#"{{"e":"text","t":"{}"}}"#, self.escape(literal)).as_str();
                         }
-                        NodeValue::Image(..) | NodeValue::Link(..) | NodeValue::Image(..) |
+                        NodeValue::Image(..) | NodeValue::Link(..) |
                         NodeValue::Text(..) | NodeValue::Code(..) => self.s += self.escape(literal).as_str(),
                         NodeValue::LineBreak | NodeValue::SoftBreak | NodeValue::ThematicBreak => (),
                         NodeValue::Document |
@@ -276,7 +276,7 @@ impl<'o> RTJsonFormatter<'o> {
                         NodeValue::Heading(..) | NodeValue::CodeBlock(..) => {
                             self.s += format!(r#"{{"e":"raw","t":"{}"}}"#, self.escape(literal)).as_str();
                         }
-                        NodeValue::Image(..) | NodeValue::Link(..) | NodeValue::Image(..) |
+                        NodeValue::Image(..) | NodeValue::Link(..) |
                         NodeValue::Text(..) | NodeValue::Code(..) => self.s += self.escape(literal).as_str(),
                         NodeValue::LineBreak | NodeValue::SoftBreak | NodeValue::ThematicBreak => (),
                         NodeValue::Document |

@@ -1,4 +1,4 @@
-cargo run -- --rtjson --spec specs/bugs.spec
+cargo run -- --rtjson --spec specs/rtjson/bugs.spec
 # Tests for Known bugs
 
 This file introduces test to ensure that fixes to ceratin bugs are working properly.

@@ -1,4 +1,4 @@
-cargo run -- --rtjson --spec specs/rtjson.spec
+cargo run -- --rtjson --spec specs/rtjson/rtjson.spec
 # RTJSON TEST   
 
 ```````````````````````````````` example
@@ -190,18 +190,24 @@ Now we also allow images with captions for our parser. An exclamation point allo
 ![alt](/mediaid "caption")
 
 ```````````````````````````````` example
-![gif](/mediaid "animated gif")
-![img](/mediaid "image")
+These media assets have captions:
+
+![gif](abcdef "an animated gif")
+
+![img](fedcba "an image")
 .
-{"document":[{"e":"par","c":[{"e":"gif","id":"/mediaid","c":"animated gif"},{"e":"img","id":"/mediaid","c":"image"}]}]}````````````````````````````````
+{"document":[{"e":"par","c":[{"e":"text","t":"These media assets have captions:"}]},{"e":"gif","id":"abcdef","c":"an animated gif"},{"e":"img","id":"fedcba","c":"an image"}]}````````````````````````````````
 
 Or without captions
 
 ```````````````````````````````` example
-![gif](/mediaid)
-![img](/mediaid)
+These media assets don't have captions:
+
+![gif](abcdef)
+
+![img](fedcba)
 .
-{"document":[{"e":"par","c":[{"e":"gif","id":"/mediaid"},{"e":"img","id":"/mediaid"}]}]}````````````````````````````````
+{"document":[{"e":"par","c":[{"e":"text","t":"These media assets don't have captions:"}]},{"e":"gif","id":"abcdef"},{"e":"img","id":"fedcba"}]}````````````````````````````````
 
 
 ```````````````````````````````` example
