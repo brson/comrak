@@ -1295,8 +1295,7 @@ impl<'a, 'o> Parser<'a, 'o> {
             },
             NodeValue::Link(..) |
             NodeValue::UnformattedLink(..) |
-            NodeValue::RedditLink(..) |
-            NodeValue::Image(..) => {
+            NodeValue::RedditLink(..)=> {
                 if !unformatted_text.is_empty() {
 
                     let text_node = if format_ranges.is_empty() {
@@ -1319,6 +1318,11 @@ impl<'a, 'o> Parser<'a, 'o> {
                     self.reset_rtjson_node(unformatted_text, current_format, format_ranges);
                 }
             },
+            NodeValue::Image(..) => {
+                let parent_paragraph = node.parent().unwrap();
+                parent_paragraph.insert_before(node);
+                parent_paragraph.detach();
+            }
             NodeValue::Code(ref literal) => {
                 let range_idx = unformatted_text.len() as u8;
                 let range_length = literal.len() as u8;
