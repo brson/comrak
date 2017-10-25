@@ -171,7 +171,7 @@ fn spec_test (args: &Vec<&str>, opts: parser::ComrakOptions) {
         if our_rendering == test.expected {
             print!(".");
         } else {
-            fail_report += format!("\nFAIL {}:\n\n---input---\n{:?}\n\n---wanted---\n{:?}\n\n---got---\n{:?}\n",
+            fail_report += format!("\nFAIL {}:\n\n---input---\n{}\n\n---wanted---\n{}\n\n---got---\n{}\n",
                 test.n, test.input, test.expected, our_rendering).as_str();
             print!("X");
             tests_failed += 1;
