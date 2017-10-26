@@ -120,7 +120,10 @@ pub extern fn markdown_to_html(md: &str, options: &ComrakOptions) -> String {
 // This initializes the Python module and assigns the name `snoomark`,
 // which converts Reddit-flavored CommonMark (or legacy Markdown) to RTJSON.
 py_module_initializer!(snoomark, initsnoomark, PyInit_snoomark, |py, m| {
-    try!(m.add(py, "__doc__", "This module is implemented in Rust."));
+    const DOC_NAME: &'static str = env!("CARGO_PKG_NAME");
+    const DOC_VERSION: &'static str = env!("CARGO_PKG_VERSION");
+    let doc_string = format!("[{} {}] This module is implemented in Rust.", DOC_NAME, DOC_VERSION);
+    try!(m.add(py, "__doc__", doc_string));
     try!(m.add(py, "cm_to_rtjson", py_fn!(py, cm_to_rtjson_py(cm: String))));
     Ok(())
 });

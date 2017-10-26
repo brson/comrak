@@ -1,11 +1,10 @@
 [package]
-name = "comrak"
-version = "0.2.7"
-authors = ["Ashe Connor <kivikakk@github.com>"]
-description = "A 100% CommonMark-compatible GitHub Flavored Markdown parser and formatter"
-documentation = "https://docs.rs/comrak"
-homepage = "https://github.com/kivikakk/comrak"
-repository = "https://github.com/kivikakk/comrak"
+name = "snoomark"
+version = "0.0.6"
+authors = ["Shaq Johnson <shaq@reddit.com>", "Zean Tsoi <zean@reddit.com>"]
+description = "A fork of GitHub's comrak CommonMark parser with Reddit flavor."
+homepage = "https://github.com/reddit/snoomark"
+repository = "https://github.com/reddit/snoomark"
 readme = "README.md"
 keywords = ["markdown", "commonmark"]
 license = "BSD-2-Clause"
