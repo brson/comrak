@@ -11,7 +11,7 @@ pub fn process_glyphs<'a>(
     contents: &mut String
 ) {
     lazy_static! {
-        static ref RE: Regex = Regex::new(r"([\^%]{1,10})((\w+|\([\w\s\(\)]+\))+)").unwrap();
+        static ref RE: Regex = Regex::new(r"([\^%]{1,10})(\([\w\s\(\)]+\)|\S+)").unwrap();
     }
 
     let owned_contents = contents.to_owned();
@@ -29,10 +29,10 @@ pub fn process_glyphs<'a>(
         );
 
         let slice = &owned_contents[start..end].to_owned();
-        let prefix = &slice[..1].to_owned();
+        let prefix: String = slice.chars().take(2).collect();
         let mut idx = 0;
         let mut wrapped = false;
-        for c in prefix.clone().into_bytes() {
+        for c in prefix.into_bytes() {
             match c {
                 b'^' | b'%' => idx += 1,
                 b'(' => {
