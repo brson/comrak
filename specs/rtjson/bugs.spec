@@ -75,3 +75,17 @@ There was a bug where we were getting a panic on the malformed strings
 [If we don't end correctly](/reddit.com "Then the test shouldn't break"
 .
 {"document":[{"e":"par","c":[{"e":"text","t":"[If we don't end correctly](/reddit.com &quot;Then the test shouldn't break&quot;"}]}]}````````````````````````````````
+
+There is also reddit specific conventions surrounding superscript.
+
+```````````````````````````````` example
+^Single will only have that work where as ^(In parens will include the whole parens).
+.
+{"document":[{"e":"par","c":[{"e":"text","t":"Single will only have that work where as In parens will include the whole parens.","f":[[32, 0, 6], [32, 41, 39]]}]}]}````````````````````````````````
+
+We must also make sure that non whitespace characters are accounted for
+
+```````````````````````````````` example
+^。here and here
+.
+{"document":[{"e":"par","c":[{"e":"text","t":"。here and here","f":[[32, 0, 7]]}]}]}````````````````````````````````
