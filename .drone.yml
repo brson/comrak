@@ -8,10 +8,10 @@ build:
     image: rust:1.21.0
     commands:
       - cargo build --release
-      - cp target/release/libsnoomark.so target/release/libsnoomark-$${TAG}.so
+      - cp target/release/libsnoomark.so target/release/snoomark-$${TAG}.so
       - echo
-      - echo "SHA256 hash of the built libsnoomark release:"
-      - shasum -a 256 target/release/libsnoomark-$${TAG}.so
+      - echo "SHA256 hash of the built snoomark release:"
+      - shasum -a 256 target/release/snoomark-$${TAG}.so
       - echo
     when:
       event: tag
@@ -20,7 +20,7 @@ publish:
   upload:
     image: plugins/s3
     environment:
-      - PLUGIN_SOURCE=/drone/src/github.com/reddit/snoomark/target/release/libsnoomark*.so
+      - PLUGIN_SOURCE=/drone/src/github.com/reddit/snoomark/target/release/snoomark*.so
       - PLUGIN_STRIP_PREFIX=/drone/src/github.com/reddit/snoomark/target/release/
       - PLUGIN_BUCKET=reddit-packages
       - PLUGIN_TARGET=/amd64/snoomark
