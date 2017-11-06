@@ -36,21 +36,21 @@ We have to make sure that nested styles get the proper rendering
 ```````````````````````````````` example
 ~curly**curly and bold**curly~
 .
-{"document":[{"e":"par","c":[{"e":"text","t":"curlycurly and boldcurly","f":[[4, 0, 5], [5, 5, 14], [4, 19, 5]]}]}]}````````````````````````````````
+{"document":[{"e":"par","c":[{"e":"text","f":[[4,0,5],[5,5,14],[4,19,5]],"t":"curlycurly and boldcurly"}]}]}````````````````````````````````
 
 The below does not work and should be looked into 
 
 ```````````````````````````````` example
 ~curly***curly and bold***curly~
 .
-{"document":[{"e":"par","c":[{"e":"text","t":"curly***curly and bold***curly","f":[[4, 0, 30]]}]}]}````````````````````````````````
+{"document":[{"e":"par","c":[{"e":"text","f":[[4,0,30]],"t":"curly***curly and bold***curly"}]}]}````````````````````````````````
 
 We should also show code and underline when we are trying ot render content
 
 ```````````````````````````````` example
 `monospace` ~underline~ <usr/>
 .
-{"document":[{"e":"par","c":[{"e":"text","t":"monospace underline &lt;usr/&gt;","f":[[64, 0, 9], [4, 10, 9]]}]}]}````````````````````````````````
+{"document":[{"e":"par","c":[{"e":"text","f":[[64,0,9],[4,10,9]],"t":"monospace underline &lt;usr/&gt;"}]}]}````````````````````````````````
 
 The test above account for known bugs and fixes.
 
@@ -81,11 +81,11 @@ There is also reddit specific conventions surrounding superscript.
 ```````````````````````````````` example
 ^Single will only have that work where as ^(In parens will include the whole parens).
 .
-{"document":[{"e":"par","c":[{"e":"text","t":"Single will only have that work where as In parens will include the whole parens.","f":[[32, 0, 6], [32, 41, 39]]}]}]}````````````````````````````````
+{"document":[{"e":"par","c":[{"e":"text","f":[[32,0,6],[32,41,39]],"t":"Single will only have that work where as In parens will include the whole parens."}]}]}````````````````````````````````
 
 We must also make sure that non whitespace characters are accounted for
 
 ```````````````````````````````` example
 ^。here and here
 .
-{"document":[{"e":"par","c":[{"e":"text","t":"。here and here","f":[[32, 0, 7]]}]}]}````````````````````````````````
+{"document":[{"e":"par","c":[{"e":"text","f":[[32,0,7]],"t":"。here and here"}]}]}````````````````````````````````

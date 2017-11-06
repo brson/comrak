@@ -16,7 +16,6 @@ extern crate clap;
 extern crate unicode_categories;
 extern crate typed_arena;
 extern crate regex;
-extern crate itertools;
 #[macro_use]
 extern crate lazy_static;
 extern crate pest;
@@ -26,6 +25,8 @@ extern crate regex;
 extern crate twoway;
 extern crate typed_arena;
 extern crate unicode_categories;
+#[macro_use]
+extern crate serde_json;
 
 mod arena_tree;
 mod html;

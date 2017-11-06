@@ -1542,14 +1542,8 @@ impl<'a, 'o> Parser<'a, 'o> {
                 NodeValue::Underline |
                 NodeValue::Superscript => node.detach(),
                 NodeValue::Code(..) => node.detach(),
-                NodeValue::Image(..) => {
-                    let formatted_text_node = inlines::make_inline(
-                        self.arena,
-                        NodeValue::Text(
-                            unformatted_text.to_string()
-                        ),
-                    );
-                    node.append(formatted_text_node);
+                NodeValue::Image(ref mut nl) => {
+                    nl.e = unformatted_text.to_string();
                     self.reset_rtjson_node(unformatted_text, current_format, format_ranges);
                 }
                 _ => ()

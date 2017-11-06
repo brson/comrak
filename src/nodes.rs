@@ -118,7 +118,7 @@ pub enum NodeValue {
     UnformattedLink(NodeFormatLink),
 
     /// **Inline**.  An [image](https://github.github.com/gfm/#images).
-    Image(NodeLink),
+    Image(NodeImage),
 
     /// **Inline**.  A footnote reference; the `Vec<u8>` is the referent footnote's name.
     FootnoteReference(Vec<u8>),
@@ -154,6 +154,22 @@ pub struct NodeLink {
     /// Note this field is used for the `title` attribute by the HTML formatter even for images;
     /// `alt` text is supplied in the image inline text.
     pub title: Vec<u8>,
+}
+
+/// The details of a link's destination, or an image's source.
+#[derive(Debug, Clone)]
+pub struct NodeImage {
+    /// The element [img, vid, gif] of the link
+    pub e: String,
+
+    /// The URL for the link destination or image source.
+    pub url: String,
+
+    /// The title for the link or image.
+    ///
+    /// Note this field is used for the `title` attribute by the HTML formatter even for images;
+    /// `alt` text is supplied in the image inline text.
+    pub title: String,
 }
 
 /// The details of a link's destination with formatting, or an image's source.

@@ -757,7 +757,11 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
         let inl = make_inline(
             self.arena,
             if is_image {
-                NodeValue::Image(nl)
+                NodeValue::Image(NodeImage{
+                    e: "".to_string(),
+                    url: nl.url,
+                    title: nl.title,
+                })
             } else {
                 NodeValue::Link(nl)
             },
