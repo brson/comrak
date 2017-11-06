@@ -4,19 +4,19 @@ cargo run -- --rtjson --spec specs/rtjson/rtjson.spec
 ```````````````````````````````` example
 this is a link with **bold** and *italic*
 .
-{"document":[{"e":"par","c":[{"e":"text","t":"this is a link with bold and italic","f":[[1, 20, 4], [2, 29, 6]]}]}]}````````````````````````````````
+{"document":[{"e":"par","c":[{"e":"text","f":[[1,20,4],[2,29,6]],"t":"this is a link with bold and italic"}]}]}````````````````````````````````
 
 ```````````````````````````````` example
 *Hello Reddit*, this an example paragraph. Read more RTJson [here](https://docs.google.com/document/d/1Qpf2tl8iabZIEKvUSE3bFRV2QCIjxaXn-6Mblvojpvs/edit#heading=h.w2llmo96i6e1)
 .
-{"document":[{"e":"par","c":[{"e":"text","t":"Hello Reddit, this an example paragraph. Read more RTJson ","f":[[2, 0, 12]]},{"e":"link","u":"https://docs.google.com/document/d/1Qpf2tl8iabZIEKvUSE3bFRV2QCIjxaXn-6Mblvojpvs/edit#heading=h.w2llmo96i6e1","t":"here"}]}]}````````````````````````````````
+{"document":[{"e":"par","c":[{"e":"text","f":[[2,0,12]],"t":"Hello Reddit, this an example paragraph. Read more RTJson "},{"e":"link","t":"here","u":"https://docs.google.com/document/d/1Qpf2tl8iabZIEKvUSE3bFRV2QCIjxaXn-6Mblvojpvs/edit#heading=h.w2llmo96i6e1"}]}]}````````````````````````````````
 
 ```````````````````````````````` example
 ### This heading contains plain text, [a link](https://reddit.com), and a u/username.
 
 Hello, this is a paragraph.
 .
-{"document":[{"e":"h","l":3,"c":[{"e":"raw","t":"This heading contains plain text, "},{"e":"link","u":"https://reddit.com","t":"a link"},{"e":"raw","t":", and a "},{"e":"u/","t":"username"},{"e":"raw","t":"."}]},{"e":"par","c":[{"e":"text","t":"Hello, this is a paragraph."}]}]}````````````````````````````````
+{"document":[{"e":"h","l":3,"c":[{"e":"raw","t":"This heading contains plain text, "},{"e":"link","t":"a link","u":"https://reddit.com"},{"e":"raw","t":", and a "},{"e":"u/","t":"username"},{"e":"raw","t":"."}]},{"e":"par","c":[{"e":"text","t":"Hello, this is a paragraph."}]}]}````````````````````````````````
 
 ```````````````````````````````` example
 >This post begins with a blockquote.
@@ -45,17 +45,17 @@ This post has a paragraph in the middle.
 >
 >Line preceding
 .
-{"document":[{"e":"blockquote","c":[{"e":"par","c":[{"e":"text","t":"Line proceeding; this line has a "},{"e":"link","u":"https://reddit.com","t":"link"},{"e":"text","t":" and a "},{"e":"r/","t":"redditlink"},{"e":"text","t":"."}]},{"e":"par","c":[{"e":"text","t":"Line preceding; no line proceeding"}]},{"e":"par","c":[{"e":"text","t":"No line preceding; no line proceeding"}]},{"e":"par","c":[{"e":"text","t":"No line preceding; line proceeding"}]},{"e":"par","c":[{"e":"text","t":"Line preceding"}]}]}]}````````````````````````````````
+{"document":[{"e":"blockquote","c":[{"e":"par","c":[{"e":"text","t":"Line proceeding; this line has a "},{"e":"link","t":"link","u":"https://reddit.com"},{"e":"text","t":" and a "},{"e":"r/","t":"redditlink"},{"e":"text","t":"."}]},{"e":"par","c":[{"e":"text","t":"Line preceding; no line proceeding"}]},{"e":"par","c":[{"e":"text","t":"No line preceding; no line proceeding"}]},{"e":"par","c":[{"e":"text","t":"No line preceding; line proceeding"}]},{"e":"par","c":[{"e":"text","t":"Line preceding"}]}]}]}````````````````````````````````
 
 ```````````````````````````````` example
 >This post ends with a blockquote\n\nwith embedded newlines.
 .
-{"document":[{"e":"blockquote","c":[{"e":"par","c":[{"e":"text","t":"This post ends with a blockquote\n\nwith embedded newlines."}]}]}]}````````````````````````````````
+{"document":[{"e":"blockquote","c":[{"e":"par","c":[{"e":"text","t":"This post ends with a blockquote\\n\\nwith embedded newlines."}]}]}]}````````````````````````````````
 
 ```````````````````````````````` example
 Hello, **this is bold**, *this is italic*, ***this is both***. And this is a u/username and a /r/subreddit.
 .
-{"document":[{"e":"par","c":[{"e":"text","t":"Hello, this is bold, this is italic, this is both. And this is a ","f":[[1, 7, 12], [2, 21, 14], [3, 37, 12]]},{"e":"u/","t":"username"},{"e":"text","t":" and a "},{"e":"r/","t":"subreddit"},{"e":"text","t":"."}]}]}````````````````````````````````
+{"document":[{"e":"par","c":[{"e":"text","f":[[1,7,12],[2,21,14],[3,37,12]],"t":"Hello, this is bold, this is italic, this is both. And this is a "},{"e":"u/","t":"username"},{"e":"text","t":" and a "},{"e":"r/","t":"subreddit"},{"e":"text","t":"."}]}]}````````````````````````````````
 
 ```````````````````````````````` example
 Below this is a list:
@@ -76,14 +76,14 @@ Above this is a list.
       * First item
       * Second item
 .
-{"document":[{"e":"list","o":false,"c":[{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"First item"}]}]},{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"Second item with "},{"e":"link","u":"https://reddit.com","t":"a link with bold and italic","f":[[1, 12, 4], [2, 21, 6]]},{"e":"text","t":" and a "},{"e":"u/","t":"username"}]},{"e":"list","o":true,"c":[{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"First item"}]}]},{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"Second item"}]},{"e":"list","o":false,"c":[{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"First item"}]}]},{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"Second item"}]}]}]}]}]}]}]}]}````````````````````````````````
+{"document":[{"e":"list","o":false,"c":[{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"First item"}]}]},{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"Second item with "},{"e":"link","f":[[1,12,4],[2,21,6]],"t":"a link with bold and italic","u":"https://reddit.com"},{"e":"text","t":" and a "},{"e":"u/","t":"username"}]},{"e":"list","o":true,"c":[{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"First item"}]}]},{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"Second item"}]},{"e":"list","o":false,"c":[{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"First item"}]}]},{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"Second item"}]}]}]}]}]}]}]}]}````````````````````````````````
 
 ```````````````````````````````` example
 |Col 1|Col 2|Col 3|
 |:-|:-:|-:|
 |a |**bold**&#8203;***bold+italic***&#8203;*italic*|a |
 .
-{"document":[{"e":"table","h":[{"a":"L","c":[{"e":"text","t":"Col 1"}]},{"a":"C","c":[{"e":"text","t":"Col 2"}]},{"a":"R","c":[{"e":"text","t":"Col 3"}]}],"c":[[{"c":[{"e":"text","t":"a"}]},{"c":[{"e":"text","t":"bold​bold+italic​italic","f":[[1, 0, 4], [3, 7, 11], [2, 21, 6]]}]},{"c":[{"e":"text","t":"a"}]}]]}]}````````````````````````````````
+{"document":[{"e":"table","h":[{"a":"L","c":[{"e":"text","t":"Col 1"}]},{"a":"C","c":[{"e":"text","t":"Col 2"}]},{"a":"R","c":[{"e":"text","t":"Col 3"}]}],"c":[[{"c":[{"e":"text","t":"a"}]},{"c":[{"e":"text","f":[[1,0,4],[3,7,11],[2,21,6]],"t":"bold​bold+italic​italic"}]},{"c":[{"e":"text","t":"a"}]}]]}]}````````````````````````````````
 
 ```````````````````````````````` example
 These are two tables:
@@ -101,7 +101,7 @@ These are two tables:
 ```````````````````````````````` example
 Hello reddit, \*\***this should be bold,**\*\* the stars around it should not be.
 .
-{"document":[{"e":"par","c":[{"e":"text","t":"Hello reddit, **this should be bold,** the stars around it should not be.","f":[[1, 16, 20]]}]}]}````````````````````````````````
+{"document":[{"e":"par","c":[{"e":"text","f":[[1,16,20]],"t":"Hello reddit, **this should be bold,** the stars around it should not be."}]}]}````````````````````````````````
 
 ```````````````````````````````` example
 Hello reddit, \*\***this should be bold,**\*\* the stars around it should not be.
@@ -124,7 +124,7 @@ Hello reddit, \*\***this should be bold,**\*\* the stars around it should not be
 
 www.thisisalink.com
 .
-{"document":[{"e":"par","c":[{"e":"text","t":"Hello reddit, **this should be bold,** the stars around it should not be.","f":[[1, 16, 20]]}]},{"e":"par","c":[{"e":"text","t":"&gt; This is text with an arrow in front"}]},{"e":"blockquote","c":[{"e":"par","c":[{"e":"text","t":"This is a quote"}]}]},{"e":"par","c":[{"e":"text","t":"Here we have something in italics","f":[[2, 0, 33]]}]},{"e":"par","c":[{"e":"text","t":"*Here we have something with single-stars around it*"}]},{"e":"par","c":[{"e":"text","t":"`Is this a codeblock?`"}]},{"e":"par","c":[{"e":"text","t":"~~This should not be strike through~~"}]},{"e":"par","c":[{"e":"text","t":"But this should be","f":[[8, 0, 18]]}]},{"e":"par","c":[{"e":"text","t":"[Finally here we have no link](www.example.com)"}]},{"e":"par","c":[{"e":"text","t":"www.thisisalink.com"}]}]}````````````````````````````````
+{"document":[{"e":"par","c":[{"e":"text","f":[[1,16,20]],"t":"Hello reddit, **this should be bold,** the stars around it should not be."}]},{"e":"par","c":[{"e":"text","t":"&gt; This is text with an arrow in front"}]},{"e":"blockquote","c":[{"e":"par","c":[{"e":"text","t":"This is a quote"}]}]},{"e":"par","c":[{"e":"text","f":[[2,0,33]],"t":"Here we have something in italics"}]},{"e":"par","c":[{"e":"text","t":"*Here we have something with single-stars around it*"}]},{"e":"par","c":[{"e":"text","t":"`Is this a codeblock?`"}]},{"e":"par","c":[{"e":"text","t":"~~This should not be strike through~~"}]},{"e":"par","c":[{"e":"text","f":[[8,0,18]],"t":"But this should be"}]},{"e":"par","c":[{"e":"text","t":"[Finally here we have no link](www.example.com)"}]},{"e":"par","c":[{"e":"text","t":"www.thisisalink.com"}]}]}````````````````````````````````
 
 ```````````````````````````````` example
 1.
@@ -138,7 +138,7 @@ www.thisisalink.com
       * 2 levels nested - ul
 4. 0 levels nested - ol
 .
-{"document":[{"e":"list","o":true,"c":[{"e":"li","c":[{"e":"list","o":false,"c":[{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"1 level "},{"e":"link","u":"www.reddit.com","t":"hello"},{"e":"text","t":" nested - ul"}]}]}]}]},{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"0 levels nested - ol"}]}]},{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"0 levels nested - ol"}]},{"e":"list","o":true,"c":[{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"1 level nested - ol"}]},{"e":"list","o":true,"c":[{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"2 levels nested - ol"}]}]},{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"2 levels nested - ol"}]}]}]}]},{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"1 level nested - ol"}]},{"e":"list","o":false,"c":[{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"2 levels nested - ul"}]}]}]}]}]}]},{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"0 levels nested - ol"}]}]}]}]}````````````````````````````````
+{"document":[{"e":"list","o":true,"c":[{"e":"li","c":[{"e":"list","o":false,"c":[{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"1 level "},{"e":"link","t":"hello","u":"www.reddit.com"},{"e":"text","t":" nested - ul"}]}]}]}]},{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"0 levels nested - ol"}]}]},{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"0 levels nested - ol"}]},{"e":"list","o":true,"c":[{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"1 level nested - ol"}]},{"e":"list","o":true,"c":[{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"2 levels nested - ol"}]}]},{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"2 levels nested - ol"}]}]}]}]},{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"1 level nested - ol"}]},{"e":"list","o":false,"c":[{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"2 levels nested - ul"}]}]}]}]}]}]},{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"0 levels nested - ol"}]}]}]}]}````````````````````````````````
 
 ```````````````````````````````` example
 * First item
@@ -148,7 +148,7 @@ www.thisisalink.com
       * First item
       * Second item
 .
-{"document":[{"e":"list","o":false,"c":[{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"First item"}]}]},{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"Second item with "},{"e":"link","u":"https://reddit.com","t":"a link with bold and italic","f":[[1, 12, 4], [2, 21, 6]]},{"e":"text","t":" and a "},{"e":"u/","t":"username"}]},{"e":"list","o":true,"c":[{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"First item"}]}]},{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"Second item"}]},{"e":"list","o":false,"c":[{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"First item"}]}]},{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"Second item"}]}]}]}]}]}]}]}]}````````````````````````````````
+{"document":[{"e":"list","o":false,"c":[{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"First item"}]}]},{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"Second item with "},{"e":"link","f":[[1,12,4],[2,21,6]],"t":"a link with bold and italic","u":"https://reddit.com"},{"e":"text","t":" and a "},{"e":"u/","t":"username"}]},{"e":"list","o":true,"c":[{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"First item"}]}]},{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"Second item"}]},{"e":"list","o":false,"c":[{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"First item"}]}]},{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"Second item"}]}]}]}]}]}]}]}]}````````````````````````````````
 
 ```````````````````````````````` example
     function test() {
@@ -164,7 +164,7 @@ each time we went on.
 ```````````````````````````````` example
 *__bold__ ~underline~ ~~strikethrough~~*
 .
-{"document":[{"e":"par","c":[{"e":"text","t":"bold underline strikethrough","f":[[3, 0, 4], [2, 4, 1], [6, 5, 9], [2, 14, 1], [10, 15, 13]]}]}]}````````````````````````````````
+{"document":[{"e":"par","c":[{"e":"text","f":[[3,0,4],[2,4,1],[6,5,9],[2,14,1],[10,15,13]],"t":"bold underline strikethrough"}]}]}````````````````````````````````
 
 In the case that we have two of the same styles nested within one another we want
 the ranges to all be the same. This will likely only result from the legacy client.
@@ -172,19 +172,19 @@ the ranges to all be the same. This will likely only result from the legacy clie
 ```````````````````````````````` example
 **This is some __bold__ text.**
 .
-{"document":[{"e":"par","c":[{"e":"text","t":"This is some bold text.","f":[[1, 0, 23]]}]}]}````````````````````````````````
+{"document":[{"e":"par","c":[{"e":"text","f":[[1,0,23]],"t":"This is some bold text."}]}]}````````````````````````````````
 
 ```````````````````````````````` example
 foo^^^bar
 .
-{"document":[{"e":"par","c":[{"e":"text","t":"foobar","f":[[32, 3, 3]]}]}]}````````````````````````````````
+{"document":[{"e":"par","c":[{"e":"text","f":[[32,3,3]],"t":"foobar"}]}]}````````````````````````````````
 
 Lets try the same thing with links
 
 ```````````````````````````````` example
 [**This is some __bold__ text.**](www.reddit.com)
 .
-{"document":[{"e":"par","c":[{"e":"link","u":"www.reddit.com","t":"This is some bold text.","f":[[1, 0, 23]]}]}]}````````````````````````````````
+{"document":[{"e":"par","c":[{"e":"link","f":[[1,0,23]],"t":"This is some bold text.","u":"www.reddit.com"}]}]}````````````````````````````````
 
 Now we also allow images with captions for our parser. An exclamation point allows us to point towards our image using the format 
 ![alt](/mediaid "caption")
@@ -196,7 +196,7 @@ These media assets have captions:
 
 ![img](fedcba "an image")
 .
-{"document":[{"e":"par","c":[{"e":"text","t":"These media assets have captions:"}]},{"e":"gif","id":"abcdef","c":"an animated gif"},{"e":"img","id":"fedcba","c":"an image"}]}````````````````````````````````
+{"document":[{"e":"par","c":[{"e":"text","t":"These media assets have captions:"}]},{"c":"an animated gif","e":"gif","id":"abcdef"},{"c":"an image","e":"img","id":"fedcba"}]}````````````````````````````````
 
 Or without captions
 
@@ -223,5 +223,5 @@ HTML entities like &amp; &quot; &lt; and &gt; should not be escaped, unless they
 ```````````````````````````````` example
 Escaping to HTML entities like & and " shouldn't impact format ranges like **this** or ~~*this*~~.
 .
-{"document":[{"e":"par","c":[{"e":"text","t":"Escaping to HTML entities like &amp; and &quot; shouldn't impact format ranges like this or this.","f":[[1, 84, 4], [10, 92, 4]]}]}]}````````````````````````````````
+{"document":[{"e":"par","c":[{"e":"text","f":[[1,84,4],[10,92,4]],"t":"Escaping to HTML entities like &amp; and &quot; shouldn't impact format ranges like this or this."}]}]}````````````````````````````````
 

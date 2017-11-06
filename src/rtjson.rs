@@ -1,7 +1,6 @@
 use ctype::isspace;
 use nodes::{TableAlignment, NodeValue, ListType, AstNode};
 use parser::ComrakOptions;
-use itertools::Itertools;
 
 /// Formats an AST as HTML, modified by the given options.
 pub fn format_document<'a>(root: &'a AstNode<'a>, options: &ComrakOptions) -> String {
@@ -135,16 +134,6 @@ impl<'o> RTJsonFormatter<'o> {
     }
 
     fn format_node<'a>(&mut self, node: &'a AstNode<'a>, entering: bool) -> bool {
-        fn _format_ranges(ranges: &Vec<[u8; 3]>) -> String {
-            format!("[{}]", ranges.iter().format_with(
-                ", ", |row, f| {
-                    f(
-                        &format!("[{}]",&row.iter().format_with(", ", |elt, g| g(&elt)))
-                    )
-                }
-            ))
-        }
-        
         match node.data.borrow().value {
             NodeValue::Document => {
                 if entering {
@@ -201,7 +190,10 @@ impl<'o> RTJsonFormatter<'o> {
 
                     let max = ncb.literal.split("\n").count() - 1;
                     for (i, it) in ncb.literal.split("\n").enumerate() {
-                        self.s += format!(r#"{{"e":"raw","t":"{}"}}"#, self.escape(it)).as_str();
+                        self.s += &json!({
+                            "e": "raw",
+                            "t": self.escape(it)
+                        }).to_string();
                         if i != max {
                             self.s += ",";
                         }
@@ -235,13 +227,19 @@ impl<'o> RTJsonFormatter<'o> {
                 if entering {
                     match node.parent().unwrap().data.borrow().value {
                         NodeValue::Heading(..) | NodeValue::CodeBlock(..) => {
-                            self.s += format!(r#"{{"e":"raw","t":"{}"}}"#, self.escape(literal)).as_str();
+                            self.s += &json!({
+                                "e": "raw",
+                                "t": self.escape(literal)
+                            }).to_string();
                         }
                         NodeValue::BlockQuote  | NodeValue::Paragraph |
                         NodeValue::TableCell  => {
-                            self.s += format!( r#"{{"e":"text","t":"{}"}}"#, self.escape(literal)).as_str();
+                            self.s += &json!({
+                                "e": "text",
+                                "t": self.escape(literal)
+                            }).to_string();
                         }
-                        NodeValue::Image(..) | NodeValue::Link(..) |
+                        NodeValue::Link(..) |
                         NodeValue::Text(..) | NodeValue::Code(..) => self.s += self.escape(literal).as_str(),
                         NodeValue::LineBreak | NodeValue::SoftBreak | NodeValue::ThematicBreak => (),
                         NodeValue::Document |
@@ -250,6 +248,7 @@ impl<'o> RTJsonFormatter<'o> {
                         NodeValue::Underline |
                         NodeValue::Superscript |
                         NodeValue::Strikethrough |
+                        NodeValue::Image(..) |
                         NodeValue::Link(..) |
                         NodeValue::List(..) | 
                         NodeValue::Item(..) | 
@@ -267,16 +266,19 @@ impl<'o> RTJsonFormatter<'o> {
                 if entering {
                     match node.parent().unwrap().data.borrow().value {
                         NodeValue::TableCell | NodeValue::Paragraph | NodeValue::BlockQuote => {
-                            self.s += format!(
-                                r#"{{"e":"text","t":"{}","f":{}}}"#,
-                                self.escape(literal),
-                                _format_ranges(format_ranges)
-                            ).as_str();
+                            self.s += &json!({
+                                "e": "text",
+                                "t": self.escape(literal),
+                                "f": format_ranges
+                            }).to_string();
                         }
                         NodeValue::Heading(..) | NodeValue::CodeBlock(..) => {
-                            self.s += format!(r#"{{"e":"raw","t":"{}"}}"#, self.escape(literal)).as_str();
+                            self.s += &json!({
+                                "e":"raw",
+                                "t": self.escape(literal)
+                            }).to_string();
                         }
-                        NodeValue::Image(..) | NodeValue::Link(..) |
+                        NodeValue::Link(..) |
                         NodeValue::Text(..) | NodeValue::Code(..) => self.s += self.escape(literal).as_str(),
                         NodeValue::LineBreak | NodeValue::SoftBreak | NodeValue::ThematicBreak => (),
                         NodeValue::Document |
@@ -285,6 +287,7 @@ impl<'o> RTJsonFormatter<'o> {
                         NodeValue::Underline |
                         NodeValue::Superscript |
                         NodeValue::Strikethrough |
+                        NodeValue::Image(..) |
                         NodeValue::List(..) |
                         NodeValue::Item(..) |
                         NodeValue::HtmlBlock(..) |
@@ -300,64 +303,71 @@ impl<'o> RTJsonFormatter<'o> {
             NodeValue::FormattedLink(ref nl) => {
                 if entering {
                     if !&nl.element.is_empty() {
-                        self.s += format!(r#"{{"e":"link","u":"{}","t":"{}","f":{},"a":"{}"}}"#,
-                            self.escape_href(&nl.url),
-                            self.escape(&nl.caption),
-                            _format_ranges(&nl.format_range),
-                            self.escape(&nl.element)
-                        ).as_str();
+                        self.s += &json!({
+                            "e": "link",
+                            "u": self.escape_href(&nl.url),
+                            "t": self.escape(&nl.caption),
+                            "f": nl.format_range,
+                            "a": self.escape(&nl.element)
+                        }).to_string();
                     } else {
-                        self.s += format!(r#"{{"e":"link","u":"{}","t":"{}","f":{}}}"#,
-                            self.escape_href(&nl.url),
-                            self.escape(&nl.caption),
-                            _format_ranges(&nl.format_range)
-                        ).as_str();
+                        self.s += &json!({
+                            "e": "link",
+                            "u": self.escape_href(&nl.url),
+                            "t": self.escape(&nl.caption),
+                            "f": &nl.format_range
+                        }).to_string();
                     }
                 }
             }
             NodeValue::UnformattedLink(ref nl) => {
                 if entering {
                     if !&nl.element.is_empty() {
-                        self.s += format!(r#"{{"e":"link","u":"{}","t":"{}", "a":"{}"}}"#,
-                            self.escape_href(&nl.url),
-                            self.escape(&nl.caption),
-                            self.escape(&nl.element)
-                        ).as_str();
+                        self.s += &json!({
+                            "e": "link",
+                            "u": self.escape_href(&nl.url),
+                            "t": self.escape(&nl.caption),
+                            "a": self.escape(&nl.element)
+                        }).to_string();
                     } else {
-                        self.s += format!(r#"{{"e":"link","u":"{}","t":"{}"}}"#,
-                            self.escape_href(&nl.url),
-                            self.escape(&nl.caption)
-                        ).as_str();
+                        self.s += &json!({
+                            "e": "link",
+                            "u": self.escape_href(&nl.url),
+                            "t": self.escape(&nl.caption)
+                        }).to_string();
                     }
                 }
             }
             NodeValue::Link(ref nl) => {
                 if entering {
-                    self.s += format!(r#"{{"e":"link","u":"{}","t":"{}"}}"#,
-                        self.escape_href(&nl.url),
-                        self.escape(&nl.title)
-                    ).as_str();
+                    self.s += &json!({
+                        "e": "link",
+                        "u": self.escape_href(&nl.url),
+                        "t": self.escape(&nl.title)
+                    }).to_string();
                 }
             }
             NodeValue::RedditLink(ref nl) => {
                 if entering {
-                    self.s += format!(r#"{{"e":"{}","t":"{}"}}"#,
-                        self.escape_href(&nl.url),
-                        self.escape(&nl.title)
-                    ).as_str();
+                    self.s += &json!({
+                        "e": self.escape_href(&nl.url),
+                        "t": self.escape(&nl.title)
+                    }).to_string();
                 }
             }
             NodeValue::Image(ref nl) => {
                 if entering {
-                    self.s += r#"{"e":""#;
-                } else {
                     if !&nl.title.is_empty() {
-                        self.s += format!(r#"","id":"{}","c":"{}"}}"#,
-                            self.escape_href(&nl.url),
-                            self.escape(&nl.title)
-                        ).as_str();
+                        self.s += &json!({
+                            "e": nl.e,
+                            "id": self.escape_href(&nl.url),
+                            "c": self.escape(&nl.title)
+                        }).to_string();
                     } else {
-                        self.s += format!(r#"","id":"{}"}}"#, self.escape_href(&nl.url)).as_str();
+                        self.s += &json!({
+                            "e": nl.e,
+                            "id": self.escape_href(&nl.url)
+                        }).to_string();
                     }
                 }
             }

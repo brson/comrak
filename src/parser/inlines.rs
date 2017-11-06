@@ -1,7 +1,7 @@
 use arena_tree::Node;
 use ctype::{isspace, ispunct};
 use entity;
-use nodes::{NodeValue, Ast, NodeLink, AstNode};
+use nodes::{NodeValue, Ast, NodeLink, NodeImage, AstNode};
 use parser::{unwrap_into, unwrap_into_copy, ComrakOptions, Reference, AutolinkType};
 use scanners;
 
@@ -767,7 +767,11 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
         let inl = make_inline(
             self.arena,
             if is_image {
-                NodeValue::Image(nl)
+                NodeValue::Image(NodeImage{
+                    e: "".to_string(),
+                    url: nl.url,
+                    title: nl.title,
+                })
             } else {
                 NodeValue::Link(nl)
             },

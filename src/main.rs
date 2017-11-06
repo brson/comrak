@@ -26,9 +26,10 @@ extern crate clap;
 extern crate unicode_categories;
 extern crate typed_arena;
 extern crate regex;
-extern crate itertools;
 #[macro_use]
 extern crate lazy_static;
+#[macro_use]
+extern crate serde_json;
 
 mod arena_tree;
 mod html;
@@ -167,8 +168,29 @@ fn spec_test (args: &Vec<&str>, opts: parser::ComrakOptions) {
         }
 
         let our_rendering = formatter(&test.input, opts);
+        let mut value = serde_json::Value::Null;
+        let mut compare = serde_json::Value::Null;
+        if opts.rtjson {
+            value = match serde_json::from_str(&our_rendering) {
+                 Ok(s) => s,
+                 Err(e) => {
+                     println!("error parsing: {:?}", e);
+                     serde_json::Value::Null
+                 }
+            };
+            // println!("Second {}", test.expected);
+            compare = match serde_json::from_str(&test.expected) {
+                 Ok(s) => s,
+                 Err(e) => {
+                    println!("error parsing: {:?}", e);
+                     serde_json::Value::Null
+                 }
+            };
+        }
 
-        if our_rendering == test.expected {
+        if opts.rtjson && value == compare {
+            print!(".");
+        } else if our_rendering == test.expected {
             print!(".");
         } else {
             fail_report += format!("\nFAIL {}:\n\n---input---\n{}\n\n---wanted---\n{}\n\n---got---\n{}\n",

@@ -82,9 +82,10 @@ extern crate unicode_categories;
 extern crate typed_arena;
 extern crate regex;
 extern crate entities;
-extern crate itertools;
 #[macro_use]
 extern crate lazy_static;
+#[macro_use]
+extern crate serde_json;
 
 mod arena_tree;
 mod parser;
