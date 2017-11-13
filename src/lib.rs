@@ -90,7 +90,6 @@ mod parser;
 mod scanners;
 mod html;
 mod rtjson;
-mod cm;
 mod ctype;
 mod nodes;
 mod entity;
