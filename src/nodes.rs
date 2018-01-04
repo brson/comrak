@@ -66,7 +66,7 @@ pub enum NodeValue {
     TableCell,
 
     /// **Inline**.  FormattedString
-    FormattedText(String, Vec<[u8; 3]>),
+    FormattedText(String, Vec<[u16; 3]>),
 
     /// **Inline**.  [Textual content](https://github.github.com/gfm/#textual-content).  All text
     /// in a document will be contained in a `Text` node.
@@ -175,7 +175,7 @@ pub struct NodeFormatLink {
     pub element: String,
  
     /// The Formatted link that is described by our parser
-    pub format_range: Vec<[u8; 3]>,
+    pub format_range: Vec<[u16; 3]>,
 
     /// The caption, if there is one, that is associated with this text node
     pub caption: String,

@@ -1227,26 +1227,28 @@ impl<'a, 'o> Parser<'a, 'o> {
     fn reset_rtjson_node(
         &mut self,
         unformatted_text: &mut String,
-        current_format: &mut HashMap<u8, u8>,
-        format_ranges: &mut Vec<[u8; 3]>,
+        current_format: &mut HashMap<u16, u16>,
+        format_ranges: &mut Vec<[u16; 3]>,
     ) {
         unformatted_text.truncate(0);
         current_format.clear();
         format_ranges.clear();
     }
     
-    fn insert_format(&mut self, current_format: &mut HashMap<u8, u8>, val: u8) {
+    fn insert_format(&mut self, current_format: &mut HashMap<u16, u16>, val: u16) {
         *current_format.entry(val).or_insert(0) += 1;
     }
     
-    fn remove_format(&mut self, current_format: &mut HashMap<u8, u8>, val: u8) {
+    fn remove_format(&mut self, current_format: &mut HashMap<u16, u16>, val: u16) {
         *current_format.entry(val).or_insert(1) -= 1;
     }
 
-    fn consolidate_format(&mut self, format_ranges: &mut Vec<[u8; 3]>) {
+    fn consolidate_format(&mut self, format_ranges: &mut Vec<[u16; 3]>) {
+        // TODO[shaq|Nov-27-2017]: This errors out on post longer than
+        // 65K, can we possibly fix that or make a better exit happen
         let mut prev_end = format_ranges[0][1] + format_ranges[0][2];
         let mut prev_style = format_ranges[0][0];
-        let mut new_format: Vec<[u8; 3]> = vec![];
+        let mut new_format: Vec<[u16; 3]> = vec![];
         let mut buffer_range = format_ranges[0];
         buffer_range[2] = 0;
         for (i, range) in format_ranges.iter().enumerate() {
@@ -1273,12 +1275,12 @@ impl<'a, 'o> Parser<'a, 'o> {
         &mut self,
         node: &'a AstNode<'a>,
         unformatted_text: &mut String,
-        current_format: &mut HashMap<u8, u8>,
-        format_ranges: &mut Vec<[u8; 3]>,
+        current_format: &mut HashMap<u16, u16>,
+        format_ranges: &mut Vec<[u16; 3]>,
     ) {
         match node.data.borrow_mut().value {
             NodeValue::Text(ref text) => {
-                let mut sum: u8 = 0;
+                let mut sum: u16 = 0;
                 for (key, val) in current_format.iter() {
                     if *val > 0 {
                         sum += *key;
@@ -1286,8 +1288,8 @@ impl<'a, 'o> Parser<'a, 'o> {
                 }
                 if sum > 0 {
                     let escaped_text = self.escape(unformatted_text);
-                    let range_idx = escaped_text.len() as u8;
-                    let range_length = text.len() as u8;
+                    let range_idx = escaped_text.len() as u16;
+                    let range_length = text.len() as u16;
                     let new_range = [sum, range_idx, range_length];
                     format_ranges.push(new_range);
                 }
@@ -1323,8 +1325,8 @@ impl<'a, 'o> Parser<'a, 'o> {
                 parent_paragraph.insert_before(node);
             }
             NodeValue::Code(ref literal) => {
-                let range_idx = unformatted_text.len() as u8;
-                let range_length = literal.len() as u8;
+                let range_idx = unformatted_text.len() as u16;
+                let range_length = literal.len() as u16;
                 let new_range = [64, range_idx, range_length];
                 format_ranges.push(new_range);
                 unformatted_text.push_str(literal);
