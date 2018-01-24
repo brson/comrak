@@ -36,7 +36,10 @@ pub fn process_glyphs<'a>(
             match c {
                 b'^' | b'%' => idx += 1,
                 b'(' => {
-                    wrapped = true;
+                    let suffix = slice.bytes().rev().next().unwrap();
+                    if  suffix == b')' {
+                        wrapped = true;
+                    }
                     break
                 }
                 _ => break

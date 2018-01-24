@@ -4,12 +4,12 @@ cargo run -- --rtjson --spec specs/rtjson/rtjson.spec
 ```````````````````````````````` example
 this is a link with **bold** and *italic*
 .
-{"document":[{"e":"par","c":[{"e":"text","f":[[1,20,4],[2,29,6]],"t":"this is a link with bold and italic"}]}]}````````````````````````````````
+{"document":[{"c":[{"e":"text","f":[[1,20,4],[2,29,6]],"t":"this is a link with bold and italic"}],"e":"par"}]}````````````````````````````````
 
 ```````````````````````````````` example
 *Hello Reddit*, this an example paragraph. Read more RTJson [here](https://docs.google.com/document/d/1Qpf2tl8iabZIEKvUSE3bFRV2QCIjxaXn-6Mblvojpvs/edit#heading=h.w2llmo96i6e1)
 .
-{"document":[{"e":"par","c":[{"e":"text","f":[[2,0,12]],"t":"Hello Reddit, this an example paragraph. Read more RTJson "},{"e":"link","t":"here","u":"https://docs.google.com/document/d/1Qpf2tl8iabZIEKvUSE3bFRV2QCIjxaXn-6Mblvojpvs/edit#heading=h.w2llmo96i6e1"}]}]}````````````````````````````````
+{"document":[{"c":[{"e":"text","f":[[2,0,12]],"t":"Hello Reddit, this an example paragraph. Read more RTJson "},{"e":"link","t":"here","u":"https://docs.google.com/document/d/1Qpf2tl8iabZIEKvUSE3bFRV2QCIjxaXn-6Mblvojpvs/edit#heading=h.w2llmo96i6e1"}],"e":"par"}]}````````````````````````````````
 
 ```````````````````````````````` example
 ### This heading contains plain text, [a link](https://reddit.com), and a u/username.
@@ -25,12 +25,12 @@ This post has a paragraph in the middle.
 
 >This post ends with a blockquote.
 .
-{"document":[{"e":"blockquote","c":[{"e":"par","c":[{"e":"text","t":"This post begins with a blockquote."}]}]},{"e":"par","c":[{"e":"text","t":"This post has a paragraph in the middle."}]},{"e":"blockquote","c":[{"e":"par","c":[{"e":"text","t":"This post ends with a blockquote."}]}]}]}````````````````````````````````
+{"document":[{"c":[{"e":"par","c":[{"e":"text","t":"This post begins with a blockquote."}]}],"e":"blockquote"},{"c":[{"e":"text","t":"This post has a paragraph in the middle."}],"e":"par"},{"c":[{"c":[{"e":"text","t":"This post ends with a blockquote."}],"e":"par"}],"e":"blockquote"}]}````````````````````````````````
 
 ```````````````````````````````` example
 >A blockquote with nothing else.
 .
-{"document":[{"e":"blockquote","c":[{"e":"par","c":[{"e":"text","t":"A blockquote with nothing else."}]}]}]}````````````````````````````````
+{"document":[{"c":[{"c":[{"e":"text","t":"A blockquote with nothing else."}],"e":"par"}],"e":"blockquote"}]}````````````````````````````````
 
 // TODO: This utilizes one of the breaks.
 
@@ -45,17 +45,17 @@ This post has a paragraph in the middle.
 >
 >Line preceding
 .
-{"document":[{"e":"blockquote","c":[{"e":"par","c":[{"e":"text","t":"Line proceeding; this line has a "},{"e":"link","t":"link","u":"https://reddit.com"},{"e":"text","t":" and a "},{"e":"r/","t":"redditlink"},{"e":"text","t":"."}]},{"e":"par","c":[{"e":"text","t":"Line preceding; no line proceeding"}]},{"e":"par","c":[{"e":"text","t":"No line preceding; no line proceeding"}]},{"e":"par","c":[{"e":"text","t":"No line preceding; line proceeding"}]},{"e":"par","c":[{"e":"text","t":"Line preceding"}]}]}]}````````````````````````````````
+{"document":[{"c":[{"c":[{"e":"text","t":"Line proceeding; this line has a "},{"e":"link","t":"link","u":"https://reddit.com"},{"e":"text","t":" and a "},{"e":"r/","t":"redditlink"},{"e":"text","t":"."}],"e":"par"},{"c":[{"e":"text","t":"Line preceding; no line proceeding"}],"e":"par"},{"c":[{"e":"text","t":"No line preceding; no line proceeding"}],"e":"par"},{"c":[{"e":"text","t":"No line preceding; line proceeding"}],"e":"par"},{"c":[{"e":"text","t":"Line preceding"}],"e":"par"}],"e":"blockquote"}]}````````````````````````````````
 
 ```````````````````````````````` example
 >This post ends with a blockquote\n\nwith embedded newlines.
 .
-{"document":[{"e":"blockquote","c":[{"e":"par","c":[{"e":"text","t":"This post ends with a blockquote\\n\\nwith embedded newlines."}]}]}]}````````````````````````````````
+{"document":[{"c":[{"c":[{"e":"text","t":"This post ends with a blockquote\\n\\nwith embedded newlines."}],"e":"par"}],"e":"blockquote"}]}````````````````````````````````
 
 ```````````````````````````````` example
 Hello, **this is bold**, *this is italic*, ***this is both***. And this is a u/username and a /r/subreddit.
 .
-{"document":[{"e":"par","c":[{"e":"text","f":[[1,7,12],[2,21,14],[3,37,12]],"t":"Hello, this is bold, this is italic, this is both. And this is a "},{"e":"u/","t":"username"},{"e":"text","t":" and a "},{"e":"r/","t":"subreddit"},{"e":"text","t":"."}]}]}````````````````````````````````
+{"document":[{"c":[{"e":"text","f":[[1,7,12],[2,21,14],[3,37,12]],"t":"Hello, this is bold, this is italic, this is both. And this is a "},{"e":"u/","t":"username"},{"e":"text","t":" and a "},{"e":"r/","t":"subreddit"},{"e":"text","t":"."}],"e":"par"}]}````````````````````````````````
 
 ```````````````````````````````` example
 Below this is a list:
@@ -66,7 +66,7 @@ Below this is a list:
 
 Above this is a list.
 .
-{"document":[{"e":"par","c":[{"e":"text","t":"Below this is a list:"}]},{"e":"list","o":false,"c":[{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"First item"}]}]},{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"Second item"}]}]},{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"Third item"}]}]}]},{"e":"par","c":[{"e":"text","t":"Above this is a list."}]}]}````````````````````````````````
+{"document":[{"c":[{"e":"text","t":"Below this is a list:"}],"e":"par"},{"c":[{"e":"li","c":[{"c":[{"e":"text","t":"First item"}],"e":"par"}]},{"c":[{"c":[{"e":"text","t":"Second item"}],"e":"par"}],"e":"li"},{"c":[{"c":[{"e":"text","t":"Third item"}],"e":"par"}],"e":"li"}],"e":"list","o":false},{"c":[{"e":"text","t":"Above this is a list."}],"e":"par"}]}````````````````````````````````
 
 ```````````````````````````````` example
 * First item
@@ -155,7 +155,7 @@ www.thisisalink.com
       console.log("notice the blank line before this function?");
     }
 .
-{"document":[{"e":"code","c":[{"e":"raw","t":"function test() {"},{"e":"raw","t":"  console.log(&quot;notice the blank line before this function?&quot;);"},{"e":"raw","t":"}"},{"e":"raw","t":""}]}]}````````````````````````````````
+{"document":[{"e":"code","c":[{"e":"raw","t":"function test() {"},{"e":"raw","t":"  console.log(&quot;notice the blank line before this function?&quot;);"},{"e":"raw","t":"}"}]}]}````````````````````````````````
 
 Say I have many formats nested in one format range. We would want to keep that 
 overall format through the whole thing, while also getting rid of the old format
@@ -164,7 +164,7 @@ each time we went on.
 ```````````````````````````````` example
 *__bold__ ~underline~ ~~strikethrough~~*
 .
-{"document":[{"e":"par","c":[{"e":"text","f":[[3,0,4],[2,4,1],[6,5,9],[2,14,1],[10,15,13]],"t":"bold underline strikethrough"}]}]}````````````````````````````````
+{"document":[{"c":[{"e":"text","f":[[3,0,4],[2,4,1],[6,5,9],[2,14,1],[10,15,13]],"t":"bold underline strikethrough"}],"e":"par"}]}````````````````````````````````
 
 In the case that we have two of the same styles nested within one another we want
 the ranges to all be the same. This will likely only result from the legacy client.
@@ -172,19 +172,19 @@ the ranges to all be the same. This will likely only result from the legacy clie
 ```````````````````````````````` example
 **This is some __bold__ text.**
 .
-{"document":[{"e":"par","c":[{"e":"text","f":[[1,0,23]],"t":"This is some bold text."}]}]}````````````````````````````````
+{"document":[{"c":[{"e":"text","f":[[1,0,23]],"t":"This is some bold text."}],"e":"par"}]}````````````````````````````````
 
 ```````````````````````````````` example
 foo^^^bar
 .
-{"document":[{"e":"par","c":[{"e":"text","f":[[32,3,3]],"t":"foobar"}]}]}````````````````````````````````
+{"document":[{"c":[{"e":"text","f":[[32,3,3]],"t":"foobar"}],"e":"par"}]}````````````````````````````````
 
 Lets try the same thing with links
 
 ```````````````````````````````` example
 [**This is some __bold__ text.**](www.reddit.com)
 .
-{"document":[{"e":"par","c":[{"e":"link","f":[[1,0,23]],"t":"This is some bold text.","u":"www.reddit.com"}]}]}````````````````````````````````
+{"document":[{"c":[{"e":"link","f":[[1,0,23]],"t":"This is some bold text.","u":"www.reddit.com"}],"e":"par"}]}````````````````````````````````
 
 Now we also allow images with captions for our parser. An exclamation point allows us to point towards our image using the format 
 ![alt](/mediaid "caption")
@@ -196,7 +196,7 @@ These media assets have captions:
 
 ![img](fedcba "an image")
 .
-{"document":[{"e":"par","c":[{"e":"text","t":"These media assets have captions:"}]},{"c":"an animated gif","e":"gif","id":"abcdef"},{"c":"an image","e":"img","id":"fedcba"}]}````````````````````````````````
+{"document":[{"c":[{"e":"text","t":"These media assets have captions:"}],"e":"par"},{"c":"an animated gif","e":"gif","id":"abcdef"},{"c":"an image","e":"img","id":"fedcba"}]}````````````````````````````````
 
 Or without captions
 
@@ -207,21 +207,20 @@ These media assets don't have captions:
 
 ![img](fedcba)
 .
-{"document":[{"e":"par","c":[{"e":"text","t":"These media assets don't have captions:"}]},{"e":"gif","id":"abcdef"},{"e":"img","id":"fedcba"}]}````````````````````````````````
+{"document":[{"c":[{"e":"text","t":"These media assets don't have captions:"}],"e":"par"},{"e":"gif","id":"abcdef"},{"e":"img","id":"fedcba"}]}````````````````````````````````
 
 
 ```````````````````````````````` example
 Raw "quotes", &ampersands, and <lt & gt> should be escaped.
 .
-{"document":[{"e":"par","c":[{"e":"text","t":"Raw &quot;quotes&quot;, &amp;ampersands, and &lt;lt &amp; gt&gt; should be escaped."}]}]}````````````````````````````````
+{"document":[{"c":[{"e":"text","t":"Raw &quot;quotes&quot;, &amp;ampersands, and &lt;lt &amp; gt&gt; should be escaped."}],"e":"par"}]}````````````````````````````````
 
 ```````````````````````````````` example
 HTML entities like &amp; &quot; &lt; and &gt; should not be escaped, unless they are malformed like &amp or &quot".
 .
-{"document":[{"e":"par","c":[{"e":"text","t":"HTML entities like &amp; &quot; &lt; and &gt; should not be escaped, unless they are malformed like &amp;amp or &amp;quot&quot;."}]}]}````````````````````````````````
+{"document":[{"c":[{"e":"text","t":"HTML entities like &amp; &quot; &lt; and &gt; should not be escaped, unless they are malformed like &amp;amp or &amp;quot&quot;."}],"e":"par"}]}````````````````````````````````
 
 ```````````````````````````````` example
 Escaping to HTML entities like & and " shouldn't impact format ranges like **this** or ~~*this*~~.
 .
-{"document":[{"e":"par","c":[{"e":"text","f":[[1,84,4],[10,92,4]],"t":"Escaping to HTML entities like &amp; and &quot; shouldn't impact format ranges like this or this."}]}]}````````````````````````````````
-
+{"document":[{"c":[{"e":"text","f":[[1,84,4],[10,92,4]],"t":"Escaping to HTML entities like &amp; and &quot; shouldn't impact format ranges like this or this."}],"e":"par"}]}````````````````````````````````

@@ -1,4 +1,4 @@
-/*! 
+/*!
   Included from https://github.com/SimonSapin/rust-forest/blob/5783c8be8680b84c0438638bdee07d4e4aca40ac/arena-tree/lib.rs.
   MIT license (per Cargo.toml).
 

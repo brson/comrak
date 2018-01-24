@@ -58,7 +58,7 @@ fn render_rtjson(text: &str, opts: parser::ComrakOptions) -> String {
     let arena = Arena::new();
     let root = parser::parse_document(&arena, text, &opts);
     let rendered_rtjson = rtjson::format_document(root, &parser::ComrakOptions::default());
-    rendered_rtjson
+    rendered_rtjson.to_string()
 }
 
 // Tests in the spec (v0.26) are of the form:
@@ -177,7 +177,6 @@ fn spec_test (args: &Vec<&str>, opts: parser::ComrakOptions) {
                      serde_json::Value::Null
                  }
             };
-            // println!("Second {}", test.expected);
             compare = match serde_json::from_str(&test.expected) {
                  Ok(s) => s,
                  Err(e) => {

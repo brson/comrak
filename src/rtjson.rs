@@ -1,23 +1,20 @@
-use ctype::isspace;
 use nodes::{TableAlignment, NodeValue, ListType, AstNode};
 use parser::ComrakOptions;
+use serde_json;
 
 /// Formats an AST as HTML, modified by the given options.
-pub fn format_document<'a>(root: &'a AstNode<'a>, options: &ComrakOptions) -> String {
+pub fn format_document<'a>(root: &'a AstNode<'a>, options: &ComrakOptions) -> serde_json::Value {
     let mut f = RTJsonFormatter::new(options);
-    f.format(root, false);
-    f.s
+    f.format(root).unwrap()
 }
 
 struct RTJsonFormatter<'o> {
-    s: String,
     options: &'o ComrakOptions,
 }
 
 impl<'o> RTJsonFormatter<'o> {
     fn new(options: &'o ComrakOptions) -> Self {
         RTJsonFormatter {
-            s: String::with_capacity(1024),
             options: options,
         }
     }
@@ -106,299 +103,216 @@ impl<'o> RTJsonFormatter<'o> {
         text
     }
 
-    fn append_comma<'a>(&mut self, node: &'a AstNode<'a>) {
-        if node.next_sibling().is_some() {
-            self.s += ",";
-        }
-    }
-
-    fn format_children<'a>(&mut self, node: &'a AstNode<'a>, plain: bool) {
+    fn format_children<'a>(&mut self, node: &'a AstNode<'a>, content: &mut serde_json::Value) {
+        let mut vals = Vec::with_capacity(128);
         for n in node.children() {
-            self.format(n, plain);
-        }
-    }
-
-    fn format<'a>(&mut self, node: &'a AstNode<'a>, plain: bool) {
-        if plain {
-            match node.data.borrow().value {
-                NodeValue::Text(ref literal) |
-                NodeValue::Code(ref literal) => self.s += self.escape(literal).as_str(),
-                _ => (),
+            let js = self.format(n).to_owned();
+            match js {
+                Some(k) => vals.push(k),
+                None => (),
             }
-            self.format_children(node, true);
-        } else {
-            let new_plain = self.format_node(node, true);
-            self.format_children(node, new_plain);
-            self.format_node(node, false);
         }
+        *content = json!(vals);
     }
 
-    fn format_node<'a>(&mut self, node: &'a AstNode<'a>, entering: bool) -> bool {
+    fn format<'a>(&mut self, node: &'a AstNode<'a>) -> Option<serde_json::Value> {
+        let mut content = &mut json!({});
+        self.format_children(node, content);
+        let mut json = match self.format_node(node) {
+            Some(k) => k,
+            None => serde_json::Value::Null
+        };
+        if json == serde_json::Value::Null {
+            return None
+        }
         match node.data.borrow().value {
             NodeValue::Document => {
-                if entering {
-                    self.s += r#"{"document":["#;
-                } else {
-                    self.s += "]}";
+                json["document"] = content.clone();
+            }
+            NodeValue::Table(..) => {
+                json["h"] = content[0].get("h").unwrap_or(&serde_json::Value::Null).clone();
+                json["c"] = content[1].get("c").unwrap_or(&serde_json::Value::Null).clone();
+            }
+            NodeValue::TableRow(..) => {
+                match json.clone().get_mut("h") {
+                    Some(_h) => json["h"] = content.clone(),
+                    None => json["c"] = json!([content.clone()]),
                 }
+            }
+            _ => {
+                if !content.as_array().unwrap().is_empty() {
+                    json["c"] = content.clone();
+                }
+            }
+        }
+        Some(json)
+    }
+
+    fn format_node<'a>(&mut self, node: &'a AstNode<'a>) -> Option<serde_json::Value> {
+        match node.data.borrow().value {
+            NodeValue::Document => {
+                Some(json!({
+                    "document": ""
+                }))
             },
             NodeValue::BlockQuote => {
-                if entering {
-                    self.s += r#"{"e":"blockquote","c":["#;
-                } else {
-                    self.s += "]}";
-                }
+                Some(json!({
+                    "e": "blockquote",
+                }))
             }
             NodeValue::List(ref nl) => {
-                if entering {
-                    if nl.list_type == ListType::Bullet {
-                        self.s += r#"{"e":"list","o":false,"c":["#;
-                    } else {
-                        self.s += r#"{"e":"list","o":true,"c":["#;
-                    }
-                } else {
-                    self.s += "]}";
-                }
+                Some(json!({
+                    "e": "list",
+                    "o": if nl.list_type != ListType::Bullet {true} else {false},
+                }))
             }
             NodeValue::Item(..) => {
-                if entering {
-                    self.s += r#"{"e":"li","c":["#;
-                } else {
-                    self.s += "]}";
-                }
+                Some(json!({
+                    "e": "li",
+                }))
             }
             NodeValue::Heading(ref nch) => {
-                if entering {
-                    self.s += &format!(r#"{{"e":"h","l":{},"c":["#, nch.level);
-                } else {
-                    self.s += "]}";
-                }
+                Some(json!({
+                    "e": "h",
+                    "l": nch.level,
+                }))
             }
             NodeValue::CodeBlock(ref ncb) => {
-                if entering {
-                    if ncb.info.is_empty() {
-                        self.s += r#"{"e":"code","c":["#;
-                    } else {
-                        let mut first_tag = 0;
-                        while first_tag < ncb.info.len() &&
-                              !isspace(ncb.info.as_bytes()[first_tag]) {
-                            first_tag += 1;
-                        }
-
-                        self.s += format!(r#"{{"e":"code","l":"{}","c":["#, self.escape(&ncb.info[..first_tag])).as_str();
-                    }
-
-                    let max = ncb.literal.split("\n").count() - 1;
-                    for (i, it) in ncb.literal.split("\n").enumerate() {
-                        self.s += &json!({
+                let mut int = Vec::with_capacity(128);
+                let max = ncb.literal.split("\n").count() - 1;
+                for (i, it) in ncb.literal.split("\n").enumerate() {
+                    if i != max {
+                        int.push(json!({
                             "e": "raw",
                             "t": self.escape(it)
-                        }).to_string();
-                        if i != max {
-                            self.s += ",";
-                        }
+                        }).clone());
                     }
-                    self.s += "]}";
                 }
+                Some(json!({
+                    "e": "code",
+                    "c": int
+                }))
             }
-            NodeValue::HtmlBlock(_) => unreachable!(),
+            NodeValue::HtmlBlock(_) => None,
             NodeValue::ThematicBreak | NodeValue::LineBreak |
-            NodeValue:: SoftBreak => (),
-            NodeValue::Code(_) => {
-                if entering {
-                    self.s += r#"{"e":"error code"}"#;
-                }
-            }
-            NodeValue::Underline => {
-                if entering {
-                    self.s += r#"{"e":"error underline"}"#;
-                }
-            }
-            NodeValue::Strong | NodeValue::Emph | NodeValue::Superscript |
-            NodeValue::Strikethrough => unreachable!(),
+            NodeValue:: SoftBreak => None,
+            NodeValue::Code(_) | NodeValue::Strong | NodeValue::Emph | NodeValue::Superscript |
+            NodeValue::Strikethrough | NodeValue::Underline => unreachable!(),
             NodeValue::Paragraph => {
-                if entering {
-                    self.s += r#"{"e":"par","c":["#;
-                } else  {
-                    self.s += "]}";
-                }
+                Some(json!({
+                    "e": "par",
+                }))
             }
             NodeValue::Text(ref literal) => {
-                if entering {
-                    match node.parent().unwrap().data.borrow().value {
-                        NodeValue::Heading(..) | NodeValue::CodeBlock(..) => {
-                            self.s += &json!({
-                                "e": "raw",
-                                "t": self.escape(literal)
-                            }).to_string();
-                        }
-                        NodeValue::BlockQuote  | NodeValue::Paragraph |
-                        NodeValue::TableCell  => {
-                            self.s += &json!({
-                                "e": "text",
-                                "t": self.escape(literal)
-                            }).to_string();
-                        }
-                        NodeValue::Link(..) |
-                        NodeValue::Text(..) | NodeValue::Code(..) => self.s += self.escape(literal).as_str(),
-                        NodeValue::LineBreak | NodeValue::SoftBreak | NodeValue::ThematicBreak => (),
-                        NodeValue::Document |
-                        NodeValue::Strong |
-                        NodeValue::Emph |
-                        NodeValue::Underline |
-                        NodeValue::Superscript |
-                        NodeValue::Strikethrough |
-                        NodeValue::Image(..) |
-                        NodeValue::Link(..) |
-                        NodeValue::List(..) | 
-                        NodeValue::Item(..) | 
-                        NodeValue::HtmlBlock(..) |
-                        NodeValue::FormattedText(..) |
-                        NodeValue::Table(..) |
-                        NodeValue::TableRow(..) |
-                        NodeValue::UnformattedLink(..) |
-                        NodeValue::FormattedLink(..) |
-                        NodeValue::RedditLink(..) => unreachable!(),
-                    }
+                match node.parent().unwrap().data.borrow().value {
+                    NodeValue::Heading(..) | NodeValue::CodeBlock(..) => {
+                       Some(json!({
+                           "e":"raw",
+                           "t": self.escape(literal)
+                       }))
+                   }
+                   NodeValue::TableCell | NodeValue::Paragraph | NodeValue::BlockQuote => {
+                       Some(json!({
+                           "e": "text",
+                           "t": self.escape(literal),
+                       }))
+                   }
+                   _ => unreachable!(),
                 }
             }
             NodeValue::FormattedText(ref literal, ref format_ranges) => {
-                if entering {
-                    match node.parent().unwrap().data.borrow().value {
-                        NodeValue::TableCell | NodeValue::Paragraph | NodeValue::BlockQuote => {
-                            self.s += &json!({
-                                "e": "text",
-                                "t": self.escape(literal),
-                                "f": format_ranges
-                            }).to_string();
-                        }
-                        NodeValue::Heading(..) | NodeValue::CodeBlock(..) => {
-                            self.s += &json!({
-                                "e":"raw",
-                                "t": self.escape(literal)
-                            }).to_string();
-                        }
-                        NodeValue::Link(..) |
-                        NodeValue::Text(..) | NodeValue::Code(..) => self.s += self.escape(literal).as_str(),
-                        NodeValue::LineBreak | NodeValue::SoftBreak | NodeValue::ThematicBreak => (),
-                        NodeValue::Document |
-                        NodeValue::Strong |
-                        NodeValue::Emph |
-                        NodeValue::Underline |
-                        NodeValue::Superscript |
-                        NodeValue::Strikethrough |
-                        NodeValue::Image(..) |
-                        NodeValue::List(..) |
-                        NodeValue::Item(..) |
-                        NodeValue::HtmlBlock(..) |
-                        NodeValue::Table(..) |
-                        NodeValue::TableRow(..) |
-                        NodeValue::FormattedText(..) |
-                        NodeValue::UnformattedLink(..) |
-                        NodeValue::FormattedLink(..) |
-                        NodeValue::RedditLink(..) => unreachable!(),
-                    }
+                match node.parent().unwrap().data.borrow().value {
+                    NodeValue::Heading(..) | NodeValue::CodeBlock(..) => {
+                       Some(json!({
+                           "e":"raw",
+                           "t": self.escape(literal)
+                       }))
+                   }
+                   NodeValue::TableCell | NodeValue::Paragraph | NodeValue::BlockQuote => {
+                       Some(json!({
+                           "e": "text",
+                           "t": self.escape(literal),
+                           "f": format_ranges
+                       }))
+                   }
+                   _ => unreachable!(),
                 }
             }
             NodeValue::FormattedLink(ref nl) => {
-                if entering {
-                    if !&nl.element.is_empty() {
-                        self.s += &json!({
-                            "e": "link",
-                            "u": self.escape_href(&nl.url),
-                            "t": self.escape(&nl.caption),
-                            "f": nl.format_range,
-                            "a": self.escape(&nl.element)
-                        }).to_string();
-                    } else {
-                        self.s += &json!({
-                            "e": "link",
-                            "u": self.escape_href(&nl.url),
-                            "t": self.escape(&nl.caption),
-                            "f": &nl.format_range
-                        }).to_string();
-                    }
+                if !&nl.element.is_empty() {
+                    Some(json!({
+                        "e":"link",
+                        "u":self.escape_href(&nl.url),
+                        "t":self.escape(&nl.caption),
+                        "f":&nl.format_range,
+                        "a":self.escape(&nl.element),
+                    }))
+                } else {
+                    Some(json!({
+                        "e":"link",
+                        "u":self.escape_href(&nl.url),
+                        "t":self.escape(&nl.caption),
+                        "f":&nl.format_range,
+                    }))
                 }
             }
             NodeValue::UnformattedLink(ref nl) => {
-                if entering {
-                    if !&nl.element.is_empty() {
-                        self.s += &json!({
-                            "e": "link",
-                            "u": self.escape_href(&nl.url),
-                            "t": self.escape(&nl.caption),
-                            "a": self.escape(&nl.element)
-                        }).to_string();
-                    } else {
-                        self.s += &json!({
-                            "e": "link",
-                            "u": self.escape_href(&nl.url),
-                            "t": self.escape(&nl.caption)
-                        }).to_string();
-                    }
+                if !&nl.element.is_empty() {
+                    Some(json!({
+                        "e": "link",
+                        "u": self.escape_href(&nl.url),
+                        "t": self.escape(&nl.caption),
+                        "a": self.escape(&nl.element)
+                    }))
+                } else {
+                    Some(json!({
+                        "e":"link",
+                        "u":self.escape_href(&nl.url),
+                        "t":self.escape(&nl.caption),
+                    }))
                 }
             }
             NodeValue::Link(ref nl) => {
-                if entering {
-                    self.s += &json!({
-                        "e": "link",
-                        "u": self.escape_href(&nl.url),
-                        "t": self.escape(&nl.title)
-                    }).to_string();
-                }
+                Some(json!({
+                    "e":"link",
+                    "u":self.escape_href(&nl.url),
+                    "t":self.escape(&nl.title),
+                }))
             }
             NodeValue::RedditLink(ref nl) => {
-                if entering {
-                    self.s += &json!({
-                        "e": self.escape_href(&nl.url),
-                        "t": self.escape(&nl.title)
-                    }).to_string();
-                }
+                Some(json!({
+                    "e":self.escape_href(&nl.url),
+                    "t":self.escape(&nl.title),
+                }))
             }
             NodeValue::Image(ref nl) => {
-                if entering {
-                    if !&nl.title.is_empty() {
-                        self.s += &json!({
-                            "e": nl.e,
-                            "id": self.escape_href(&nl.url),
-                            "c": self.escape(&nl.title)
-                        }).to_string();
-                    } else {
-                        self.s += &json!({
-                            "e": nl.e,
-                            "id": self.escape_href(&nl.url)
-                        }).to_string();
-                    }
+                if !&nl.title.is_empty() {
+                    Some(json!({
+                        "e": nl.e,
+                        "id": self.escape_href(&nl.url),
+                        "c": self.escape(&nl.title),
+                    }))
+                } else {
+                    Some(json!({
+                        "e": nl.e,
+                        "id": self.escape_href(&nl.url),
+                    }))
                 }
             }
             NodeValue::Table(..) => {
-                if entering {
-                    self.s += r#"{"e":"table","#;
-                } else {
-                    if !node.last_child()
-                            .unwrap()
-                            .same_node(node.first_child().unwrap()) {
-                        self.s += "]";
-                    }
-                    self.s += "}";
-                }
+                Some(json!({
+                    "e": "table",
+                }))
             }
             NodeValue::TableRow(header) => {
-                if entering {
-                    if header {
-                        self.s += r#""h":["#;
-                    } else {
-                        self.s += "[";
-                    }
+                if header {
+                    Some(json!({
+                        "h" : []
+                    }))
                 } else {
-                    self.s += "]";
-                    if node.next_sibling().is_some() && !header {
-                        self.s += ",";
-                    }
-                    if header {
-                        self.s += ",";
-                        self.s += r#""c":["#;
-                    }
+                    Some(json!({
+                        "c" : []
+                    }))
                 }
             }
             NodeValue::TableCell => {
@@ -420,43 +334,28 @@ impl<'o> RTJsonFormatter<'o> {
                     _ => panic!(),
                 };
 
-                if entering {
+                let mut i = 0;
+                let mut start = node.parent().unwrap().first_child().unwrap();
+                while !start.same_node(node) {
+                    i += 1;
+                    start = start.next_sibling().unwrap();
+                }
 
-                    let mut start = node.parent().unwrap().first_child().unwrap();
-                    let mut i = 0;
-                    while !start.same_node(node) {
-                        i += 1;
-                        start = start.next_sibling().unwrap();
-                    }
-
-                    self.s += "{";
-                    if in_header {
-
-                        match alignments[i] {
-                            TableAlignment::Left => self.s += r#""a":"L","#,
-                            TableAlignment::Right => self.s += r#""a":"R","#,
-                            TableAlignment::Center => self.s += r#""a":"C","#,
-                            TableAlignment::None => (),
-                        }
-                    }
-                    
-                    self.s += r#""c":["#;
+                if in_header {
+                    Some(json!({
+                        "a": match alignments[i] {
+                            TableAlignment::Left => "L",
+                            TableAlignment::Right => "R",
+                            TableAlignment::Center => "C",
+                            TableAlignment::None => "",
+                        },
+                    }))
                 } else {
-                    self.s += "]}";
+                    Some(json!({
+                        "c": []
+                    }))
                 }
             }
         }
-        
-        match node.data.borrow().value {
-            NodeValue::TableRow(..) |
-            NodeValue::LineBreak | NodeValue::SoftBreak | 
-            NodeValue::ThematicBreak  => (),
-            _ => {
-                if !entering {
-                    self.append_comma(node);
-                }
-            }
-        }
-        false
     }
 }
