@@ -1449,6 +1449,7 @@ impl<'a, 'o> Parser<'a, 'o> {
             NodeValue::Image(..) => {
                 let parent_paragraph = node.parent().unwrap();
                 parent_paragraph.insert_before(node);
+                parent_paragraph.detach();
             }
             NodeValue::Code(ref literal) => {
                 let range_idx = unformatted_text.len() as u16;

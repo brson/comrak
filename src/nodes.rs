@@ -183,7 +183,7 @@ pub struct NodeFormatLink {
     /// Note this field is used for the `title` attribute by the HTML formatter even for images;
     /// `alt` text is supplied in the image inline text.
     pub element: String,
- 
+
     /// The Formatted link that is described by our parser
     pub format_range: Vec<[u16; 3]>,
 

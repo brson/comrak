@@ -101,7 +101,8 @@ use typed_arena::Arena;
 extern crate libc;
 #[macro_use] extern crate cpython;
 
-use cpython::{PyResult, Python};
+use cpython::*;
+use serde_json::Value;
 
 /// Render Markdown to HTML.
 ///
@@ -131,7 +132,7 @@ py_module_initializer!(snoomark, initsnoomark, PyInit_snoomark, |py, m| {
 // declared in a separate module.
 // Note that the py_fn!() macro automatically converts the arguments from
 // Python objects to Rust values; and the Rust return value back into a Python object.
-fn cm_to_rtjson(cm: String) -> String {
+fn cm_to_rtjson(cm: String) -> Value {
     let arena = Arena::new();
 
     let options = ComrakOptions {
@@ -152,8 +153,52 @@ fn cm_to_rtjson(cm: String) -> String {
     rendered_rtjson
 }
 
+/// Convert from a `serde_json::Value` to a `cpython::PyObject`.
+/// Code originally inspired from library by Iliana Weller found at
+/// https://github.com/ilianaw/rust-cpython-json/blob/master/src/lib.rs
+pub fn from_json(py: Python, json: Value) -> PyObject {
+    macro_rules! obj {
+        ($x:ident) => {
+            $x.into_py_object(py).into_object()
+        }
+    }
+
+    match json {
+        Value::Number(x) => {
+            if let Some(n) = x.as_u64() {
+                obj!(n)
+            } else if let Some(n) = x.as_i64() {
+                obj!(n)
+            } else if let Some(n) = x.as_f64() {
+                obj!(n)
+            } else {
+                // We should never get to this point
+                unreachable!()
+            }
+        }
+        Value::String(x) => PyUnicode::new(py, &x).into_object(),
+        Value::Bool(x) => obj!(x),
+        Value::Array(vec) => {
+            let mut elements = Vec::new();
+            for item in vec {
+                elements.push(from_json(py, item));
+            }
+            PyList::new(py, &elements[..]).into_object()
+        }
+        Value::Object(map) => {
+            let dict = PyDict::new(py);
+            for (key, value) in map {
+                dict.set_item(py, key, from_json(py, value));
+            }
+            dict.into_object()
+        }
+        Value::Null => py.None(),
+    }
+}
+
 // logic implemented as a normal rust function
-fn cm_to_rtjson_py(_: Python, cm: String) -> PyResult<String> {
+fn cm_to_rtjson_py(py: Python, cm: String) -> PyResult<PyObject> {
     let out = cm_to_rtjson(cm);
-    Ok(out)
+    let res = from_json(py, out);
+    Ok(res)
 }
