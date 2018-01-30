@@ -191,6 +191,41 @@ pub struct NodeFormatLink {
     pub caption: Vec<u8>,
 }
 
+/// The details of a link's destination, or an image's source.
+#[derive(Debug, Clone)]
+pub struct NodeImage {
+    /// The element [img, vid, gif] of the link
+    pub e: String,
+
+    /// The URL for the link destination or image source.
+    pub url: String,
+
+    /// The title for the link or image.
+    ///
+    /// Note this field is used for the `title` attribute by the HTML formatter even for images;
+    /// `alt` text is supplied in the image inline text.
+    pub title: String,
+}
+
+/// The details of a link's destination with formatting, or an image's source.
+#[derive(Debug, Clone)]
+pub struct NodeFormatLink {
+    /// The URL for the link destination or image source.
+    pub url: String,
+
+    /// The title for the link or image.
+    ///
+    /// Note this field is used for the `title` attribute by the HTML formatter even for images;
+    /// `alt` text is supplied in the image inline text.
+    pub element: String,
+
+    /// The Formatted link that is described by our parser
+    pub format_range: Vec<[u16; 3]>,
+
+    /// The caption, if there is one, that is associated with this text node
+    pub caption: String,
+}
+
 /// The metadata of a list; the kind of list, the delimiter used and so on.
 #[derive(Debug, Default, Clone, Copy)]
 pub struct NodeList {
