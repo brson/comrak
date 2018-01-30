@@ -692,11 +692,11 @@ impl<'a, 'o> Parser<'a, 'o> {
                 );
 
                 let mut hashpos = line[self.first_nonspace..]
-                    .bytes()
-                    .position(|c| c == b'#')
+                    .iter()
+                    .position(|&c| c == b'#')
                     .unwrap() + self.first_nonspace;
                 let mut level = 0;
-                while line.as_bytes()[hashpos] == b'#' {
+                while line[hashpos] == b'#' {
                     level += 1;
                     hashpos += 1;
                 }
