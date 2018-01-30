@@ -17,5 +17,3 @@ notifications:
   email:
     on_failure: change
     on_success: change
-    recipients:
-      - ashe@kivikakk.ee

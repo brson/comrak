@@ -1,7 +1,6 @@
 use pest::Parser;
 use std::str;
 use twoway::find_bytes;
-use regex::bytes::Regex;
 
 #[cfg(debug_assertions)]
 const _LEXER: &str = include_str!("lexer.pest");

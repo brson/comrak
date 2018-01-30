@@ -1,11 +1,11 @@
 build:
   test:
-    image: rust:1.21.0
+    image: rust:1.26.0
     commands:
       - cargo test
 
   release:
-    image: rust:1.21.0
+    image: rust:1.26.0
     commands:
       - cargo build --release
       - cp target/release/libsnoomark.so target/release/snoomark-$${TAG}.so
