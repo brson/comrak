@@ -1,6 +1,7 @@
 use pest::Parser;
 use std::str;
 use twoway::find_bytes;
+use regex::bytes::Regex;
 
 #[cfg(debug_assertions)]
 const _LEXER: &str = include_str!("lexer.pest");
@@ -180,9 +181,9 @@ pub fn table_row_end(line: &[u8]) -> Option<usize> {
 }
 
 // extensions by reddit
-pub fn reddit_atx_heading_start(line: &str) -> Option<usize> {
+pub fn reddit_atx_heading_start(line: &[u8]) -> Option<usize> {
     lazy_static! {
         static ref RE: Regex = Regex::new(r"\A(?:#{1,6})").unwrap();
     }
-    search(&RE, line)
+    search(Rule::atx_heading_start, line)
 }

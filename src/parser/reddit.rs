@@ -1,20 +1,20 @@
 // Reddit-flavored extensions
 use nodes::{NodeValue, AstNode};
 use parser::inlines::make_inline;
-use regex::Regex;
+use regex::bytes::Regex;
 use typed_arena::Arena;
 
 // ZT: recursively call this to nest; enable multiple initial levels of nesting
 pub fn process_glyphs<'a>(
     arena: &'a Arena<AstNode<'a>>,
     node: &'a AstNode<'a>,
-    contents: &mut String
+    contents: &mut Vec<u8>
 ) {
     lazy_static! {
         static ref RE: Regex = Regex::new(r"([\^%]{1,10})(\([\w\s\(\)]+\)|\S+)").unwrap();
     }
 
-    let owned_contents = contents.to_owned();
+    let owned_contents =  contents.to_owned();
     let matched = RE.find(&owned_contents);
     let m = match matched {
         Some(m) => m,
@@ -28,16 +28,16 @@ pub fn process_glyphs<'a>(
             NodeValue::Superscript
         );
 
-        let slice = &owned_contents[start..end].to_owned();
-        let prefix: String = slice.chars().take(2).collect();
+        let mut slice = &owned_contents[start..end].to_owned();
+        let prefix: Vec<u8> = slice[0..1].to_vec();
         let mut idx = 0;
         let mut wrapped = false;
-        for c in prefix.into_bytes() {
-            match c {
+        for c in prefix.iter() {
+            match *c {
                 b'^' | b'%' => idx += 1,
                 b'(' => {
-                    let suffix = slice.bytes().rev().next().unwrap();
-                    if  suffix == b')' {
+                    let suffix = slice.iter().rev().next().unwrap();
+                    if *suffix == b')' {
                         wrapped = true;
                     }
                     break
@@ -56,13 +56,13 @@ pub fn process_glyphs<'a>(
         inl.append(make_inline(
             arena,
             NodeValue::Text(
-                inner_text.to_owned()
+                inner_text.to_vec()
             )
         ));
 
         node.insert_after(inl);
-        let remain = owned_contents[end..].to_string();
-        inl.insert_after(make_inline(arena, NodeValue::Text(remain)));
+        let remain = &owned_contents[end..];
+        inl.insert_after(make_inline(arena, NodeValue::Text(remain.to_vec())));
 
         contents.truncate(start);
 }

@@ -70,7 +70,7 @@ pub enum NodeValue {
     TableCell,
 
     /// **Inline**.  FormattedString
-    FormattedText(String, Vec<[u16; 3]>),
+    FormattedText(Vec<u8>, Vec<[u16; 3]>),
 
     /// **Inline**.  [Textual content](https://github.github.com/gfm/#textual-content).  All text
     /// in a document will be contained in a `Text` node.
@@ -160,35 +160,35 @@ pub struct NodeLink {
 #[derive(Debug, Clone)]
 pub struct NodeImage {
     /// The element [img, vid, gif] of the link
-    pub e: String,
+    pub e: Vec<u8>,
 
     /// The URL for the link destination or image source.
-    pub url: String,
+    pub url: Vec<u8>,
 
     /// The title for the link or image.
     ///
     /// Note this field is used for the `title` attribute by the HTML formatter even for images;
     /// `alt` text is supplied in the image inline text.
-    pub title: String,
+    pub title: Vec<u8>,
 }
 
 /// The details of a link's destination with formatting, or an image's source.
 #[derive(Debug, Clone)]
 pub struct NodeFormatLink {
     /// The URL for the link destination or image source.
-    pub url: String,
+    pub url: Vec<u8>,
 
     /// The title for the link or image.
     ///
     /// Note this field is used for the `title` attribute by the HTML formatter even for images;
     /// `alt` text is supplied in the image inline text.
-    pub element: String,
+    pub element: Vec<u8>,
 
     /// The Formatted link that is described by our parser
     pub format_range: Vec<[u16; 3]>,
 
     /// The caption, if there is one, that is associated with this text node
-    pub caption: String,
+    pub caption: Vec<u8>,
 }
 
 /// The metadata of a list; the kind of list, the delimiter used and so on.

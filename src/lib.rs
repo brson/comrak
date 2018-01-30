@@ -62,7 +62,7 @@
 //! # }
 //! ```
 
-#![deny(missing_docs, missing_debug_implementations, missing_copy_implementations, trivial_casts,
+#![deny(missing_debug_implementations, missing_copy_implementations, trivial_casts,
         trivial_numeric_casts, unstable_features, unused_import_braces)]
 #![cfg_attr(feature = "dev", allow(unstable_features))]
 #![allow(unknown_lints, doc_markdown, cyclomatic_complexity)]
@@ -79,10 +79,8 @@ extern crate lazy_static;
 extern crate pest;
 #[macro_use]
 extern crate pest_derive;
-extern crate regex;
 extern crate twoway;
-extern crate typed_arena;
-extern crate unicode_categories;
+#[macro_use]
 extern crate serde_json;
 
 mod arena_tree;
@@ -95,7 +93,7 @@ mod nodes;
 mod entity;
 mod strings;
 
-use parser::{parse_document, ComrakOptions};
+pub use parser::{parse_document, ComrakOptions};
 use typed_arena::Arena;
 
 extern crate libc;
@@ -104,22 +102,13 @@ extern crate libc;
 use cpython::*;
 use serde_json::Value;
 
-/// Render Markdown to HTML.
-///
-/// See the documentation of the crate root for an example.
-#[no_mangle]
-pub extern fn markdown_to_html(md: &str, options: &ComrakOptions) -> String {
-    let arena = Arena::new();
-    let root = parse_document(&arena, md, options);
-    let mut s = Vec::new();
-    format_html(root, options, &mut s).unwrap();
-    String::from_utf8(s).unwrap()
-}
-
 // add bindings to the generated python module
 // This initializes the Python module and assigns the name `snoomark`,
 // which converts Reddit-flavored CommonMark (or legacy Markdown) to RTJSON.
 py_module_initializer!(snoomark, initsnoomark, PyInit_snoomark, |py, m| {
+    // add bindings to the generated python module
+    // This initializes the Python module and assigns the name `snoomark`,
+    // which converts Reddit-flavored CommonMark (or legacy Markdown) to RTJSON.
     const DOC_NAME: &'static str = env!("CARGO_PKG_NAME");
     const DOC_VERSION: &'static str = env!("CARGO_PKG_VERSION");
     let doc_string = format!("[{} {}] This module is implemented in Rust.", DOC_NAME, DOC_VERSION);
@@ -145,7 +134,9 @@ fn cm_to_rtjson(cm: String) -> Value {
         ext_table: true,
         ext_autolink: false,
         ext_tasklist: false,
-        ext_superscript: false
+        ext_superscript: false,
+        ext_footnotes: false,
+        ext_header_ids: None
     };
 
     let root = parse_document(&arena, &cm, &options);

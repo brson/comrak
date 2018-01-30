@@ -179,8 +179,9 @@ impl<'o> RTJsonFormatter<'o> {
             }
             NodeValue::CodeBlock(ref ncb) => {
                 let mut int = Vec::with_capacity(128);
-                let max = ncb.literal.split("\n").count() - 1;
-                for (i, it) in ncb.literal.split("\n").enumerate() {
+                let code_content = String::from_utf8(ncb.literal.to_owned()).unwrap();
+                let max = code_content.split("\n").count() - 1;
+                for (i, it) in code_content.split("\n").enumerate() {
                     if i != max {
                         int.push(json!({
                             "e": "raw",
@@ -208,13 +209,13 @@ impl<'o> RTJsonFormatter<'o> {
                     NodeValue::Heading(..) | NodeValue::CodeBlock(..) => {
                        Some(json!({
                            "e":"raw",
-                           "t": self.escape(literal)
+                           "t": self.escape(&String::from_utf8(literal.to_owned()).unwrap())
                        }))
                    }
                    NodeValue::TableCell | NodeValue::Paragraph | NodeValue::BlockQuote => {
                        Some(json!({
                            "e": "text",
-                           "t": self.escape(literal),
+                           "t": self.escape(&String::from_utf8(literal.to_owned()).unwrap()),
                        }))
                    }
                    _ => unreachable!(),
@@ -225,13 +226,13 @@ impl<'o> RTJsonFormatter<'o> {
                     NodeValue::Heading(..) | NodeValue::CodeBlock(..) => {
                        Some(json!({
                            "e":"raw",
-                           "t": self.escape(literal)
+                           "t": self.escape(&String::from_utf8(literal.to_owned()).unwrap())
                        }))
                    }
                    NodeValue::TableCell | NodeValue::Paragraph | NodeValue::BlockQuote => {
                        Some(json!({
                            "e": "text",
-                           "t": self.escape(literal),
+                           "t": self.escape(&String::from_utf8(literal.to_owned()).unwrap()),
                            "f": format_ranges
                        }))
                    }
@@ -242,16 +243,16 @@ impl<'o> RTJsonFormatter<'o> {
                 if !&nl.element.is_empty() {
                     Some(json!({
                         "e":"link",
-                        "u":self.escape_href(&nl.url),
-                        "t":self.escape(&nl.caption),
+                        "u":self.escape_href(&String::from_utf8(nl.url.to_owned()).unwrap()),
+                        "t":self.escape(&String::from_utf8(nl.caption.to_owned()).unwrap()),
                         "f":&nl.format_range,
-                        "a":self.escape(&nl.element),
+                        "a":self.escape(&String::from_utf8(nl.element.to_owned()).unwrap()),
                     }))
                 } else {
                     Some(json!({
                         "e":"link",
-                        "u":self.escape_href(&nl.url),
-                        "t":self.escape(&nl.caption),
+                        "u":self.escape_href(&String::from_utf8(nl.url.to_owned()).unwrap()),
+                        "t":self.escape(&String::from_utf8(nl.caption.to_owned()).unwrap()),
                         "f":&nl.format_range,
                     }))
                 }
@@ -260,42 +261,42 @@ impl<'o> RTJsonFormatter<'o> {
                 if !&nl.element.is_empty() {
                     Some(json!({
                         "e": "link",
-                        "u": self.escape_href(&nl.url),
-                        "t": self.escape(&nl.caption),
-                        "a": self.escape(&nl.element)
+                        "u": self.escape_href(&String::from_utf8(nl.url.to_owned()).unwrap()),
+                        "t": self.escape(&String::from_utf8(nl.caption.to_owned()).unwrap()),
+                        "a": self.escape(&String::from_utf8(nl.element.to_owned()).unwrap())
                     }))
                 } else {
                     Some(json!({
                         "e":"link",
-                        "u":self.escape_href(&nl.url),
-                        "t":self.escape(&nl.caption),
+                        "u":self.escape_href(&String::from_utf8(nl.url.to_owned()).unwrap()),
+                        "t":self.escape(&String::from_utf8(nl.caption.to_owned()).unwrap()),
                     }))
                 }
             }
             NodeValue::Link(ref nl) => {
                 Some(json!({
                     "e":"link",
-                    "u":self.escape_href(&nl.url),
-                    "t":self.escape(&nl.title),
+                    "u":self.escape_href(&String::from_utf8(nl.url.to_owned()).unwrap()),
+                    "t":self.escape(&String::from_utf8(nl.title.to_owned()).unwrap()),
                 }))
             }
             NodeValue::RedditLink(ref nl) => {
                 Some(json!({
-                    "e":self.escape_href(&nl.url),
-                    "t":self.escape(&nl.title),
+                    "e":self.escape_href(&String::from_utf8(nl.url.to_owned()).unwrap()),
+                    "t":self.escape(&String::from_utf8(nl.title.to_owned()).unwrap()),
                 }))
             }
             NodeValue::Image(ref nl) => {
                 if !&nl.title.is_empty() {
                     Some(json!({
                         "e": nl.e,
-                        "id": self.escape_href(&nl.url),
-                        "c": self.escape(&nl.title),
+                        "id": self.escape_href(&String::from_utf8(nl.url.to_owned()).unwrap()),
+                        "c": self.escape(&String::from_utf8(nl.title.to_owned()).unwrap()),
                     }))
                 } else {
                     Some(json!({
                         "e": nl.e,
-                        "id": self.escape_href(&nl.url),
+                        "id": self.escape_href(&String::from_utf8(nl.url.to_owned()).unwrap()),
                     }))
                 }
             }
@@ -356,6 +357,9 @@ impl<'o> RTJsonFormatter<'o> {
                     }))
                 }
             }
+            NodeValue::FootnoteDefinition(..) => None,
+            NodeValue::HtmlInline(..) => None,
+            NodeValue::FootnoteReference(..) => None
         }
     }
 }

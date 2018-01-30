@@ -2,7 +2,7 @@ use ctype::{isalnum, isalpha, isspace};
 use nodes::{AstNode, NodeLink, NodeValue};
 use parser::inlines::make_inline;
 use std::str;
-use regex::{Regex, Captures};
+use regex::Regex;
 use typed_arena::Arena;
 use unicode_categories::UnicodeCategories;
 
@@ -340,14 +340,14 @@ fn email_match<'a>(
 pub fn process_redditlinks<'a>(
     arena: &'a Arena<AstNode<'a>>,
     node: &'a AstNode<'a>,
-    contents: &mut String,
+    contents: &[u8],
 ) {
     lazy_static! {
         static ref RE: Regex = Regex::new(r"(^|[\n\t\r-_.+!*'(),%#@?=/;:,+&$])((/?(r|u)/)(\w+))").unwrap();
     }
 
-    let borrowed_contents = contents.to_string();
-    let matched = match RE.captures(&borrowed_contents) {
+    let borrowed_contents = contents.to_owned();
+    let matched = match RE.captures( unsafe { str::from_utf8_unchecked(&borrowed_contents) } ) {
         Some(m) => m,
         None => return
     };
@@ -363,16 +363,16 @@ pub fn process_redditlinks<'a>(
     let inl = make_inline(
         arena,
         NodeValue::RedditLink(NodeLink{
-            url: prefix.to_string(),
-            title: name.to_string()
+            url: prefix.to_vec(),
+            title: name.to_vec()
         })
     );
 
     node.insert_after(inl);
-    let remain = contents[name_match.end()..].to_string();
+    let remain = contents[name_match.end()..].to_owned();
     inl.insert_after(make_inline(arena, NodeValue::Text(remain)));
 
-    contents.truncate(prefix_match.start());
+    let contents = &contents[..prefix_match.start()];
 
     ()
 }

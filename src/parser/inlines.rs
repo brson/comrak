@@ -1,7 +1,7 @@
 use arena_tree::Node;
 use ctype::{ispunct, isspace};
 use entity;
-use nodes::{Ast, AstNode, NodeLink, NodeValue};
+use nodes::{Ast, AstNode, NodeLink, NodeValue, NodeImage};
 use parser::{unwrap_into, unwrap_into_copy, AutolinkType, ComrakOptions, Reference};
 use scanners;
 use std::cell::{Cell, RefCell};
@@ -758,7 +758,7 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
             self.arena,
             if is_image {
                 NodeValue::Image(NodeImage{
-                    e: "".to_string(),
+                    e: b"".to_vec(),
                     url: nl.url,
                     title: nl.title,
                 })

@@ -419,30 +419,10 @@ impl<'o> HtmlFormatter<'o> {
                     _ => false,
                 };
 
-                if entering {
-                    if !tight {
-                        self.cr();
-                        self.s += "<p>";
-                    }
-                } else if !tight {
-                    self.s += "</p>\n";
-                }
-            }
-            NodeValue::FormattedText(_, _) => (),
-            NodeValue::Text(ref literal) => {
-                if entering {
-                    self.escape(literal);
-                }
-            }
-            NodeValue::LineBreak => {
-                if entering {
-                    self.s += "<br />\n";
-                }
-            }
-            NodeValue::SoftBreak => {
-                if entering {
-                    if self.options.hardbreaks {
-                        self.s += "<br />\n";
+                if !tight {
+                    if entering {
+                        try!(self.cr());
+                        try!(self.output.write_all(b"<p>"));
                     } else {
                         if match node.parent().unwrap().data.borrow().value {
                             NodeValue::FootnoteDefinition(..) => true,
@@ -502,6 +482,11 @@ impl<'o> HtmlFormatter<'o> {
             } else {
                 try!(self.output.write_all(b"</sup>"));
             },
+            NodeValue::Underline => if entering {
+                try!(self.output.write_all(b"<u>"));
+            } else {
+                try!(self.output.write_all(b"</u>"));
+            },
             NodeValue::Link(ref nl) => if entering {
                 try!(self.output.write_all(b"<a href=\""));
                 try!(self.escape_href(&nl.url));
@@ -523,22 +508,17 @@ impl<'o> HtmlFormatter<'o> {
                     try!(self.output.write_all(b"\" title=\""));
                     try!(self.escape(&nl.title));
                 }
-            }
-            NodeValue::FormattedLink(..) => (),
-            NodeValue::UnformattedLink(..) => (),
-            NodeValue::RedditLink(..) => (),
-            NodeValue::Image(ref nl) => {
-                if entering {
-                    self.s += "<img src=\"";
-                    self.escape_href(&nl.url);
-                    self.s += "\" alt=\"";
-                    return true;
-                } else {
-                    if !nl.title.is_empty() {
-                        self.s += "\" title=\"";
-                        self.escape(&nl.title);
-                    }
-                    self.s += "\" />";
+                try!(self.output.write_all(b"\" />"));
+            },
+            NodeValue::Table(..) => if entering {
+                try!(self.cr());
+                try!(self.output.write_all(b"<table>\n"));
+            } else {
+                if !node.last_child()
+                    .unwrap()
+                    .same_node(node.first_child().unwrap())
+                {
+                    try!(self.output.write_all(b"</tbody>"));
                 }
                 try!(self.output.write_all(b"</table>\n"));
             },
@@ -633,6 +613,10 @@ impl<'o> HtmlFormatter<'o> {
                     r, r, r
                 ));
             },
+            NodeValue::FormattedText(_, _) => (),
+            NodeValue::FormattedLink(..) => (),
+            NodeValue::UnformattedLink(..) => (),
+            NodeValue::RedditLink(..) => (),
         }
         Ok(false)
     }
