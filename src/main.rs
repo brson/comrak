@@ -44,10 +44,9 @@ use typed_arena::Arena;
 fn render_html(text: &str, opts: &parser::ComrakOptions) -> String {
     let arena = Arena::new();
     let root = parser::parse_document(&arena, text, opts);
-    //let mut rendered_html = vec![];
-    // html::format_document(root, &parser::ComrakOptions::default(), &mut render_html).ok();
-    // String::from_utf8(rendered_html).unwrap()
-    "".to_string()
+    let mut rendered_html = vec![];
+    html::format_document(root, &parser::ComrakOptions::default(), &mut rendered_html).ok();
+    String::from_utf8(rendered_html).unwrap()
 }
 
 fn render_rtjson(text: &str, opts: &parser::ComrakOptions) -> String {
@@ -296,7 +295,7 @@ fn main() {
             0,
         ),
         ext_strikethrough: true,
-        ext_tagfilter: false,
+        ext_tagfilter: true,
         ext_table: true,
         ext_autolink: false,
         ext_tasklist: false,

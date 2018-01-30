@@ -327,7 +327,7 @@ impl NodeValue {
     /// Indicates whether this node may contain inlines.
     pub fn contains_inlines(&self) -> bool {
         match *self {
-            NodeValue::Paragraph | NodeValue::Heading(..) | NodeValue::TableCell => true,
+            NodeValue::Paragraph | NodeValue::Link(..) | NodeValue::Heading(..) | NodeValue::TableCell => true,
             _ => false,
         }
     }
@@ -435,6 +435,7 @@ pub fn can_contain_type<'a>(node: &'a AstNode<'a>, child: &NodeValue) -> bool {
         | NodeValue::Emph
         | NodeValue::Strong
         | NodeValue::Link(..)
+        | NodeValue::RedditLink(..)
         | NodeValue::Image(..) => !child.block(),
 
         NodeValue::Table(..) => match *child {
@@ -453,6 +454,7 @@ pub fn can_contain_type<'a>(node: &'a AstNode<'a>, child: &NodeValue) -> bool {
             | NodeValue::Emph
             | NodeValue::Strong
             | NodeValue::Link(..)
+            | NodeValue::RedditLink(..)
             | NodeValue::Image(..)
             | NodeValue::Strikethrough
             | NodeValue::HtmlInline(..) => true,

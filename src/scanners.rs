@@ -182,8 +182,5 @@ pub fn table_row_end(line: &[u8]) -> Option<usize> {
 
 // extensions by reddit
 pub fn reddit_atx_heading_start(line: &[u8]) -> Option<usize> {
-    lazy_static! {
-        static ref RE: Regex = Regex::new(r"\A(?:#{1,6})").unwrap();
-    }
     search(Rule::atx_heading_start, line)
 }

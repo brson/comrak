@@ -1603,7 +1603,7 @@ impl<'a, 'o> Parser<'a, 'o> {
                 NodeValue::Superscript => node.detach(),
                 NodeValue::Code(..) => node.detach(),
                 NodeValue::Image(ref mut nl) => {
-                    nl.e = unformatted_text.to_vec();
+                    nl.e =  unformatted_text.to_vec();
                     self.reset_rtjson_node(unformatted_text, current_format, format_ranges);
                 }
                 _ => ()
@@ -1658,7 +1658,7 @@ impl<'a, 'o> Parser<'a, 'o> {
         *text = text[end..].to_vec();
         let checkbox = inlines::make_inline(
             self.arena,
-            NodeValue::HtmlInline(if active {
+            NodeValue::Text(if active {
                 b"<input type=\"checkbox\" disabled=\"\" checked=\"\" />".to_vec()
             } else {
                 b"<input type=\"checkbox\" disabled=\"\" />".to_vec()

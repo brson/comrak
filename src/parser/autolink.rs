@@ -340,7 +340,7 @@ fn email_match<'a>(
 pub fn process_redditlinks<'a>(
     arena: &'a Arena<AstNode<'a>>,
     node: &'a AstNode<'a>,
-    contents: &[u8],
+    contents: &mut Vec<u8>,
 ) {
     lazy_static! {
         static ref RE: Regex = Regex::new(r"(^|[\n\t\r-_.+!*'(),%#@?=/;:,+&$])((/?(r|u)/)(\w+))").unwrap();
@@ -372,7 +372,7 @@ pub fn process_redditlinks<'a>(
     let remain = contents[name_match.end()..].to_owned();
     inl.insert_after(make_inline(arena, NodeValue::Text(remain)));
 
-    let contents = &contents[..prefix_match.start()];
+    contents.truncate(prefix_match.start());
 
     ()
 }

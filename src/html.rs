@@ -616,7 +616,23 @@ impl<'o> HtmlFormatter<'o> {
             NodeValue::FormattedText(_, _) => (),
             NodeValue::FormattedLink(..) => (),
             NodeValue::UnformattedLink(..) => (),
-            NodeValue::RedditLink(..) => (),
+            NodeValue::RedditLink(ref nl) => if entering {
+                try!(self.output.write_all(b"<a href=\"/"));
+                try!(self.escape_href(&nl.url));
+                try!(self.escape_href(&nl.title));
+                if !nl.title.is_empty() {
+                    try!(self.output.write_all(b"\" title=\""));
+                    try!(self.output.write_all(b"/"));
+                    try!(self.escape_href(&nl.url));
+                    try!(self.escape(&nl.title));
+                }
+                try!(self.output.write_all(b"\">"));
+            } else {
+                try!(self.output.write_all(b"/"));
+                try!(self.escape_href(&nl.url));
+                try!(self.escape(&nl.title));
+                try!(self.output.write_all(b"</a>"));
+            },
         }
         Ok(false)
     }

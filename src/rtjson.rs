@@ -289,13 +289,13 @@ impl<'o> RTJsonFormatter<'o> {
             NodeValue::Image(ref nl) => {
                 if !&nl.title.is_empty() {
                     Some(json!({
-                        "e": nl.e,
+                        "e": String::from_utf8(nl.e.to_owned()).unwrap(),
                         "id": self.escape_href(&String::from_utf8(nl.url.to_owned()).unwrap()),
                         "c": self.escape(&String::from_utf8(nl.title.to_owned()).unwrap()),
                     }))
                 } else {
                     Some(json!({
-                        "e": nl.e,
+                        "e": String::from_utf8(nl.e.to_owned()).unwrap(),
                         "id": self.escape_href(&String::from_utf8(nl.url.to_owned()).unwrap()),
                     }))
                 }
@@ -358,7 +358,7 @@ impl<'o> RTJsonFormatter<'o> {
                 }
             }
             NodeValue::FootnoteDefinition(..) => None,
-            NodeValue::HtmlInline(..) => None,
+            NodeValue::HtmlInline(ref nd) => unreachable!(),
             NodeValue::FootnoteReference(..) => None
         }
     }

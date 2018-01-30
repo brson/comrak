@@ -29,7 +29,7 @@ pub fn process_glyphs<'a>(
         );
 
         let mut slice = &owned_contents[start..end].to_owned();
-        let prefix: Vec<u8> = slice[0..1].to_vec();
+        let prefix: Vec<u8> = slice[0..2].to_vec();
         let mut idx = 0;
         let mut wrapped = false;
         for c in prefix.iter() {
