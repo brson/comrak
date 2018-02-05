@@ -130,13 +130,20 @@ impl<'o> RTJsonFormatter<'o> {
                 json["document"] = content.clone();
             }
             NodeValue::Table(..) => {
-                json["h"] = content[0].get("h").unwrap_or(&serde_json::Value::Null).clone();
-                json["c"] = content[1].get("c").unwrap_or(&serde_json::Value::Null).clone();
+                let mut vals = vec![];
+                for val in content.as_array_mut().unwrap() {
+                    if val.get("h") != None {
+                        json["h"] = val.get("h").unwrap_or(&serde_json::Value::Null).clone();
+                    } else {
+                        vals.push(val.get("c").unwrap_or(&serde_json::Value::Null));
+                    }
+                }
+                json["c"] = json!(vals);
             }
             NodeValue::TableRow(..) => {
                 match json.clone().get_mut("h") {
                     Some(_h) => json["h"] = content.clone(),
-                    None => json["c"] = json!([content.clone()]),
+                    None => json["c"] = content.clone(),
                 }
             }
             _ => {
