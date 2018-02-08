@@ -176,6 +176,13 @@ impl<'o> RTJsonFormatter<'o> {
             NodeValue::Item(..) => {
                 Some(json!({
                     "e": "li",
+                    "c": [{
+                        "c": [{
+                            "e": "text",
+                            "t": ""
+                        }],
+                        "e": "par"
+                    }],
                 }))
             }
             NodeValue::Heading(ref nch) => {
