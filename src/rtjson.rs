@@ -146,6 +146,13 @@ impl<'o> RTJsonFormatter<'o> {
                     None => json["c"] = content.clone(),
                 }
             }
+            NodeValue::Item(..) => {
+                if content[0].get("e") != None && content[0].get("e").unwrap() == "list" {
+                    json["c"] = json!([json["c"], content.clone()]);
+                } else {
+                    json["c"] = content.clone();
+                }
+            }
             _ => {
                 if !content.as_array().unwrap().is_empty() {
                     json["c"] = content.clone();
