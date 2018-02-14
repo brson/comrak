@@ -99,3 +99,16 @@ We want to have code blocks not include empty lines at the end.
     }
 .
 {"document":[{"c":[{"e":"raw","t":"for (var i in arr) {"},{"e":"raw", "t":""},{"e":"raw","t":"    console.log(arr[i]);"},{"e":"raw","t":"}"}],"e":"code"}]}````````````````````````````````
+
+Our tables should show all of their rows and columns
+
+
+```````````````````````````````` example
+|Col 1|Col 2|Col 3|
+|:-|:-:|-:|
+| | | |
+|c1:r2|c2:r2|c3:r2|
+| |c2:r3|c3:r3|
+|c1:r4| |c3:r4|
+.
+{"document":[{"c":[[{"c":[]},{"c":[]},{"c":[]}],[{"c":[{"e":"text","t":"c1:r2"}]},{"c":[{"e":"text","t":"c2:r2"}]},{"c":[{"e":"text","t":"c3:r2"}]}],[{"c":[]},{"c":[{"e":"text","t":"c2:r3"}]},{"c":[{"e":"text","t":"c3:r3"}]}],[{"c":[{"e":"text","t":"c1:r4"}]},{"c":[]},{"c":[{"e":"text","t":"c3:r4"}]}]],"e":"table","h":[{"a":"L","c":[{"e":"text","t":"Col 1"}]},{"a":"C","c":[{"e":"text","t":"Col 2"}]},{"a":"R","c":[{"e":"text","t":"Col 3"}]}]}]}````````````````````````````````
