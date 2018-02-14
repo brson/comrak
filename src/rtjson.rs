@@ -127,21 +127,28 @@ impl<'o> RTJsonFormatter<'o> {
         }
         match node.data.borrow().value {
             NodeValue::Document => {
-                json["document"] = content.clone();
+                json["document"] = content.to_owned();
             }
             NodeValue::Table(..) => {
-                json["h"] = content[0].get("h").unwrap_or(&serde_json::Value::Null).clone();
-                json["c"] = content[1].get("c").unwrap_or(&serde_json::Value::Null).clone();
+                let mut vals = vec![];
+                for val in content.as_array_mut().unwrap() {
+                    if val.get("h") != None {
+                        json["h"] = val.get("h").unwrap_or(&serde_json::Value::Null).to_owned();
+                    } else {
+                        vals.push(val.get("c").unwrap_or(&serde_json::Value::Null));
+                    }
+                }
+                json["c"] = json!(vals);
             }
             NodeValue::TableRow(..) => {
                 match json.clone().get_mut("h") {
-                    Some(_h) => json["h"] = content.clone(),
-                    None => json["c"] = json!([content.clone()]),
+                    Some(_h) => json["h"] = content.to_owned(),
+                    None => json["c"] = content.to_owned(),
                 }
             }
             _ => {
                 if !content.as_array().unwrap().is_empty() {
-                    json["c"] = content.clone();
+                    json["c"] = content.to_owned();
                 }
             }
         }
