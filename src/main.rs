@@ -295,7 +295,7 @@ fn main() {
             0,
         ),
         ext_strikethrough: true,
-        ext_tagfilter: true,
+        ext_tagfilter: false,
         ext_table: true,
         ext_autolink: false,
         ext_tasklist: false,
