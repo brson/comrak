@@ -54,6 +54,10 @@ pub enum NodeValue {
     /// children.
     ThematicBreak,
 
+    /// **Block**. A footnote definition.  The `Vec<u8>` is the footnote's name.
+    /// Contains other **blocks**.
+    FootnoteDefinition(Vec<u8>),
+
     /// **Block**. A [table](https://github.github.com/gfm/#tables-extension-) per the GFM spec.
     /// Contains table rows.
     Table(Vec<TableAlignment>),
@@ -66,11 +70,11 @@ pub enum NodeValue {
     TableCell,
 
     /// **Inline**.  FormattedString
-    FormattedText(String, Vec<[u16; 3]>),
+    FormattedText(Vec<u8>, Vec<[u16; 3]>),
 
     /// **Inline**.  [Textual content](https://github.github.com/gfm/#textual-content).  All text
     /// in a document will be contained in a `Text` node.
-    Text(String),
+    Text(Vec<u8>),
 
     /// **Inline**.  A [soft line break](https://github.github.com/gfm/#soft-line-breaks).  If
     /// the `hardbreaks` option is set in `ComrakOptions` during formatting, it will be formatted
@@ -81,7 +85,10 @@ pub enum NodeValue {
     LineBreak,
 
     /// **Inline**.  A [code span](https://github.github.com/gfm/#code-spans).
-    Code(String),
+    Code(Vec<u8>),
+
+    /// **Inline**.  [Raw HTML](https://github.github.com/gfm/#raw-html) contained inline.
+    HtmlInline(Vec<u8>),
 
     /// **Inline**.  [Emphasised](https://github.github.com/gfm/#emphasis-and-strong-emphasis)
     /// text.
@@ -113,6 +120,9 @@ pub enum NodeValue {
     /// **Inline**.  An [image](https://github.github.com/gfm/#images).
     Image(NodeImage),
 
+    /// **Inline**.  A footnote reference; the `Vec<u8>` is the referent footnote's name.
+    FootnoteReference(Vec<u8>),
+
     /// **Inline**.  Underline
     Underline,
 }
@@ -137,48 +147,48 @@ pub enum TableAlignment {
 #[derive(Debug, Clone)]
 pub struct NodeLink {
     /// The URL for the link destination or image source.
-    pub url: String,
+    pub url: Vec<u8>,
 
     /// The title for the link or image.
     ///
     /// Note this field is used for the `title` attribute by the HTML formatter even for images;
     /// `alt` text is supplied in the image inline text.
-    pub title: String,
+    pub title: Vec<u8>,
 }
 
 /// The details of a link's destination, or an image's source.
 #[derive(Debug, Clone)]
 pub struct NodeImage {
     /// The element [img, vid, gif] of the link
-    pub e: String,
+    pub e: Vec<u8>,
 
     /// The URL for the link destination or image source.
-    pub url: String,
+    pub url: Vec<u8>,
 
     /// The title for the link or image.
     ///
     /// Note this field is used for the `title` attribute by the HTML formatter even for images;
     /// `alt` text is supplied in the image inline text.
-    pub title: String,
+    pub title: Vec<u8>,
 }
 
 /// The details of a link's destination with formatting, or an image's source.
 #[derive(Debug, Clone)]
 pub struct NodeFormatLink {
     /// The URL for the link destination or image source.
-    pub url: String,
+    pub url: Vec<u8>,
 
     /// The title for the link or image.
     ///
     /// Note this field is used for the `title` attribute by the HTML formatter even for images;
     /// `alt` text is supplied in the image inline text.
-    pub element: String,
+    pub element: Vec<u8>,
 
     /// The Formatted link that is described by our parser
     pub format_range: Vec<[u16; 3]>,
 
     /// The caption, if there is one, that is associated with this text node
-    pub caption: String,
+    pub caption: Vec<u8>,
 }
 
 /// The metadata of a list; the kind of list, the delimiter used and so on.
@@ -256,12 +266,12 @@ pub struct NodeCodeBlock {
 
     /// For fenced code blocks, the [info string](https://github.github.com/gfm/#info-string) after
     /// the opening fence, if any.
-    pub info: String,
+    pub info: Vec<u8>,
 
     /// The literal contents of the code block.  As the contents are not interpreted as Markdown at
     /// all, they are contained within this structure, rather than inserted into a child inline of
     /// any kind.
-    pub literal: String,
+    pub literal: Vec<u8>,
 }
 
 /// The metadata of a heading.
@@ -282,26 +292,26 @@ pub struct NodeHtmlBlock {
 
     /// The literal contents of the HTML block.  Per NodeCodeBlock, the content is included here
     /// rather than in any inline.
-    pub literal: String,
+    pub literal: Vec<u8>,
 }
-
 
 impl NodeValue {
     /// Indicates whether this node is a block node or inline node.
     pub fn block(&self) -> bool {
         match *self {
-            NodeValue::Document |
-            NodeValue::BlockQuote |
-            NodeValue::List(..) |
-            NodeValue::Item(..) |
-            NodeValue::CodeBlock(..) |
-            NodeValue::HtmlBlock(..) |
-            NodeValue::Paragraph |
-            NodeValue::Heading(..) |
-            NodeValue::ThematicBreak |
-            NodeValue::Table(..) |
-            NodeValue::TableRow(..) |
-            NodeValue::TableCell => true,
+            NodeValue::Document
+            | NodeValue::BlockQuote
+            | NodeValue::FootnoteDefinition(_)
+            | NodeValue::List(..)
+            | NodeValue::Item(..)
+            | NodeValue::CodeBlock(..)
+            | NodeValue::HtmlBlock(..)
+            | NodeValue::Paragraph
+            | NodeValue::Heading(..)
+            | NodeValue::ThematicBreak
+            | NodeValue::Table(..)
+            | NodeValue::TableRow(..)
+            | NodeValue::TableCell => true,
             _ => false,
         }
     }
@@ -309,9 +319,7 @@ impl NodeValue {
     #[doc(hidden)]
     pub fn accepts_lines(&self) -> bool {
         match *self {
-            NodeValue::Paragraph |
-            NodeValue::Heading(..) |
-            NodeValue::CodeBlock(..) => true,
+            NodeValue::Paragraph | NodeValue::Heading(..) | NodeValue::CodeBlock(..) => true,
             _ => false,
         }
     }
@@ -319,10 +327,7 @@ impl NodeValue {
     /// Indicates whether this node may contain inlines.
     pub fn contains_inlines(&self) -> bool {
         match *self {
-            NodeValue::Link(..) |
-            NodeValue::Paragraph |
-            NodeValue::Heading(..) |
-            NodeValue::TableCell => true,
+            NodeValue::Paragraph | NodeValue::Link(..) | NodeValue::Heading(..) | NodeValue::TableCell => true,
             _ => false,
         }
     }
@@ -330,7 +335,7 @@ impl NodeValue {
     /// Return a reference to the text of a `Text` inline, if this node is one.
     ///
     /// Convenience method.
-    pub fn text(&self) -> Option<&String> {
+    pub fn text(&self) -> Option<&Vec<u8>> {
         match *self {
             NodeValue::Text(ref t) => Some(t),
             _ => None,
@@ -340,7 +345,7 @@ impl NodeValue {
     /// Return a mutable reference to the text of a `Text` inline, if this node is one.
     ///
     /// Convenience method.
-    pub fn text_mut(&mut self) -> Option<&mut String> {
+    pub fn text_mut(&mut self) -> Option<&mut Vec<u8>> {
         match *self {
             NodeValue::Text(ref mut t) => Some(t),
             _ => None,
@@ -370,7 +375,7 @@ pub struct Ast {
     pub end_column: usize,
 
     #[doc(hidden)]
-    pub content: String,
+    pub content: Vec<u8>,
     #[doc(hidden)]
     pub open: bool,
     #[doc(hidden)]
@@ -381,7 +386,7 @@ pub struct Ast {
 pub fn make_block(value: NodeValue, start_line: u32, start_column: usize) -> Ast {
     Ast {
         value: value,
-        content: String::new(),
+        content: vec![],
         start_line: start_line,
         start_column: start_column,
         end_line: start_line,
@@ -410,58 +415,51 @@ pub fn can_contain_type<'a>(node: &'a AstNode<'a>, child: &NodeValue) -> bool {
     }
 
     match node.data.borrow().value {
-        NodeValue::Document |
-        NodeValue::BlockQuote |
-        NodeValue::Item(..) => {
-            child.block() &&
-                match *child {
-                    NodeValue::Item(..) => false,
-                    _ => true,
-                }
-        }
-
-        NodeValue::List(..) => {
-            match *child {
-                NodeValue::Item(..) => true,
-                _ => false,
+        NodeValue::Document
+        | NodeValue::BlockQuote
+        | NodeValue::FootnoteDefinition(_)
+        | NodeValue::Item(..) => {
+            child.block() && match *child {
+                NodeValue::Item(..) => false,
+                _ => true,
             }
         }
 
-        NodeValue::Paragraph |
-        NodeValue::Heading(..) |
-        NodeValue::Emph |
-        NodeValue::Strong |
-        NodeValue::Link(..) |
-        NodeValue::RedditLink(..) |
-        NodeValue::Image(..) => !child.block(),
+        NodeValue::List(..) => match *child {
+            NodeValue::Item(..) => true,
+            _ => false,
+        },
 
-        NodeValue::Table(..) => {
-            match *child {
-                NodeValue::TableRow(..) => true,
-                _ => false,
-            }
-        }
+        NodeValue::Paragraph
+        | NodeValue::Heading(..)
+        | NodeValue::Emph
+        | NodeValue::Strong
+        | NodeValue::Link(..)
+        | NodeValue::RedditLink(..)
+        | NodeValue::Image(..) => !child.block(),
 
-        NodeValue::TableRow(..) => {
-            match *child {
-                NodeValue::TableCell => true,
-                _ => false,
-            }
-        }
+        NodeValue::Table(..) => match *child {
+            NodeValue::TableRow(..) => true,
+            _ => false,
+        },
 
-        NodeValue::TableCell => {
-            match *child {
-                NodeValue::Text(..) |
-                NodeValue::Code(..) |
-                NodeValue::Emph |
-                NodeValue::Strong |
-                NodeValue::Link(..) |
-                NodeValue::RedditLink(..) |
-                NodeValue::Image(..) |
-                NodeValue::Strikethrough => true,
-                _ => false,
-            }
-        }
+        NodeValue::TableRow(..) => match *child {
+            NodeValue::TableCell => true,
+            _ => false,
+        },
+
+        NodeValue::TableCell => match *child {
+            NodeValue::Text(..)
+            | NodeValue::Code(..)
+            | NodeValue::Emph
+            | NodeValue::Strong
+            | NodeValue::Link(..)
+            | NodeValue::RedditLink(..)
+            | NodeValue::Image(..)
+            | NodeValue::Strikethrough
+            | NodeValue::HtmlInline(..) => true,
+            _ => false,
+        },
 
         _ => false,
     }
@@ -475,8 +473,7 @@ pub fn ends_with_blank_line<'a>(node: &'a AstNode<'a>) -> bool {
             return true;
         }
         match cur.data.borrow().value {
-            NodeValue::List(..) |
-            NodeValue::Item(..) => it = cur.last_child(),
+            NodeValue::List(..) | NodeValue::Item(..) => it = cur.last_child(),
             _ => it = None,
         };
     }

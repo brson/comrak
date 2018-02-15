@@ -42,16 +42,18 @@
 //! iter_nodes(root, &|node| {
 //!     match &mut node.data.borrow_mut().value {
 //!         &mut NodeValue::Text(ref mut text) => {
-//!             *text = text.replace("my", "your");
+//!             let orig = std::mem::replace(text, vec![]);
+//!             *text = String::from_utf8(orig).unwrap().replace("my", "your").as_bytes().to_vec();
 //!         }
 //!         _ => (),
 //!     }
 //! });
 //!
-//! let html: String = format_html(root, &ComrakOptions::default());
+//! let mut html = vec![];
+//! format_html(root, &ComrakOptions::default(), &mut html).unwrap();
 //!
 //! assert_eq!(
-//!     html,
+//!     String::from_utf8(html).unwrap(),
 //!     "<p>This is your input.</p>\n\
 //!      <ol>\n\
 //!      <li>Also your input.</li>\n\
@@ -60,19 +62,9 @@
 //! # }
 //! ```
 
-#![deny(
-    missing_debug_implementations,
-    missing_copy_implementations,
-    trivial_casts,
-    trivial_numeric_casts,
-    unstable_features,
-    unused_import_braces,
-    unused_qualifications
-)]
-
+#![deny(missing_debug_implementations, missing_copy_implementations, trivial_casts,
+        trivial_numeric_casts, unstable_features, unused_import_braces)]
 #![cfg_attr(feature = "dev", allow(unstable_features))]
-#![cfg_attr(feature = "dev", feature(plugin))]
-#![cfg_attr(feature = "dev", plugin(clippy))]
 #![allow(unknown_lints, doc_markdown, cyclomatic_complexity)]
 
 #![cfg_attr(rustbuild, feature(staged_api, rustc_private))]
@@ -84,6 +76,10 @@ extern crate regex;
 extern crate entities;
 #[macro_use]
 extern crate lazy_static;
+extern crate pest;
+#[macro_use]
+extern crate pest_derive;
+extern crate twoway;
 #[macro_use]
 extern crate serde_json;
 
@@ -97,7 +93,7 @@ mod nodes;
 mod entity;
 mod strings;
 
-use parser::{parse_document, ComrakOptions};
+pub use parser::{parse_document, ComrakOptions};
 use typed_arena::Arena;
 
 extern crate libc;
@@ -106,20 +102,13 @@ extern crate libc;
 use cpython::*;
 use serde_json::Value;
 
-/// Render Markdown to HTML.
-///
-/// See the documentation of the crate root for an example.
-#[no_mangle]
-pub extern fn markdown_to_html(md: &str, options: &ComrakOptions) -> String {
-    let arena = Arena::new();
-    let root = parse_document(&arena, md, options);
-    html::format_document(root, options)
-}
-
 // add bindings to the generated python module
 // This initializes the Python module and assigns the name `snoomark`,
 // which converts Reddit-flavored CommonMark (or legacy Markdown) to RTJSON.
 py_module_initializer!(snoomark, initsnoomark, PyInit_snoomark, |py, m| {
+    // add bindings to the generated python module
+    // This initializes the Python module and assigns the name `snoomark`,
+    // which converts Reddit-flavored CommonMark (or legacy Markdown) to RTJSON.
     const DOC_NAME: &'static str = env!("CARGO_PKG_NAME");
     const DOC_VERSION: &'static str = env!("CARGO_PKG_VERSION");
     let doc_string = format!("[{} {}] This module is implemented in Rust.", DOC_NAME, DOC_VERSION);
@@ -145,7 +134,9 @@ fn cm_to_rtjson(cm: String) -> Value {
         ext_table: true,
         ext_autolink: false,
         ext_tasklist: false,
-        ext_superscript: false
+        ext_superscript: false,
+        ext_footnotes: false,
+        ext_header_ids: None
     };
 
     let root = parse_document(&arena, &cm, &options);

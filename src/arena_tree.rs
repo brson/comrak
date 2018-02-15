@@ -1,5 +1,6 @@
 /*!
-  Included from https://github.com/SimonSapin/rust-forest/blob/5783c8be8680b84c0438638bdee07d4e4aca40ac/arena-tree/lib.rs.
+  Included from https://github.com/SimonSapin/rust-forest/blob/
+  5783c8be8680b84c0438638bdee07d4e4aca40ac/arena-tree/lib.rs.
   MIT license (per Cargo.toml).
 
 A DOM-like tree data structure based on `&Node` references.
@@ -19,7 +20,6 @@ make it a cell (`Cell` or `RefCell`) or use cells inside of it.
 
 use std::cell::Cell;
 
-
 /// A node inside a DOM-like tree.
 #[derive(Debug)]
 pub struct Node<'a, T: 'a> {
@@ -31,7 +31,6 @@ pub struct Node<'a, T: 'a> {
     last_child: Cell<Option<&'a Node<'a, T>>>,
     pub data: T,
 }
-
 
 fn same_ref<T>(a: &T, b: &T) -> bool {
     let a: *const T = a;
@@ -222,7 +221,6 @@ impl<'a, T> Node<'a, T> {
     }
 }
 
-
 macro_rules! axis_iterator {
     (#[$attr:meta] $name: ident: $next: ident) => {
         #[$attr]
@@ -270,7 +268,6 @@ axis_iterator! {
     ReverseChildren: previous_sibling
 }
 
-
 /// An iterator of references to a given node and its descendants, in tree order.
 #[derive(Debug)]
 pub struct Descendants<'a, T: 'a>(Traverse<'a, T>);
@@ -283,12 +280,11 @@ impl<'a, T> Iterator for Descendants<'a, T> {
             match self.0.next() {
                 Some(NodeEdge::Start(node)) => return Some(node),
                 Some(NodeEdge::End(_)) => {}
-                None => return None
+                None => return None,
             }
         }
     }
 }
-
 
 #[derive(Debug, Clone)]
 pub enum NodeEdge<T> {
@@ -354,15 +350,16 @@ macro_rules! traverse_iterator {
 }
 
 traverse_iterator! {
-    #[doc = "An iterator of the start and end edges of a given node and its descendants, in tree order."]
+    #[doc = "An iterator of the start and end edges of a given
+    node and its descendants, in tree order."]
     Traverse: first_child, next_sibling
 }
 
 traverse_iterator! {
-    #[doc = "An iterator of the start and end edges of a given node and its descendants, in reverse tree order."]
+    #[doc = "An iterator of the start and end edges of a given
+    node and its descendants, in reverse tree order."]
     ReverseTraverse: last_child, previous_sibling
 }
-
 
 #[cfg(test)]
 extern crate typed_arena;
@@ -385,26 +382,27 @@ fn it_works() {
             arena.alloc(Node::new((new_counter, DropTracker(&drop_counter))))
         };
 
-        let a = new();  // 1
-        a.append(new());  // 2
-        a.append(new());  // 3
-        a.prepend(new());  // 4
-        let b = new();  // 5
+        let a = new(); // 1
+        a.append(new()); // 2
+        a.append(new()); // 3
+        a.prepend(new()); // 4
+        let b = new(); // 5
         b.append(a);
-        a.insert_before(new());  // 6
-        a.insert_before(new());  // 7
-        a.insert_after(new());  // 8
-        a.insert_after(new());  // 9
-        let c = new();  // 10
+        a.insert_before(new()); // 6
+        a.insert_before(new()); // 7
+        a.insert_after(new()); // 8
+        a.insert_after(new()); // 9
+        let c = new(); // 10
         b.append(c);
 
         assert_eq!(drop_counter.get(), 0);
         c.previous_sibling.get().unwrap().detach();
         assert_eq!(drop_counter.get(), 0);
 
-        assert_eq!(b.descendants().map(|node| node.data.0).collect::<Vec<_>>(), [
-            5, 6, 7, 1, 4, 2, 3, 9, 10
-        ]);
+        assert_eq!(
+            b.descendants().map(|node| node.data.0).collect::<Vec<_>>(),
+            [5, 6, 7, 1, 4, 2, 3, 9, 10]
+        );
     }
 
     assert_eq!(drop_counter.get(), 10);

@@ -1,4 +1,4 @@
-FROM debian:jessie
+FROM debian:stretch
 
 RUN apt-get update && apt-get install -y \
   build-essential autoconf libtool \
@@ -18,3 +18,5 @@ RUN cd /tmp && chmod +x rustup-init && ./rustup-init -y --default-toolchain nigh
 RUN echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> /root/.bashrc
 
 RUN apt-get install -y vim-common
+RUN apt-get install -y time
+RUN apt-get install -y linux-perf

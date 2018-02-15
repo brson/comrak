@@ -1,0 +1,44 @@
+### 0.2.7
+
+* Use [`pest`](https://github.com/pest-parser/pest) instead of regexes for lexing.
+
+### 0.2.6
+
+* Fixed a bug where back-to-back emphases would not be processed correctly.
+  (#45; thanks to @SSJohns for the report.)
+
+### 0.2.5
+
+* Fixed a bug where an exclamation mark "!" followed by a footnote would be
+  eaten by the parser.
+
+### 0.2.4
+
+* Added footnotes support.
+
+### 0.2.3
+
+* Added header IDs extension.
+
+### 0.2.2
+
+* Fix for pathological reference link parsing.
+
+### 0.2.1
+
+* Speed optimisations.
+
+### 0.2.0
+
+* The formatters no longer produce Strings themeselves; you must specify an
+  output stream.
+* Speed up whitespace normalisation.
+
+### 0.1.9
+
+* Multibyte character fix for autolink (#35, Shaquille Johnson).
+* Resolve panics with tables in awkward situations (#36).
+
+### 0.1.8
+
+* Fix possible DoS in link parsing (#33, Demi Obenour).

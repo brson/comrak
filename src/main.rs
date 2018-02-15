@@ -1,18 +1,8 @@
 //! The `comrak` binary.
 
-#![deny(missing_docs,
-        missing_debug_implementations,
-    missing_copy_implementations,
-    trivial_casts,
-    trivial_numeric_casts,
-    unsafe_code,
-    unstable_features,
-    unused_import_braces,
-    unused_qualifications)]
-
+#![deny(missing_docs, missing_debug_implementations, missing_copy_implementations, trivial_casts,
+        trivial_numeric_casts, unstable_features, unused_import_braces)]
 #![cfg_attr(feature = "dev", allow(unstable_features))]
-#![cfg_attr(feature = "dev", feature(plugin))]
-#![cfg_attr(feature = "dev", plugin(clippy))]
 #![allow(unknown_lints, doc_markdown, cyclomatic_complexity)]
 
 // When compiled for the rustc compiler itself we want to make sure that this is
@@ -28,6 +18,10 @@ extern crate typed_arena;
 extern crate regex;
 #[macro_use]
 extern crate lazy_static;
+extern crate pest;
+#[macro_use]
+extern crate pest_derive;
+extern crate twoway;
 #[macro_use]
 extern crate serde_json;
 
@@ -47,16 +41,17 @@ use std::path::Path;
 use std::fs::File;
 use typed_arena::Arena;
 
-fn render_html(text: &str, opts: parser::ComrakOptions) -> String {
+fn render_html(text: &str, opts: &parser::ComrakOptions) -> String {
     let arena = Arena::new();
-    let root = parser::parse_document(&arena, text, &opts);
-    let rendered_html = html::format_document(root, &parser::ComrakOptions::default());
-    rendered_html
+    let root = parser::parse_document(&arena, text, opts);
+    let mut rendered_html = vec![];
+    html::format_document(root, &parser::ComrakOptions::default(), &mut rendered_html).ok();
+    String::from_utf8(rendered_html).unwrap()
 }
 
-fn render_rtjson(text: &str, opts: parser::ComrakOptions) -> String {
+fn render_rtjson(text: &str, opts: &parser::ComrakOptions) -> String {
     let arena = Arena::new();
-    let root = parser::parse_document(&arena, text, &opts);
+    let root = parser::parse_document(&arena, text, opts);
     let rendered_rtjson = rtjson::format_document(root, &parser::ComrakOptions::default());
     rendered_rtjson.to_string()
 }
@@ -165,11 +160,12 @@ fn spec_test (args: &Vec<&str>, opts: parser::ComrakOptions) {
         } else if test.n % 10 == 6 {
             print!(" ");
         }
+        let rtjson = opts.rtjson.clone();
 
-        let our_rendering = formatter(&test.input, opts);
+        let our_rendering = formatter(&test.input, &opts);
         let mut value = serde_json::Value::Null;
         let mut compare = serde_json::Value::Null;
-        if opts.rtjson {
+        if rtjson {
             value = match serde_json::from_str(&our_rendering) {
                  Ok(s) => s,
                  Err(e) => {
@@ -186,7 +182,7 @@ fn spec_test (args: &Vec<&str>, opts: parser::ComrakOptions) {
             };
         }
 
-        if opts.rtjson && value == compare {
+        if rtjson && value == compare {
             print!(".");
         } else if our_rendering == test.expected {
             print!(".");
@@ -303,7 +299,9 @@ fn main() {
         ext_table: true,
         ext_autolink: false,
         ext_tasklist: false,
-        ext_superscript: false
+        ext_superscript: false,
+        ext_footnotes: false,
+        ext_header_ids: None
     };
 
     if matches.is_present("spec") {

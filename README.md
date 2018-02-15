@@ -1,5 +1,5 @@
 [![Build Status](https://travis-ci.org/kivikakk/comrak.svg?branch=master)](https://travis-ci.org/kivikakk/comrak)
-![Spec Status: 643/643](https://img.shields.io/badge/specs-643%2F643-brightgreen.svg)
+![Spec Status: 647/647](https://img.shields.io/badge/specs-647%2F647-brightgreen.svg)
 [![crates.io version](https://img.shields.io/crates/v/comrak.svg)](https://crates.io/crates/comrak)
 [![docs.rs](https://docs.rs/comrak/badge.svg)](https://docs.rs/comrak)
 
@@ -15,22 +15,24 @@ A binary is included which does everything you typically want:
 
 ```
 $ comrak --help
-comrak 0.1.6
-Yuki Izumi <yuki@kivikakk.ee>
-CommonMark parser with GitHub Flavored Markdown extensions
+comrak 0.2.7
+Ashe Connor <kivikakk@github.com>
+A 100% CommonMark-compatible GitHub Flavored Markdown parser and formatter
 
 USAGE:
-    comrak [FLAGS] [OPTIONS] [--] [<FILE>]
+    comrak [FLAGS] [OPTIONS] [--] [FILE]...
 
 FLAGS:
+        --footnotes          Parse footnotes
         --github-pre-lang    Use GitHub-style <pre lang> for code blocks
         --hardbreaks         Treat newlines as hard line breaks
     -h, --help               Prints help information
     -V, --version            Prints version information
 
 OPTIONS:
-    -e, --extension <EXTENSION>...    Specify an extension name to use [values: strikethrough, tagfilter, table, autolink, superscript]
+    -e, --extension <EXTENSION>...    Specify an extension name to use [values: strikethrough, tagfilter, table, autolink, tasklist, superscript, footnotes]
     -t, --to <FORMAT>                 Specify output format [default: html]  [values: html, commonmark]
+        --header-ids <PREFIX>         Use the Comrak header IDs extension, with the given ID prefix
         --width <WIDTH>               Specify wrap width (0 = nowrap) [default: 0]
 
 ARGS:
@@ -74,16 +76,18 @@ fn iter_nodes<'a, F>(node: &'a AstNode<'a>, f: &F)
 iter_nodes(root, &|node| {
     match &mut node.data.borrow_mut().value {
         &mut NodeValue::Text(ref mut text) => {
-            *text = text.replace("my", "your");
+            let orig = std::mem::replace(text, vec![]);
+            *text = String::from_utf8(orig).unwrap().replace("my", "your").as_bytes().to_vec();
         }
         _ => (),
     }
 });
 
-let html: String = format_html(root, &ComrakOptions::default());
+let mut html = vec![];
+format_html(root, &ComrakOptions::default(), &mut html).unwrap();
 
 assert_eq!(
-    html,
+    String::from_utf8(html).unwrap(),
     "<p>This is your input.</p>\n\
      <ol>\n\
      <li>Also your input.</li>\n\
@@ -114,7 +118,7 @@ Comrak supports the five extensions to CommonMark defined in the
 * [Autolinks](https://github.github.com/gfm/#autolinks-extension-)
 * [Disallowed Raw HTML](https://github.github.com/gfm/#disallowed-raw-html-extension-)
 
-as well as superscript.
+as well as superscript and footnotes.
 
 By default none are enabled; they are individually enabled with each parse by
 setting the appropriate values in the
@@ -122,7 +126,7 @@ setting the appropriate values in the
 
 ## Legal
 
-Copyright (c) 2017, Yuki Izumi.  Licensed under the [2-Clause BSD License](https://opensource.org/licenses/BSD-2-Clause).
+Copyright (c) 2017–2018, Ashe Connor.  Licensed under the [2-Clause BSD License](https://opensource.org/licenses/BSD-2-Clause).
 
 `cmark` itself is is copyright (c) 2014, John MacFarlane.
 

@@ -1,6 +1,7 @@
-use ctype::{isspace, isalpha, isalnum};
-use nodes::{NodeValue, NodeLink, AstNode};
+use ctype::{isalnum, isalpha, isspace};
+use nodes::{AstNode, NodeLink, NodeValue};
 use parser::inlines::make_inline;
+use std::str;
 use regex::Regex;
 use typed_arena::Arena;
 use unicode_categories::UnicodeCategories;
@@ -8,7 +9,7 @@ use unicode_categories::UnicodeCategories;
 pub fn process_autolinks<'a>(
     arena: &'a Arena<AstNode<'a>>,
     node: &'a AstNode<'a>,
-    contents: &mut String,
+    contents: &mut Vec<u8>,
 ) {
     let len = contents.len();
     let mut i = 0;
@@ -17,7 +18,7 @@ pub fn process_autolinks<'a>(
         let mut post_org = None;
 
         while i < len {
-            match contents.as_bytes()[i] {
+            match contents[i] {
                 b':' => {
                     post_org = url_match(arena, contents, i);
                     if post_org.is_some() {
@@ -45,7 +46,7 @@ pub fn process_autolinks<'a>(
             i -= reverse;
             node.insert_after(post);
             if i + skip < len {
-                let remain = contents[i + skip..].to_string();
+                let remain = contents[i + skip..].to_vec();
                 assert!(!remain.is_empty());
                 post.insert_after(make_inline(arena, NodeValue::Text(remain)));
             }
@@ -57,7 +58,7 @@ pub fn process_autolinks<'a>(
 
 fn www_match<'a>(
     arena: &'a Arena<AstNode<'a>>,
-    contents: &str,
+    contents: &[u8],
     i: usize,
 ) -> Option<(&'a AstNode<'a>, usize, usize)> {
     lazy_static! {
@@ -70,13 +71,11 @@ fn www_match<'a>(
         };
     }
 
-    if i > 0 && !isspace(contents.as_bytes()[i - 1]) &&
-        !WWW_DELIMS[contents.as_bytes()[i - 1] as usize]
-    {
+    if i > 0 && !isspace(contents[i - 1]) && !WWW_DELIMS[contents[i - 1] as usize] {
         return None;
     }
 
-    if !contents[i..].starts_with("www.") {
+    if !contents[i..].starts_with(b"www.") {
         return None;
     }
 
@@ -85,36 +84,36 @@ fn www_match<'a>(
         Some(link_end) => link_end,
     };
 
-    while i + link_end < contents.len() && !isspace(contents.as_bytes()[i + link_end]) {
+    while i + link_end < contents.len() && !isspace(contents[i + link_end]) {
         link_end += 1;
     }
 
     link_end = autolink_delim(&contents[i..], link_end);
 
-    let mut url = "http://".to_string();
-    url += &contents[i..link_end + i];
+    let mut url = b"http://".to_vec();
+    url.extend_from_slice(&contents[i..link_end + i]);
 
     let inl = make_inline(
         arena,
         NodeValue::Link(NodeLink {
             url: url,
-            title: String::new(),
+            title: vec![],
         }),
     );
 
     inl.append(make_inline(
         arena,
-        NodeValue::Text(contents[i..link_end + i].to_string()),
+        NodeValue::Text(contents[i..link_end + i].to_vec()),
     ));
     Some((inl, 0, link_end))
 }
 
-fn check_domain(data: &str) -> Option<usize> {
+fn check_domain(data: &[u8]) -> Option<usize> {
     let mut np = 0;
     let mut uscore1 = 0;
     let mut uscore2 = 0;
 
-    for (i, c) in data.char_indices() {
+    for (i, c) in unsafe { str::from_utf8_unchecked(data) }.char_indices() {
         if c == '_' {
             uscore2 += 1;
         } else if c == '.' {
@@ -140,7 +139,7 @@ fn is_valid_hostchar(ch: char) -> bool {
     !ch.is_whitespace() && !ch.is_punctuation()
 }
 
-fn autolink_delim(data: &str, mut link_end: usize) -> usize {
+fn autolink_delim(data: &[u8], mut link_end: usize) -> usize {
     lazy_static! {
         static ref LINK_END_ASSORTMENT: [bool; 256] = {
             let mut sc = [false; 256];
@@ -151,15 +150,15 @@ fn autolink_delim(data: &str, mut link_end: usize) -> usize {
         };
     }
 
-    for i in 0..link_end {
-        if data.as_bytes()[i] == b'<' {
+    for (i, &b) in data.iter().enumerate().take(link_end) {
+        if b == b'<' {
             link_end = i;
             break;
         }
     }
 
     while link_end > 0 {
-        let cclose = data.as_bytes()[link_end - 1];
+        let cclose = data[link_end - 1];
 
         let copen = if cclose == b')' { Some(b'(') } else { None };
 
@@ -168,11 +167,11 @@ fn autolink_delim(data: &str, mut link_end: usize) -> usize {
         } else if cclose == b';' {
             let mut new_end = link_end - 2;
 
-            while new_end > 0 && isalpha(data.as_bytes()[new_end]) {
+            while new_end > 0 && isalpha(data[new_end]) {
                 new_end -= 1;
             }
 
-            if new_end < link_end - 2 && data.as_bytes()[new_end] == b'&' {
+            if new_end < link_end - 2 && data[new_end] == b'&' {
                 link_end = new_end;
             } else {
                 link_end -= 1;
@@ -180,10 +179,10 @@ fn autolink_delim(data: &str, mut link_end: usize) -> usize {
         } else if let Some(copen) = copen {
             let mut opening = 0;
             let mut closing = 0;
-            for i in 0..link_end {
-                if data.as_bytes()[i] == copen {
+            for &b in data.iter().take(link_end) {
+                if b == copen {
                     opening += 1;
-                } else if data.as_bytes()[i] == cclose {
+                } else if b == cclose {
                     closing += 1;
                 }
             }
@@ -203,29 +202,27 @@ fn autolink_delim(data: &str, mut link_end: usize) -> usize {
 
 fn url_match<'a>(
     arena: &'a Arena<AstNode<'a>>,
-    contents: &str,
+    contents: &[u8],
     i: usize,
 ) -> Option<(&'a AstNode<'a>, usize, usize)> {
     lazy_static! {
-        static ref SCHEMES: Vec<&'static str> =
-            vec!["http", "https", "ftp"];
+        static ref SCHEMES: Vec<&'static [u8]> =
+            vec![b"http", b"https", b"ftp"];
     }
 
     let size = contents.len();
 
-    if size - i < 4 || contents.as_bytes()[i + 1] != b'/' || contents.as_bytes()[i + 2] != b'/' {
+    if size - i < 4 || contents[i + 1] != b'/' || contents[i + 2] != b'/' {
         return None;
     }
 
     let mut rewind = 0;
-    while rewind < i && isalpha(contents.as_bytes()[i - rewind - 1]) {
+    while rewind < i && isalpha(contents[i - rewind - 1]) {
         rewind += 1;
     }
 
-    if !SCHEMES.iter().any(|s| {
-        size - i + rewind >= s.len() && &&contents[i - rewind..i] == s
-    })
-    {
+    let cond = |s: &&[u8]| size - i + rewind >= s.len() && &&contents[i - rewind..i] == s;
+    if !SCHEMES.iter().any(cond) {
         return None;
     }
 
@@ -234,18 +231,18 @@ fn url_match<'a>(
         Some(link_end) => link_end,
     };
 
-    while link_end < size - i && !isspace(contents.as_bytes()[i + link_end]) {
+    while link_end < size - i && !isspace(contents[i + link_end]) {
         link_end += 1;
     }
 
     link_end = autolink_delim(&contents[i..], link_end);
 
-    let url = contents[i - rewind..i + link_end].to_string();
+    let url = contents[i - rewind..i + link_end].to_vec();
     let inl = make_inline(
         arena,
         NodeValue::Link(NodeLink {
             url: url.clone(),
-            title: String::new(),
+            title: vec![],
         }),
     );
 
@@ -255,7 +252,7 @@ fn url_match<'a>(
 
 fn email_match<'a>(
     arena: &'a Arena<AstNode<'a>>,
-    contents: &str,
+    contents: &[u8],
     i: usize,
 ) -> Option<(&'a AstNode<'a>, usize, usize)> {
     lazy_static! {
@@ -274,7 +271,7 @@ fn email_match<'a>(
     let mut ns = 0;
 
     while rewind < i {
-        let c = contents.as_bytes()[i - rewind - 1];
+        let c = contents[i - rewind - 1];
 
         if isalnum(c) || EMAIL_OK_SET[c as usize] {
             rewind += 1;
@@ -297,7 +294,7 @@ fn email_match<'a>(
     let mut np = 0;
 
     while link_end < size - i {
-        let c = contents.as_bytes()[i + link_end];
+        let c = contents[i + link_end];
 
         if isalnum(c) {
             // empty
@@ -312,31 +309,28 @@ fn email_match<'a>(
         link_end += 1;
     }
 
-    if link_end < 2 || nb != 1 || np == 0 ||
-        (!isalpha(contents.as_bytes()[i + link_end - 1]) &&
-             contents.as_bytes()[i + link_end - 1] != b'.')
+    if link_end < 2 || nb != 1 || np == 0
+        || (!isalpha(contents[i + link_end - 1]) && contents[i + link_end - 1] != b'.')
     {
         return None;
     }
 
     link_end = autolink_delim(&contents[i..], link_end);
 
-    let mut url = "mailto:".to_string();
-    url += &contents[i - rewind..link_end + i];
+    let mut url = b"mailto:".to_vec();
+    url.extend_from_slice(&contents[i - rewind..link_end + i]);
 
     let inl = make_inline(
         arena,
         NodeValue::Link(NodeLink {
             url: url,
-            title: String::new(),
+            title: vec![],
         }),
     );
 
     inl.append(make_inline(
         arena,
-        NodeValue::Text(
-            contents[i - rewind..link_end + i].to_string(),
-        ),
+        NodeValue::Text(contents[i - rewind..link_end + i].to_vec()),
     ));
     Some((inl, rewind, rewind + link_end))
 }
@@ -346,14 +340,14 @@ fn email_match<'a>(
 pub fn process_redditlinks<'a>(
     arena: &'a Arena<AstNode<'a>>,
     node: &'a AstNode<'a>,
-    contents: &mut String,
+    contents: &mut Vec<u8>,
 ) {
     lazy_static! {
         static ref RE: Regex = Regex::new(r"(^|[\n\t\r-_.+!*'(),%#@?=/;:,+&$])((/?(r|u)/)(\w+))").unwrap();
     }
 
-    let borrowed_contents = contents.to_string();
-    let matched = match RE.captures(&borrowed_contents) {
+    let borrowed_contents = contents.to_owned();
+    let matched = match RE.captures( unsafe { str::from_utf8_unchecked(&borrowed_contents) } ) {
         Some(m) => m,
         None => return
     };
@@ -369,13 +363,13 @@ pub fn process_redditlinks<'a>(
     let inl = make_inline(
         arena,
         NodeValue::RedditLink(NodeLink{
-            url: prefix.to_string(),
-            title: name.to_string()
+            url: prefix.to_vec(),
+            title: name.to_vec()
         })
     );
 
     node.insert_after(inl);
-    let remain = contents[name_match.end()..].to_string();
+    let remain = contents[name_match.end()..].to_owned();
     inl.insert_after(make_inline(arena, NodeValue::Text(remain)));
 
     contents.truncate(prefix_match.start());

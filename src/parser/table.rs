@@ -1,6 +1,5 @@
 use arena_tree::Node;
-
-use nodes::{NodeValue, TableAlignment, AstNode, make_block};
+use nodes::{make_block, AstNode, NodeValue, TableAlignment};
 use parser::Parser;
 use scanners;
 use std::cell::RefCell;
@@ -10,7 +9,7 @@ use strings::trim;
 pub fn try_opening_block<'a, 'o>(
     parser: &mut Parser<'a, 'o>,
     container: &'a AstNode<'a>,
-    line: &str,
+    line: &[u8],
 ) -> Option<(&'a AstNode<'a>, bool)> {
     let aligns = match container.data.borrow().value {
         NodeValue::Paragraph => None,
@@ -27,7 +26,7 @@ pub fn try_opening_block<'a, 'o>(
 fn try_opening_header<'a, 'o>(
     parser: &mut Parser<'a, 'o>,
     container: &'a AstNode<'a>,
-    line: &str,
+    line: &[u8],
 ) -> Option<(&'a AstNode<'a>, bool)> {
     if scanners::table_start(&line[parser.first_nonspace..]).is_none() {
         return Some((container, false));
@@ -46,8 +45,8 @@ fn try_opening_header<'a, 'o>(
 
     let mut alignments = vec![];
     for cell in marker_row {
-        let left = !cell.is_empty() && cell.as_bytes()[0] == b':';
-        let right = !cell.is_empty() && cell.as_bytes()[cell.len() - 1] == b':';
+        let left = !cell.is_empty() && cell[0] == b':';
+        let right = !cell.is_empty() && cell[cell.len() - 1] == b':';
         alignments.push(if left && right {
             TableAlignment::Center
         } else if left {
@@ -60,7 +59,11 @@ fn try_opening_header<'a, 'o>(
     }
 
     let start_column = container.data.borrow().start_column;
-    let child = make_block(NodeValue::Table(alignments), parser.line_number, start_column);
+    let child = make_block(
+        NodeValue::Table(alignments),
+        parser.line_number,
+        start_column,
+    );
     let table = parser.arena.alloc(Node::new(RefCell::new(child)));
     container.append(table);
 
@@ -76,12 +79,11 @@ fn try_opening_header<'a, 'o>(
     Some((table, true))
 }
 
-
 fn try_opening_row<'a, 'o>(
     parser: &mut Parser<'a, 'o>,
     container: &'a AstNode<'a>,
     alignments: &[TableAlignment],
-    line: &str,
+    line: &[u8],
 ) -> Option<(&'a AstNode<'a>, bool)> {
     if parser.blank {
         return None;
@@ -119,19 +121,19 @@ fn try_opening_row<'a, 'o>(
     Some((new_row, false))
 }
 
-fn row(string: &str) -> Option<Vec<String>> {
+fn row(string: &[u8]) -> Option<Vec<Vec<u8>>> {
     let len = string.len();
     let mut v = vec![];
     let mut offset = 0;
 
-    if len > 0 && string.as_bytes()[0] == b'|' {
+    if len > 0 && string[0] == b'|' {
         offset += 1;
     }
 
     loop {
         let cell_matched = scanners::table_cell(&string[offset..]).unwrap_or(0);
-        let mut pipe_matched = scanners::table_cell_end(&string[offset + cell_matched..])
-            .unwrap_or(0);
+        let mut pipe_matched =
+            scanners::table_cell_end(&string[offset + cell_matched..]).unwrap_or(0);
 
         if cell_matched > 0 || pipe_matched > 0 {
             let mut cell = unescape_pipes(&string[offset..offset + cell_matched]);
@@ -158,15 +160,16 @@ fn row(string: &str) -> Option<Vec<String>> {
     }
 }
 
-fn unescape_pipes(string: &str) -> String {
-    let mut v = String::with_capacity(string.len());
+fn unescape_pipes(string: &[u8]) -> Vec<u8> {
+    let mut v = Vec::with_capacity(string.len());
     let mut escaping = false;
 
-    for c in string.chars() {
+    for &c in string {
+        // TODO
         if escaping {
             v.push(c);
             escaping = false;
-        } else if c == '\\' {
+        } else if c == b'\\' {
             escaping = true;
         } else {
             v.push(c);
@@ -174,12 +177,12 @@ fn unescape_pipes(string: &str) -> String {
     }
 
     if escaping {
-        v.push('\\');
+        v.push(b'\\');
     }
 
     v
 }
 
-pub fn matches(line: &str) -> bool {
+pub fn matches(line: &[u8]) -> bool {
     row(line).is_some()
 }
