@@ -662,37 +662,6 @@ impl<'a, 'o> Parser<'a, 'o> {
 
                 let mut hashpos = line[self.first_nonspace..]
                     .iter()
-                    .position(|c| *c == b'#')
-                    .unwrap() + self.first_nonspace;
-                let mut level = 0;
-                while line[hashpos] == b'#' {
-                    level += 1;
-                    hashpos += 1;
-                }
-
-                container.data.borrow_mut().value = NodeValue::Heading(NodeHeading {
-                    level: level,
-                    setext: false,
-                });
-
-            } else if !indented &&
-                       unwrap_into(
-                    scanners::reddit_atx_heading_start(&line[self.first_nonspace..]),
-                    &mut matched,
-                )
-            {
-                // ZT: abstract ATX header functionality to make DRY
-                let heading_startpos = self.first_nonspace;
-                let offset = self.offset;
-                self.advance_offset(line, heading_startpos + matched - offset, false);
-                *container = self.add_child(
-                    *container,
-                    NodeValue::Heading(NodeHeading::default()),
-                    heading_startpos + 1,
-                );
-
-                let mut hashpos = line[self.first_nonspace..]
-                    .iter()
                     .position(|&c| c == b'#')
                     .unwrap() + self.first_nonspace;
                 let mut level = 0;
