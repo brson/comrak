@@ -112,3 +112,12 @@ Our tables should show all of their rows and columns
 |c1:r4| |c3:r4|
 .
 {"document":[{"c":[[{"c":[]},{"c":[]},{"c":[]}],[{"c":[{"e":"text","t":"c1:r2"}]},{"c":[{"e":"text","t":"c2:r2"}]},{"c":[{"e":"text","t":"c3:r2"}]}],[{"c":[]},{"c":[{"e":"text","t":"c2:r3"}]},{"c":[{"e":"text","t":"c3:r3"}]}],[{"c":[{"e":"text","t":"c1:r4"}]},{"c":[]},{"c":[{"e":"text","t":"c3:r4"}]}]],"e":"table","h":[{"a":"L","c":[{"e":"text","t":"Col 1"}]},{"a":"C","c":[{"e":"text","t":"Col 2"}]},{"a":"R","c":[{"e":"text","t":"Col 3"}]}]}]}````````````````````````````````
+
+List with empty nodes should send back a empty paragraph node.
+
+```````````````````````````````` example
+* fdsa
+*
+* fds
+.
+{"document":[{"c":[{"c":[{"c":[{"e":"text","t":"fdsa"}],"e":"par"}],"e":"li"},{"c":[{"c":[{"e":"text","t":""}],"e":"par"}],"e":"li"},{"c":[{"c":[{"e":"text","t":"fds"}],"e":"par"}],"e":"li"}],"e":"list","o":false}]}````````````````````````````````
