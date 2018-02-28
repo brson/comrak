@@ -45,6 +45,6 @@ crate-type = ["cdylib"]
 
 [dependencies.cpython]
 git = "https://github.com/dgrunwald/rust-cpython.git"
-version = "0.1"
+rev = "b7090799b652c77220bdb266937538a6e900119c"
 default-features = false
 features = ["python27-sys", "extension-module-2-7"]
