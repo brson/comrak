@@ -124,7 +124,7 @@ Hello reddit, \*\***this should be bold,**\*\* the stars around it should not be
 
 www.thisisalink.com
 .
-{"document":[{"e":"par","c":[{"e":"text","f":[[1,16,20]],"t":"Hello reddit, **this should be bold,** the stars around it should not be."}]},{"e":"par","c":[{"e":"text","t":"&gt; This is text with an arrow in front"}]},{"e":"blockquote","c":[{"e":"par","c":[{"e":"text","t":"This is a quote"}]}]},{"e":"par","c":[{"e":"text","f":[[2,0,33]],"t":"Here we have something in italics"}]},{"e":"par","c":[{"e":"text","t":"*Here we have something with single-stars around it*"}]},{"e":"par","c":[{"e":"text","t":"`Is this a codeblock?`"}]},{"e":"par","c":[{"e":"text","t":"~~This should not be strike through~~"}]},{"e":"par","c":[{"e":"text","f":[[8,0,18]],"t":"But this should be"}]},{"e":"par","c":[{"e":"text","t":"[Finally here we have no link](www.example.com)"}]},{"e":"par","c":[{"e":"text","t":"www.thisisalink.com"}]}]}````````````````````````````````
+{"document":[{"e":"par","c":[{"e":"text","f":[[1,16,20]],"t":"Hello reddit, **this should be bold,** the stars around it should not be."}]},{"e":"par","c":[{"e":"text","t":"> This is text with an arrow in front"}]},{"e":"blockquote","c":[{"e":"par","c":[{"e":"text","t":"This is a quote"}]}]},{"e":"par","c":[{"e":"text","f":[[2,0,33]],"t":"Here we have something in italics"}]},{"e":"par","c":[{"e":"text","t":"*Here we have something with single-stars around it*"}]},{"e":"par","c":[{"e":"text","t":"`Is this a codeblock?`"}]},{"e":"par","c":[{"e":"text","t":"~~This should not be strike through~~"}]},{"e":"par","c":[{"e":"text","f":[[8,0,18]],"t":"But this should be"}]},{"e":"par","c":[{"e":"text","t":"[Finally here we have no link](www.example.com)"}]},{"e":"par","c":[{"e":"text","t":"www.thisisalink.com"}]}]}````````````````````````````````
 
 ```````````````````````````````` example
 1.
@@ -155,7 +155,7 @@ www.thisisalink.com
       console.log("notice the blank line before this function?");
     }
 .
-{"document":[{"e":"code","c":[{"e":"raw","t":"function test() {"},{"e":"raw","t":"  console.log(&quot;notice the blank line before this function?&quot;);"},{"e":"raw","t":"}"}]}]}````````````````````````````````
+{"document":[{"e":"code","c":[{"e":"raw","t":"function test() {"},{"e":"raw","t":"  console.log(\"notice the blank line before this function?\");"},{"e":"raw","t":"}"}]}]}````````````````````````````````
 
 Say I have many formats nested in one format range. We would want to keep that 
 overall format through the whole thing, while also getting rid of the old format
@@ -213,14 +213,14 @@ These media assets don't have captions:
 ```````````````````````````````` example
 Raw "quotes", &ampersands, and <lt & gt> should be escaped.
 .
-{"document":[{"c":[{"e":"text","t":"Raw &quot;quotes&quot;, &amp;ampersands, and &lt;lt &amp; gt&gt; should be escaped."}],"e":"par"}]}````````````````````````````````
+{"document":[{"c":[{"e":"text","t":"Raw \"quotes\", &ampersands, and <lt & gt> should be escaped."}],"e":"par"}]}````````````````````````````````
 
 ```````````````````````````````` example
-HTML entities like &amp; &quot; &lt; and &gt; should not be escaped, unless they are malformed like &amp or &quot".
+HTML entities like & \" < and > should not be escaped, unless they are malformed like &amp or &quot".
 .
-{"document":[{"c":[{"e":"text","t":"HTML entities like &amp; &quot; &lt; and &gt; should not be escaped, unless they are malformed like &amp;amp or &amp;quot&quot;."}],"e":"par"}]}````````````````````````````````
+{"document":[{"c":[{"e":"text","t":"HTML entities like & \" < and > should not be escaped, unless they are malformed like &amp or &quot\"."}],"e":"par"}]}````````````````````````````````
 
 ```````````````````````````````` example
 Escaping to HTML entities like & and " shouldn't impact format ranges like **this** or ~~*this*~~.
 .
-{"document":[{"c":[{"e":"text","f":[[1,84,4],[10,92,4]],"t":"Escaping to HTML entities like &amp; and &quot; shouldn't impact format ranges like this or this."}],"e":"par"}]}````````````````````````````````
+{"document":[{"c":[{"e":"text","f":[[1,75,4],[10,83,4]],"t":"Escaping to HTML entities like & and \" shouldn't impact format ranges like this or this."}],"e":"par"}]}````````````````````````````````

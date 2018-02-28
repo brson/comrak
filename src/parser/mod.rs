@@ -373,109 +373,6 @@ impl<'a, 'o> Parser<'a, 'o> {
             && strings::is_line_end_char(line[self.first_nonspace]);
     }
 
-    fn escape(&mut self, buffer: &[u8]) -> Vec<u8> {
-        lazy_static! {
-            static ref NEEDS_ESCAPED: [bool; 256] = {
-                let mut sc = [false; 256];
-                for &c in &['"', '&', '<', '>'] {
-                    sc[c as usize] = true;
-                }
-                sc
-            };
-        }
-
-        let size = buffer.len();
-        let mut i = 0;
-        let mut text = vec![];
-
-        while i < size {
-            let org = i;
-            while i < size && !NEEDS_ESCAPED[buffer[i] as usize] {
-                i += 1;
-            }
-
-            if i > org {
-                text.extend_from_slice(&buffer[org..i]);
-                //try!(self.output.write_all(&buffer[org..i]));
-            }
-
-            if i >= size {
-                break;
-            }
-
-            match buffer[i] as char {
-                '"' => {
-                    text.extend_from_slice(b"&quot;");
-                    //try!(self.output.write_all(b"&quot;"));
-                }
-                '&' => {
-                    text.extend_from_slice(b"&amp;");
-                    //try!(self.output.write_all(b"&amp;"));
-                }
-                '<' => {
-                    text.extend_from_slice(b"&lt;");
-                    //try!(self.output.write_all(b"&lt;"));
-                }
-                '>' => {
-                    text.extend_from_slice(b"&gt;");
-                    //try!(self.output.write_all(b"&gt;"));
-                }
-                _ => unreachable!(),
-            }
-
-            i += 1;
-        }
-
-        text
-    }
-
-    // fn escape_href(&mut self, buffer: &[u8]) -> io::Result<()> {
-    //     lazy_static! {
-    //         static ref HREF_SAFE: [bool; 256] = {
-    //             let mut a = [false; 256];
-    //             for &c in b"-_.+!*'(),%#@?=;:/,+&$abcdefghijklmnopqrstuvwxyz".iter() {
-    //                 a[c as usize] = true;
-    //             }
-    //             for &c in b"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".iter() {
-    //                 a[c as usize] = true;
-    //             }
-    //             a
-    //         };
-    //     }
-    // 
-    //     let size = buffer.len();
-    //     let mut i = 0;
-    // 
-    //     while i < size {
-    //         let org = i;
-    //         while i < size && HREF_SAFE[buffer[i] as usize] {
-    //             i += 1;
-    //         }
-    // 
-    //         if i > org {
-    //             try!(self.output.write_all(&buffer[org..i]));
-    //         }
-    // 
-    //         if i >= size {
-    //             break;
-    //         }
-    // 
-    //         match buffer[i] as char {
-    //             '&' => {
-    //                 try!(self.output.write_all(b"&amp;"));
-    //             }
-    //             '\'' => {
-    //                 try!(self.output.write_all(b"&#x27;"));
-    //             }
-    //             _ => try!(write!(self.output, "%{:02X}", buffer[i])),
-    //         }
-    // 
-    //         i += 1;
-    //     }
-    // 
-    //     Ok(())
-    // }
-
     fn process_line(&mut self, line: &[u8]) {
         let mut new_line: Vec<u8>;
         let line =
@@ -1471,8 +1368,7 @@ impl<'a, 'o> Parser<'a, 'o> {
                     }
                 }
                 if sum > 0 {
-                    let escaped_text = self.escape(unformatted_text);
-                    let range_idx = escaped_text.len() as u16;
+                    let range_idx = unformatted_text.len() as u16;
                     let range_length = text.len() as u16;
                     let new_range = [sum, range_idx, range_length];
                     format_ranges.push(new_range);

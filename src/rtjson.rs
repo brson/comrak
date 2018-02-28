@@ -19,90 +19,6 @@ impl<'o> RTJsonFormatter<'o> {
         }
     }
 
-    fn escape(&mut self, buffer: &str) -> String {
-        lazy_static! {
-            static ref NEEDS_ESCAPED: [bool; 256] = {
-                let mut sc = [false; 256];
-                for &c in &['"', '&', '<', '>'] {
-                    sc[c as usize] = true;
-                }
-                sc
-            };
-        }
-
-        let src = buffer.as_bytes();
-        let size = src.len();
-        let mut i = 0;
-        let mut text = String::with_capacity(1024);
-
-        while i < size {
-            let org = i;
-            while i < size && !NEEDS_ESCAPED[src[i] as usize] {
-                i += 1;
-            }
-
-            if i > org {
-                text += &buffer[org..i];
-            }
-
-            if i >= size {
-                break;
-            }
-
-            match src[i] as char {
-                '"' => text += "&quot;",
-                '&' => text += "&amp;",
-                '<' => text += "&lt;",
-                '>' => text += "&gt;",
-                _ => unreachable!(),
-            }
-
-            i += 1;
-        }
-        text
-    }
-
-    fn escape_href(&mut self, buffer: &str) -> String {
-        lazy_static! {
-            static ref HREF_SAFE: [bool; 256] = {
-                let mut a = [false; 256];
-                for &c in b"-_.+!*'(),%#@?=;:/,+&$abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".iter() {
-                    a[c as usize] = true;
-                }
-                a
-            };
-        }
-
-        let src = buffer.as_bytes();
-        let size = src.len();
-        let mut i = 0;
-        let mut text = String::with_capacity(1024);
-
-        while i < size {
-            let org = i;
-            while i < size && HREF_SAFE[src[i] as usize] {
-                i += 1;
-            }
-
-            if i > org {
-                text += &buffer[org..i];
-            }
-
-            if i >= size {
-                break;
-            }
-
-            match src[i] as char {
-                '&' => text += "&amp;",
-                '\'' => text += "&#x27;",
-                _ => text += &format!("%{:02X}", src[i]),
-            }
-
-            i += 1;
-        }
-        text
-    }
-
     fn format_children<'a>(&mut self, node: &'a AstNode<'a>, content: &mut serde_json::Value) {
         let mut vals = Vec::with_capacity(128);
         for n in node.children() {
@@ -206,7 +122,7 @@ impl<'o> RTJsonFormatter<'o> {
                     if i != max {
                         int.push(json!({
                             "e": "raw",
-                            "t": self.escape(it)
+                            "t": it
                         }).clone());
                     }
                 }
@@ -230,13 +146,13 @@ impl<'o> RTJsonFormatter<'o> {
                     NodeValue::Heading(..) | NodeValue::CodeBlock(..) => {
                        Some(json!({
                            "e":"raw",
-                           "t": self.escape(&String::from_utf8(literal.to_owned()).unwrap())
+                           "t": String::from_utf8(literal.to_owned()).unwrap()
                        }))
                    }
                    NodeValue::TableCell | NodeValue::Paragraph | NodeValue::BlockQuote => {
                        Some(json!({
                            "e": "text",
-                           "t": self.escape(&String::from_utf8(literal.to_owned()).unwrap()),
+                           "t": String::from_utf8(literal.to_owned()).unwrap(),
                        }))
                    }
                    _ => unreachable!(),
@@ -247,13 +163,13 @@ impl<'o> RTJsonFormatter<'o> {
                     NodeValue::Heading(..) | NodeValue::CodeBlock(..) => {
                        Some(json!({
                            "e":"raw",
-                           "t": self.escape(&String::from_utf8(literal.to_owned()).unwrap())
+                           "t": String::from_utf8(literal.to_owned()).unwrap()
                        }))
                    }
                    NodeValue::TableCell | NodeValue::Paragraph | NodeValue::BlockQuote => {
                        Some(json!({
                            "e": "text",
-                           "t": self.escape(&String::from_utf8(literal.to_owned()).unwrap()),
+                           "t": String::from_utf8(literal.to_owned()).unwrap(),
                            "f": format_ranges
                        }))
                    }
@@ -264,16 +180,16 @@ impl<'o> RTJsonFormatter<'o> {
                 if !&nl.element.is_empty() {
                     Some(json!({
                         "e":"link",
-                        "u":self.escape_href(&String::from_utf8(nl.url.to_owned()).unwrap()),
-                        "t":self.escape(&String::from_utf8(nl.caption.to_owned()).unwrap()),
-                        "f":&nl.format_range,
-                        "a":self.escape(&String::from_utf8(nl.element.to_owned()).unwrap()),
+                        "u": String::from_utf8(nl.url.to_owned()).unwrap(),
+                        "t": String::from_utf8(nl.caption.to_owned()).unwrap(),
+                        "f": &nl.format_range,
+                        "a": String::from_utf8(nl.element.to_owned()).unwrap(),
                     }))
                 } else {
                     Some(json!({
                         "e":"link",
-                        "u":self.escape_href(&String::from_utf8(nl.url.to_owned()).unwrap()),
-                        "t":self.escape(&String::from_utf8(nl.caption.to_owned()).unwrap()),
+                        "u": String::from_utf8(nl.url.to_owned()).unwrap(),
+                        "t": String::from_utf8(nl.caption.to_owned()).unwrap(),
                         "f":&nl.format_range,
                     }))
                 }
@@ -282,42 +198,42 @@ impl<'o> RTJsonFormatter<'o> {
                 if !&nl.element.is_empty() {
                     Some(json!({
                         "e": "link",
-                        "u": self.escape_href(&String::from_utf8(nl.url.to_owned()).unwrap()),
-                        "t": self.escape(&String::from_utf8(nl.caption.to_owned()).unwrap()),
-                        "a": self.escape(&String::from_utf8(nl.element.to_owned()).unwrap())
+                        "u": String::from_utf8(nl.url.to_owned()).unwrap(),
+                        "t": String::from_utf8(nl.caption.to_owned()).unwrap(),
+                        "a": String::from_utf8(nl.element.to_owned()).unwrap()
                     }))
                 } else {
                     Some(json!({
                         "e":"link",
-                        "u":self.escape_href(&String::from_utf8(nl.url.to_owned()).unwrap()),
-                        "t":self.escape(&String::from_utf8(nl.caption.to_owned()).unwrap()),
+                        "u": String::from_utf8(nl.url.to_owned()).unwrap(),
+                        "t": String::from_utf8(nl.caption.to_owned()).unwrap(),
                     }))
                 }
             }
             NodeValue::Link(ref nl) => {
                 Some(json!({
                     "e":"link",
-                    "u":self.escape_href(&String::from_utf8(nl.url.to_owned()).unwrap()),
-                    "t":self.escape(&String::from_utf8(nl.title.to_owned()).unwrap()),
+                    "u": String::from_utf8(nl.url.to_owned()).unwrap(),
+                    "t": String::from_utf8(nl.title.to_owned()).unwrap(),
                 }))
             }
             NodeValue::RedditLink(ref nl) => {
                 Some(json!({
-                    "e":self.escape_href(&String::from_utf8(nl.url.to_owned()).unwrap()),
-                    "t":self.escape(&String::from_utf8(nl.title.to_owned()).unwrap()),
+                    "e": String::from_utf8(nl.url.to_owned()).unwrap(),
+                    "t": String::from_utf8(nl.title.to_owned()).unwrap(),
                 }))
             }
             NodeValue::Image(ref nl) => {
                 if !&nl.title.is_empty() {
                     Some(json!({
-                        "e": String::from_utf8(nl.e.to_owned()).unwrap(),
-                        "id": self.escape_href(&String::from_utf8(nl.url.to_owned()).unwrap()),
-                        "c": self.escape(&String::from_utf8(nl.title.to_owned()).unwrap()),
+                        "e":  String::from_utf8(nl.e.to_owned()).unwrap(),
+                        "id": String::from_utf8(nl.url.to_owned()).unwrap(),
+                        "c":  String::from_utf8(nl.title.to_owned()).unwrap(),
                     }))
                 } else {
                     Some(json!({
                         "e": String::from_utf8(nl.e.to_owned()).unwrap(),
-                        "id": self.escape_href(&String::from_utf8(nl.url.to_owned()).unwrap()),
+                        "id": String::from_utf8(nl.url.to_owned()).unwrap(),
                     }))
                 }
             }

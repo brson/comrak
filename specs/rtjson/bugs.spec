@@ -50,7 +50,7 @@ We should also show code and underline when we are trying ot render content
 ```````````````````````````````` example
 `monospace` ~underline~ <usr/>
 .
-{"document":[{"c":[{"e":"text","f":[[64,0,9],[4,10,9]],"t":"monospace underline &lt;usr/&gt;"}],"e":"par"}]}````````````````````````````````
+{"document":[{"c":[{"e":"text","f":[[64,0,9],[4,10,9]],"t":"monospace underline <usr/>"}],"e":"par"}]}````````````````````````````````
 
 The test above account for known bugs and fixes.
 
@@ -74,7 +74,7 @@ There was a bug where we were getting a panic on the malformed strings
 ```````````````````````````````` example
 [If we don't end correctly](/reddit.com "Then the test shouldn't break"
 .
-{"document":[{"c":[{"e":"text","t":"[If we don't end correctly](/reddit.com &quot;Then the test shouldn't break&quot;"}],"e":"par"}]}````````````````````````````````
+{"document":[{"c":[{"e":"text","t":"[If we don't end correctly](/reddit.com \"Then the test shouldn't break\""}],"e":"par"}]}````````````````````````````````
 
 There is also reddit specific conventions surrounding superscript.
 
