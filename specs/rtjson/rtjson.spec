@@ -55,7 +55,7 @@ This post has a paragraph in the middle.
 ```````````````````````````````` example
 Hello, **this is bold**, *this is italic*, ***this is both***. And this is a u/username and a /r/subreddit.
 .
-{"document":[{"c":[{"e":"text","f":[[1,7,12],[2,21,14],[3,37,12]],"t":"Hello, this is bold, this is italic, this is both. And this is a "},{"e":"u/","t":"username"},{"e":"text","t":" and a "},{"e":"r/","t":"subreddit"},{"e":"text","t":"."}],"e":"par"}]}````````````````````````````````
+{"document":[{"c":[{"e":"text","f":[[1,7,12],[2,21,14],[3,37,12]],"t":"Hello, this is bold, this is italic, this is both. And this is a "},{"e":"u/","t":"username"},{"e":"text","t":" and a "},{"e":"r/","l":true,"t":"subreddit"},{"e":"text","t":"."}],"e":"par"}]}````````````````````````````````
 
 ```````````````````````````````` example
 Below this is a list:

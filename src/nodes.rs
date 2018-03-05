@@ -154,6 +154,9 @@ pub struct NodeLink {
     /// Note this field is used for the `title` attribute by the HTML formatter even for images;
     /// `alt` text is supplied in the image inline text.
     pub title: Vec<u8>,
+
+    /// The l field for the leading slash.
+    pub l: bool,
 }
 
 /// The details of a link's destination, or an image's source.

@@ -753,6 +753,7 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
         let nl = NodeLink {
             url: url,
             title: title,
+            l: false,
         };
         let inl = make_inline(
             self.arena,
@@ -917,6 +918,7 @@ fn make_autolink<'a>(
         NodeValue::Link(NodeLink {
             url: strings::clean_autolink(url, kind),
             title: vec![],
+            l: false,
         }),
     );
     inl.append(make_inline(

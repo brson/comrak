@@ -98,6 +98,7 @@ fn www_match<'a>(
         NodeValue::Link(NodeLink {
             url: url,
             title: vec![],
+            l: false,
         }),
     );
 
@@ -243,6 +244,7 @@ fn url_match<'a>(
         NodeValue::Link(NodeLink {
             url: url.clone(),
             title: vec![],
+            l: false,
         }),
     );
 
@@ -325,6 +327,7 @@ fn email_match<'a>(
         NodeValue::Link(NodeLink {
             url: url,
             title: vec![],
+            l: false,
         }),
     );
 
@@ -354,7 +357,9 @@ pub fn process_redditlinks<'a>(
 
     let prefix_match = matched.get(3).unwrap();
     let mut prefix = &borrowed_contents[prefix_match.start()..prefix_match.end()];
+    let mut leading_slash = false;
     if prefix.len() > 2 {
+        leading_slash = true;
         prefix = &prefix[1..];
     }
     let name_match = matched.get(5).unwrap();
@@ -364,7 +369,8 @@ pub fn process_redditlinks<'a>(
         arena,
         NodeValue::RedditLink(NodeLink{
             url: prefix.to_vec(),
-            title: name.to_vec()
+            title: name.to_vec(),
+            l: leading_slash,
         })
     );
 
