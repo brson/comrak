@@ -242,6 +242,22 @@ pub struct ComrakOptions {
     ///            "<p>Hi<sup class=\"footnote-ref\"><a href=\"#fn1\" id=\"fnref1\">[1]</a></sup>.</p>\n<section class=\"footnotes\">\n<ol>\n<li id=\"fn1\">\n<p>A greeting. <a href=\"#fnref1\" class=\"footnote-backref\">↩</a></p>\n</li>\n</ol>\n</section>\n");
     /// ```
     pub ext_footnotes: bool,
+
+    /// Enables the spoilertext extension per `Reddit Flavored Markdown`.
+    ///
+    /// For usage, see `src/tests.rs`.  The extension is modelled after
+    /// [Kramdown](https://kramdown.gettalong.org/syntax.html#footnotes).
+    ///
+    /// ```
+    /// # use comrak::{markdown_to_html, ComrakOptions};
+    /// let options = ComrakOptions {
+    ///   ext_spoilertext: true,
+    ///   ..ComrakOptions::default()
+    /// };
+    /// assert_eq!(markdown_to_html("This is a >!spoilered text post!<", &options),
+    ///            "<p>This is a <div class="spoiler">spoilered text post</div></p>\n");
+    /// ```
+    pub ext_spoilertext: bool,
 }
 
 #[derive(Clone)]
@@ -1375,9 +1391,10 @@ impl<'a, 'o> Parser<'a, 'o> {
                 }
                 unformatted_text.extend_from_slice(text);
             },
-            NodeValue::Link(..) |
-            NodeValue::UnformattedLink(..) |
-            NodeValue::RedditLink(..)=> {
+            NodeValue::Link(..)
+            | NodeValue::UnformattedLink(..)
+            | NodeValue::RedditLink(..)
+            | NodeValue::SpoilerText => {
                 if !unformatted_text.is_empty() {
 
                     let text_node = if format_ranges.is_empty() {

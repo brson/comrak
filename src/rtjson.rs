@@ -149,7 +149,8 @@ impl<'o> RTJsonFormatter<'o> {
                            "t": String::from_utf8(literal.to_owned()).unwrap()
                        }))
                    }
-                   NodeValue::TableCell | NodeValue::Paragraph | NodeValue::BlockQuote => {
+                   NodeValue::TableCell | NodeValue::Paragraph | NodeValue::BlockQuote
+                   | NodeValue::SpoilerText => {
                        Some(json!({
                            "e": "text",
                            "t": String::from_utf8(literal.to_owned()).unwrap(),
@@ -166,7 +167,8 @@ impl<'o> RTJsonFormatter<'o> {
                            "t": String::from_utf8(literal.to_owned()).unwrap()
                        }))
                    }
-                   NodeValue::TableCell | NodeValue::Paragraph | NodeValue::BlockQuote => {
+                   NodeValue::TableCell | NodeValue::Paragraph | NodeValue::BlockQuote
+                   | NodeValue::SpoilerText => {
                        Some(json!({
                            "e": "text",
                            "t": String::from_utf8(literal.to_owned()).unwrap(),
@@ -304,7 +306,13 @@ impl<'o> RTJsonFormatter<'o> {
             }
             NodeValue::FootnoteDefinition(..) => None,
             NodeValue::HtmlInline(ref nd) => unreachable!(),
-            NodeValue::FootnoteReference(..) => None
+            NodeValue::FootnoteReference(..) => None,
+            NodeValue::SpoilerText => {
+                Some(json!({
+                    "e": "spoilertext",
+                    "c": [],
+                }))
+            }
         }
     }
 }

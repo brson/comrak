@@ -301,7 +301,8 @@ fn main() {
         ext_tasklist: false,
         ext_superscript: false,
         ext_footnotes: false,
-        ext_header_ids: None
+        ext_header_ids: None,
+        ext_spoilertext: true,
     };
 
     if matches.is_present("spec") {

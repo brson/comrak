@@ -125,6 +125,9 @@ pub enum NodeValue {
 
     /// **Inline**.  Underline
     Underline,
+
+    /// **Inline** SpoilerText
+    SpoilerText,
 }
 
 /// Alignment of a single table cell.
@@ -310,6 +313,7 @@ impl NodeValue {
             | NodeValue::CodeBlock(..)
             | NodeValue::HtmlBlock(..)
             | NodeValue::Paragraph
+            | NodeValue::SpoilerText
             | NodeValue::Heading(..)
             | NodeValue::ThematicBreak
             | NodeValue::Table(..)
@@ -322,7 +326,8 @@ impl NodeValue {
     #[doc(hidden)]
     pub fn accepts_lines(&self) -> bool {
         match *self {
-            NodeValue::Paragraph | NodeValue::Heading(..) | NodeValue::CodeBlock(..) => true,
+            NodeValue::Paragraph | NodeValue::Heading(..) | NodeValue::CodeBlock(..)
+            | NodeValue::SpoilerText=> true,
             _ => false,
         }
     }
@@ -330,7 +335,8 @@ impl NodeValue {
     /// Indicates whether this node may contain inlines.
     pub fn contains_inlines(&self) -> bool {
         match *self {
-            NodeValue::Paragraph | NodeValue::Link(..) | NodeValue::Heading(..) | NodeValue::TableCell => true,
+            NodeValue::Paragraph | NodeValue::Link(..) | NodeValue::Heading(..) | NodeValue::SpoilerText
+            | NodeValue::TableCell => true,
             _ => false,
         }
     }
@@ -439,7 +445,8 @@ pub fn can_contain_type<'a>(node: &'a AstNode<'a>, child: &NodeValue) -> bool {
         | NodeValue::Strong
         | NodeValue::Link(..)
         | NodeValue::RedditLink(..)
-        | NodeValue::Image(..) => !child.block(),
+        | NodeValue::Image(..)
+        | NodeValue::SpoilerText => !child.block(),
 
         NodeValue::Table(..) => match *child {
             NodeValue::TableRow(..) => true,
@@ -460,7 +467,8 @@ pub fn can_contain_type<'a>(node: &'a AstNode<'a>, child: &NodeValue) -> bool {
             | NodeValue::RedditLink(..)
             | NodeValue::Image(..)
             | NodeValue::Strikethrough
-            | NodeValue::HtmlInline(..) => true,
+            | NodeValue::HtmlInline(..)
+            | NodeValue::SpoilerText => true,
             _ => false,
         },
 

@@ -633,6 +633,11 @@ impl<'o> HtmlFormatter<'o> {
                 try!(self.escape(&nl.title));
                 try!(self.output.write_all(b"</a>"));
             },
+            NodeValue::SpoilerText => if entering {
+                try!(self.output.write_all(b"<div class=\"spoiler\">"));
+            } else {
+                try!(self.output.write_all(b"</div>"));
+            }
         }
         Ok(false)
     }

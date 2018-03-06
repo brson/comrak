@@ -138,7 +138,7 @@ www.thisisalink.com
       * 2 levels nested - ul
 4. 0 levels nested - ol
 .
-{"document":[{"e":"list","o":true,"c":[{"e":"li","c":[{"e":"list","o":false,"c":[{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"1 level "},{"e":"link","t":"hello","u":"www.reddit.com"},{"e":"text","t":" nested - ul"}]}]}]}]},{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"0 levels nested - ol"}]}]},{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"0 levels nested - ol"}]},{"e":"list","o":true,"c":[{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"1 level nested - ol"}]},{"e":"list","o":true,"c":[{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"2 levels nested - ol"}]}]},{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"2 levels nested - ol"}]}]}]}]},{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"1 level nested - ol"}]},{"e":"list","o":false,"c":[{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"2 levels nested - ul"}]}]}]}]}]}]},{"e":"li","c":[{"e":"par","c":[{"e":"text","t":"0 levels nested - ol"}]}]}]}]}````````````````````````````````
+{"document":[{"c":[{"c":[[{"c":[{"e":"text","t":""}],"e":"par"}],[{"c":[{"c":[{"c":[{"e":"text","t":"1 level "},{"e":"link","t":"hello","u":"www.reddit.com"},{"e":"text","t":" nested - ul"}],"e":"par"}],"e":"li"}],"e":"list","o":false}]],"e":"li"},{"c":[{"c":[{"e":"text","t":"0 levels nested - ol"}],"e":"par"}],"e":"li"},{"c":[{"c":[{"e":"text","t":"0 levels nested - ol"}],"e":"par"},{"c":[{"c":[{"c":[{"e":"text","t":"1 level nested - ol"}],"e":"par"},{"c":[{"c":[{"c":[{"e":"text","t":"2 levels nested - ol"}],"e":"par"}],"e":"li"},{"c":[{"c":[{"e":"text","t":"2 levels nested - ol"}],"e":"par"}],"e":"li"}],"e":"list","o":true}],"e":"li"},{"c":[{"c":[{"e":"text","t":"1 level nested - ol"}],"e":"par"},{"c":[{"c":[{"c":[{"e":"text","t":"2 levels nested - ul"}],"e":"par"}],"e":"li"}],"e":"list","o":false}],"e":"li"}],"e":"list","o":true}],"e":"li"},{"c":[{"c":[{"e":"text","t":"0 levels nested - ol"}],"e":"par"}],"e":"li"}],"e":"list","o":true}]}````````````````````````````````
 
 ```````````````````````````````` example
 * First item
@@ -224,3 +224,59 @@ HTML entities like & \" < and > should not be escaped, unless they are malformed
 Escaping to HTML entities like & and " shouldn't impact format ranges like **this** or ~~*this*~~.
 .
 {"document":[{"c":[{"e":"text","f":[[1,75,4],[10,83,4]],"t":"Escaping to HTML entities like & and \" shouldn't impact format ranges like this or this."}],"e":"par"}]}````````````````````````````````
+
+We now support spoiler text and here are some test for those.
+
+```````````````````````````````` example
+This >!areallylongword *followed* by something!< EMAIL_OK_SET
+.
+{"document":[{"c":[{"e":"text","t":"This "},{"c":[{"e":"text","f":[[2,16,8]],"t":"areallylongword followed by something"}],"e":"spoilertext"},{"e":"text","t":" EMAIL_OK_SET"}],"e":"par"}]}````````````````````````````````
+
+
+
+```````````````````````````````` example
+This >!areallylongword **in bold followed** by something!< EMAIL_OK_SET
+.
+{"document":[{"c":[{"e":"text","t":"This "},{"c":[{"e":"text","f":[[1,16,16]],"t":"areallylongword in bold followed by something"}],"e":"spoilertext"},{"e":"text","t":" EMAIL_OK_SET"}],"e":"par"}]}````````````````````````````````
+
+
+
+```````````````````````````````` example
+This >!areallylongword ~followed~ *by* something!< EMAIL_OK_SET
+.
+{"document":[{"c":[{"e":"text","t":"This "},{"c":[{"e":"text","f":[[4,16,8],[2,25,2]],"t":"areallylongword followed by something"}],"e":"spoilertext"},{"e":"text","t":" EMAIL_OK_SET"}],"e":"par"}]}````````````````````````````````
+
+
+
+```````````````````````````````` example
+This >!areallylongword [*followed*](www.example.com "Hoping captions still work") by something!< EMAIL_OK_SET
+.
+{"document":[{"c":[{"e":"text","t":"This "},{"c":[{"e":"text","t":"areallylongword "},{"a":"Hoping captions still work","e":"link","f":[[2,0,8]],"t":"followed","u":"www.example.com"},{"e":"text","t":" by something"}],"e":"spoilertext"},{"e":"text","t":" EMAIL_OK_SET"}],"e":"par"}]}````````````````````````````````
+
+
+
+```````````````````````````````` example
+This >!areallylongword /u/followed by something!< EMAIL_OK_SET
+.
+{"document":[{"c":[{"e":"text","t":"This "},{"c":[{"e":"text","t":"areallylongword "},{"e":"u/","t":"followed"},{"e":"text","t":" by something"}],"e":"spoilertext"},{"e":"text","t":" EMAIL_OK_SET"}],"e":"par"}]}````````````````````````````````
+
+String with opening marker (!>), but no closing marker
+
+```````````````````````````````` example
+This is a string with an >!opener but no closer
+.
+{"document":[{"c":[{"e":"text","t":"This is a string with an >!opener but no closer"}],"e":"par"}]}````````````````````````````````
+
+Spoiler contained within a formatting run, e.g., *These italics include !>spoilertext<!*
+
+```````````````````````````````` example
+This is a string with a >!Spoiler and then >!another spoiler!< inside of it.!<
+.
+{"document":[{"c":[{"e":"text","t":"This is a string with a "},{"c":[{"e":"text","t":"Spoiler and then "},{"c":[{"e":"text","t":"another spoiler"}],"e":"spoilertext"},{"e":"text","t":" inside of it."}],"e":"spoilertext"}],"e":"par"}]}````````````````````````````````
+
+Spoiler nested within another spoiler (not sure what the behavior is)
+
+```````````````````````````````` example
+*This is an italic sentence with >!this!< inside it.*
+.
+{"document":[{"c":[{"e":"text","t":"This "},{"c":[{"e":"text","f":[[2,16,8]],"t":"areallylongword followed by something"}],"e":"s"},{"e":"text","t":" EMAIL_OK_SET"}],"e":"par"}]}````````````````````````````````

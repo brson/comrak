@@ -136,7 +136,8 @@ fn cm_to_rtjson(cm: String) -> Value {
         ext_tasklist: false,
         ext_superscript: false,
         ext_footnotes: false,
-        ext_header_ids: None
+        ext_header_ids: None,
+        ext_spoilertext: true,
     };
 
     let root = parse_document(&arena, &cm, &options);

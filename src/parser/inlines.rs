@@ -71,7 +71,7 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
         };
         s.special_chars.extend_from_slice(&[false; 256]);
         for &c in &[
-            b'\n', b'\r', b'_', b'*', b'"', b'`', b'\\', b'&', b'<', b'[', b']', b'!'
+            b'\n', b'\r', b'_', b'*', b'"', b'`', b'\\', b'&', b'<', b'[', b']', b'!', b'>'
         ] {
             s.special_chars[c as usize] = true;
         }
@@ -102,6 +102,14 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
             '\\' => new_inl = Some(self.handle_backslash()),
             '&' => new_inl = Some(self.handle_entity()),
             '<' => new_inl = Some(self.handle_pointy_brace()),
+            '>' => {
+                self.pos += 1;
+                if self.peek_char() == Some(&(b'!')) {
+                    new_inl = Some(self.handle_spoiler(b'!', true));
+                } else {
+                    new_inl = Some(make_inline(self.arena, NodeValue::Text(b">".to_vec())));
+                }
+            }
             '*' | '_' | '\'' | '"' => new_inl = Some(self.handle_delim(c as u8)),
             // TODO: smart characters. Eh.
             //'-' => new_inl => Some(self.handle_hyphen()),
@@ -120,6 +128,10 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
                     let inl = make_inline(self.arena, NodeValue::Text(b"![".to_vec()));
                     new_inl = Some(inl);
                     self.push_bracket(true, inl);
+                } else if self.peek_char() == Some(&(b'<')) {
+                    self.pos -= 1;
+                    new_inl = Some(self.handle_spoiler(b'!', false));
+                    self.pos += 1;
                 } else {
                     new_inl = Some(make_inline(self.arena, NodeValue::Text(b"!".to_vec())));
                 }
@@ -201,6 +213,7 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
                 if closer.unwrap().delim_char == b'*' || closer.unwrap().delim_char == b'_'
                     || (self.options.ext_strikethrough && closer.unwrap().delim_char == b'~')
                     || (self.options.ext_superscript && closer.unwrap().delim_char == b'^')
+                    || (self.options.ext_spoilertext && closer.unwrap().delim_char == b'!')
                 {
                     if opener_found {
                         closer = self.insert_emph(opener.unwrap(), closer.unwrap());
@@ -403,6 +416,24 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
         inl
     }
 
+    pub fn handle_spoiler(&mut self, c: u8, open: bool) -> &'a AstNode<'a> {
+        let (numdelims, _, _) = self.scan_delims(c);
+        let (can_open, can_close) = if open == true {
+            (true, false)
+        } else {
+            (false, true)
+        };
+
+        let contents = self.input[self.pos - numdelims..self.pos].to_vec();
+        let inl = make_inline(self.arena, NodeValue::Text(contents));
+
+        if (can_open || can_close) && c != b'\'' && c != b'"' {
+            self.push_delimiter(c, can_open, can_close, inl);
+        }
+
+        inl
+    }
+
     pub fn scan_delims(&mut self, c: u8) -> (usize, bool, bool) {
         let before_char = if self.pos == 0 {
             '\n'
@@ -528,6 +559,8 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
                 }
             } else if self.options.ext_superscript && opener_char == b'^' {
                 NodeValue::Superscript
+            } else if self.options.ext_spoilertext && opener_char == b'!' {
+                NodeValue::SpoilerText
             } else if use_delims == 1 {
                 NodeValue::Emph
             } else {
