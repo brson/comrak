@@ -346,7 +346,7 @@ pub fn process_redditlinks<'a>(
     contents: &mut Vec<u8>,
 ) {
     lazy_static! {
-        static ref RE: Regex = Regex::new(r"(^|[\n\t\r-_.+!*'(),%#@?=/;:,+&$])((/?(r|u)/)(\w+))").unwrap();
+        static ref RE: Regex = Regex::new(r"(^|[\n\t\r-_.+!*'(),%#@?=/;:,+&$])((/?(r|u)/)([-\w]+))").unwrap();
     }
 
     let borrowed_contents = contents.to_owned();

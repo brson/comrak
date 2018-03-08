@@ -121,3 +121,10 @@ List with empty nodes should send back a empty paragraph node.
 * fds
 .
 {"document":[{"c":[{"c":[{"c":[{"e":"text","t":"fdsa"}],"e":"par"}],"e":"li"},{"c":[{"c":[{"e":"text","t":""}],"e":"par"}],"e":"li"},{"c":[{"c":[{"e":"text","t":"fds"}],"e":"par"}],"e":"li"}],"e":"list","o":false}]}````````````````````````````````
+
+When a username has a hyphen in it we should support it.
+
+```````````````````````````````` example
+u/hello-there- hello-there
+.
+{"document":[{"c":[{"e":"u/","t":"hello-there-"},{"e":"text","t":" hello-there"}],"e":"par"}]}````````````````````````````````
