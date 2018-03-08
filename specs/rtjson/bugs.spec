@@ -122,6 +122,14 @@ List with empty nodes should send back a empty paragraph node.
 .
 {"document":[{"c":[{"c":[{"c":[{"e":"text","t":"fdsa"}],"e":"par"}],"e":"li"},{"c":[{"c":[{"e":"text","t":""}],"e":"par"}],"e":"li"},{"c":[{"c":[{"e":"text","t":"fds"}],"e":"par"}],"e":"li"}],"e":"list","o":false}]}````````````````````````````````
 
+Bug where empty nested nodes were not being rendered correctly.
+
+```````````````````````````````` example
+* 
+  * 
+.
+{"document":[{"c":[{"c":[{"c":[{"e":"text","t":""}],"e":"par"},{"c":[{"c":[{"c":[{"e":"text","t":""}],"e":"par"}],"e":"li"}],"e":"list","o":false}],"e":"li"}],"e":"list","o":false}]}````````````````````````````````
+
 When a username has a hyphen in it we should support it.
 
 ```````````````````````````````` example

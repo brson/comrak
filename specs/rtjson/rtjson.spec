@@ -127,7 +127,7 @@ www.thisisalink.com
 {"document":[{"e":"par","c":[{"e":"text","f":[[1,16,20]],"t":"Hello reddit, **this should be bold,** the stars around it should not be."}]},{"e":"par","c":[{"e":"text","t":"> This is text with an arrow in front"}]},{"e":"blockquote","c":[{"e":"par","c":[{"e":"text","t":"This is a quote"}]}]},{"e":"par","c":[{"e":"text","f":[[2,0,33]],"t":"Here we have something in italics"}]},{"e":"par","c":[{"e":"text","t":"*Here we have something with single-stars around it*"}]},{"e":"par","c":[{"e":"text","t":"`Is this a codeblock?`"}]},{"e":"par","c":[{"e":"text","t":"~~This should not be strike through~~"}]},{"e":"par","c":[{"e":"text","f":[[8,0,18]],"t":"But this should be"}]},{"e":"par","c":[{"e":"text","t":"[Finally here we have no link](www.example.com)"}]},{"e":"par","c":[{"e":"text","t":"www.thisisalink.com"}]}]}````````````````````````````````
 
 ```````````````````````````````` example
-1.
+1. 
    * 1 level [hello](www.reddit.com) nested - ul
 2. 0 levels nested - ol
 3. 0 levels nested - ol
@@ -138,7 +138,7 @@ www.thisisalink.com
       * 2 levels nested - ul
 4. 0 levels nested - ol
 .
-{"document":[{"c":[{"c":[[{"c":[{"e":"text","t":""}],"e":"par"}],[{"c":[{"c":[{"c":[{"e":"text","t":"1 level "},{"e":"link","t":"hello","u":"www.reddit.com"},{"e":"text","t":" nested - ul"}],"e":"par"}],"e":"li"}],"e":"list","o":false}]],"e":"li"},{"c":[{"c":[{"e":"text","t":"0 levels nested - ol"}],"e":"par"}],"e":"li"},{"c":[{"c":[{"e":"text","t":"0 levels nested - ol"}],"e":"par"},{"c":[{"c":[{"c":[{"e":"text","t":"1 level nested - ol"}],"e":"par"},{"c":[{"c":[{"c":[{"e":"text","t":"2 levels nested - ol"}],"e":"par"}],"e":"li"},{"c":[{"c":[{"e":"text","t":"2 levels nested - ol"}],"e":"par"}],"e":"li"}],"e":"list","o":true}],"e":"li"},{"c":[{"c":[{"e":"text","t":"1 level nested - ol"}],"e":"par"},{"c":[{"c":[{"c":[{"e":"text","t":"2 levels nested - ul"}],"e":"par"}],"e":"li"}],"e":"list","o":false}],"e":"li"}],"e":"list","o":true}],"e":"li"},{"c":[{"c":[{"e":"text","t":"0 levels nested - ol"}],"e":"par"}],"e":"li"}],"e":"list","o":true}]}````````````````````````````````
+{"document":[{"c":[{"c":[{"c":[{"e":"text","t":""}],"e":"par"},{"c":[{"c":[{"c":[{"e":"text","t":"1 level "},{"e":"link","t":"hello","u":"www.reddit.com"},{"e":"text","t":" nested - ul"}],"e":"par"}],"e":"li"}],"e":"list","o":false}],"e":"li"},{"c":[{"c":[{"e":"text","t":"0 levels nested - ol"}],"e":"par"}],"e":"li"},{"c":[{"c":[{"e":"text","t":"0 levels nested - ol"}],"e":"par"},{"c":[{"c":[{"c":[{"e":"text","t":"1 level nested - ol"}],"e":"par"},{"c":[{"c":[{"c":[{"e":"text","t":"2 levels nested - ol"}],"e":"par"}],"e":"li"},{"c":[{"c":[{"e":"text","t":"2 levels nested - ol"}],"e":"par"}],"e":"li"}],"e":"list","o":true}],"e":"li"},{"c":[{"c":[{"e":"text","t":"1 level nested - ol"}],"e":"par"},{"c":[{"c":[{"c":[{"e":"text","t":"2 levels nested - ul"}],"e":"par"}],"e":"li"}],"e":"list","o":false}],"e":"li"}],"e":"list","o":true}],"e":"li"},{"c":[{"c":[{"e":"text","t":"0 levels nested - ol"}],"e":"par"}],"e":"li"}],"e":"list","o":true}]}````````````````````````````````
 
 ```````````````````````````````` example
 * First item
@@ -258,7 +258,7 @@ This >!areallylongword [*followed*](www.example.com "Hoping captions still work"
 ```````````````````````````````` example
 This >!areallylongword /u/followed by something!< EMAIL_OK_SET
 .
-{"document":[{"c":[{"e":"text","t":"This "},{"c":[{"e":"text","t":"areallylongword "},{"e":"u/","t":"followed"},{"e":"text","t":" by something"}],"e":"spoilertext"},{"e":"text","t":" EMAIL_OK_SET"}],"e":"par"}]}````````````````````````````````
+{"document":[{"c":[{"e":"text","t":"This "},{"c":[{"e":"text","t":"areallylongword "},{"e":"u/","l":true,"t":"followed"},{"e":"text","t":" by something"}],"e":"spoilertext"},{"e":"text","t":" EMAIL_OK_SET"}],"e":"par"}]}````````````````````````````````
 
 String with opening marker (!>), but no closing marker
 

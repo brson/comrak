@@ -62,13 +62,6 @@ impl<'o> RTJsonFormatter<'o> {
                     None => json["c"] = content.to_owned(),
                 }
             }
-            NodeValue::Item(..) => {
-                if content[0].get("e") != None && content[0].get("e").unwrap() == "list" {
-                    json["c"] = json!([json["c"], content.clone()]);
-                } else {
-                    json["c"] = content.clone();
-                }
-            }
             _ => {
                 if !content.as_array().unwrap().is_empty() {
                     json["c"] = content.to_owned();
@@ -99,13 +92,6 @@ impl<'o> RTJsonFormatter<'o> {
             NodeValue::Item(..) => {
                 Some(json!({
                     "e": "li",
-                    "c": [{
-                        "c": [{
-                            "e": "text",
-                            "t": ""
-                        }],
-                        "e": "par"
-                    }],
                 }))
             }
             NodeValue::Heading(ref nch) => {

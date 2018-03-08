@@ -519,7 +519,7 @@ impl<'a, 'o> Parser<'a, 'o> {
             self.find_first_nonspace(line);
             let indented = self.indent >= CODE_INDENT;
 
-            if !indented && line[self.first_nonspace] == b'>' {
+            if !indented && line[self.first_nonspace] == b'>' && line[self.first_nonspace + 1] != b'!' {
                 let blockquote_startpos = self.first_nonspace;
                 let offset = self.first_nonspace + 1 - self.offset;
                 self.advance_offset(line, offset, false);
@@ -1444,6 +1444,46 @@ impl<'a, 'o> Parser<'a, 'o> {
                 current_format,
                 format_ranges
             );
+        }
+        match node.data.borrow().value {
+            NodeValue::Item(..) => {
+                match node.children().next() {
+                    None => {
+                        let par_inl = inlines::make_inline(
+                            self.arena,
+                            NodeValue::Paragraph,
+                        );
+                        let inl = inlines::make_inline(
+                            self.arena,
+                            NodeValue::Text(
+                                b"".to_vec()
+                            ),
+                        );
+                        par_inl.append(inl);
+                        node.prepend(par_inl);
+                    },
+                    Some(n) => {
+                        match n.data.borrow().value {
+                            NodeValue::List(..) => {
+                                let par_inl = inlines::make_inline(
+                                    self.arena,
+                                    NodeValue::Paragraph,
+                                );
+                                let inl = inlines::make_inline(
+                                    self.arena,
+                                    NodeValue::Text(
+                                        b"".to_vec()
+                                    ),
+                                );
+                                par_inl.append(inl);
+                                node.prepend(par_inl);
+                            },
+                            _ => ()
+                        }
+                    }
+                }
+            },
+            _ => (),
         }
         
         match node.data.borrow().value {
