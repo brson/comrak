@@ -10,7 +10,7 @@ nonoe www.reddit.com /r/or r/or either/or
 .
 {"document":[{"c":[{"e":"text","t":"nonoe www.reddit.com "},{"e":"r/","l":true,"t":"or"},{"e":"text","t":" "},{"e":"r/","t":"or"},{"e":"text","t":" either/or"}],"e":"par"}]}````````````````````````````````
 
-We also need to check links at the beginning 
+We also need to check links at the beginning
 
 ```````````````````````````````` example
 www.reddit.com nonoe /r/or r/or either/or
@@ -38,7 +38,7 @@ We have to make sure that nested styles get the proper rendering
 .
 {"document":[{"c":[{"e":"text","f":[[4,0,5],[5,5,14],[4,19,5]],"t":"curlycurly and boldcurly"}],"e":"par"}]}````````````````````````````````
 
-The below does not work and should be looked into 
+The below does not work and should be looked into
 
 ```````````````````````````````` example
 ~curly***curly and bold***curly~
@@ -94,7 +94,7 @@ We want to have code blocks not include empty lines at the end.
 
 ```````````````````````````````` example
     for (var i in arr) {
-    
+
         console.log(arr[i]);
     }
 .
@@ -125,8 +125,8 @@ List with empty nodes should send back a empty paragraph node.
 Bug where empty nested nodes were not being rendered correctly.
 
 ```````````````````````````````` example
-* 
-  * 
+*
+  *
 .
 {"document":[{"c":[{"c":[{"c":[{"e":"text","t":""}],"e":"par"},{"c":[{"c":[{"c":[{"e":"text","t":""}],"e":"par"}],"e":"li"}],"e":"list","o":false}],"e":"li"}],"e":"list","o":false}]}````````````````````````````````
 
@@ -136,3 +136,16 @@ When a username has a hyphen in it we should support it.
 u/hello-there- hello-there
 .
 {"document":[{"c":[{"e":"u/","t":"hello-there-"},{"e":"text","t":" hello-there"}],"e":"par"}]}````````````````````````````````
+
+Spoilertext should not turn into block quotes
+
+```````````````````````````````` example
+This >!works!<
+
+>!So does this!!<
+
+>!And this.!<
+
+> Finally a regular blockquote
+.
+{"document":[{"c":[{"e":"text","t":"This "},{"c":[{"e":"text","t":"works"}],"e":"spoilertext"}],"e":"par"},{"c":[{"c":[{"e":"text","t":"So does this!"}],"e":"spoilertext"}],"e":"par"},{"c":[{"c":[{"e":"text","t":"And this."}],"e":"spoilertext"}],"e":"par"},{"c":[{"c":[{"e":"text","t":"Finally a regular blockquote"}],"e":"par"}],"e":"blockquote"}]}````````````````````````````````

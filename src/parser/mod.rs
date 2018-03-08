@@ -786,7 +786,7 @@ impl<'a, 'o> Parser<'a, 'o> {
 
     fn parse_block_quote_prefix(&mut self, line: &[u8]) -> bool {
         let indent = self.indent;
-        if indent <= 3 && line[self.first_nonspace] == b'>' {
+        if indent <= 3 && line[self.first_nonspace] == b'>'  && line[self.first_nonspace + 1] != b'!' {
             self.advance_offset(line, indent + 1, true);
 
             if strings::is_space_or_tab(line[self.offset]) {
