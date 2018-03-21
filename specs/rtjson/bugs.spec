@@ -88,7 +88,7 @@ We must also make sure that non whitespace characters are accounted for
 ```````````````````````````````` example
 ^。here and here
 .
-{"document":[{"c":[{"e":"text","f":[[32,0,7]],"t":"。here and here"}],"e":"par"}]}````````````````````````````````
+{"document":[{"c":[{"e":"text","f":[[32,0,5]],"t":"。here and here"}],"e":"par"}]}````````````````````````````````
 
 We want to have code blocks not include empty lines at the end.
 
@@ -149,3 +149,48 @@ This >!works!<
 > Finally a regular blockquote
 .
 {"document":[{"c":[{"e":"text","t":"This "},{"c":[{"e":"text","t":"works"}],"e":"spoilertext"}],"e":"par"},{"c":[{"c":[{"e":"text","t":"So does this!"}],"e":"spoilertext"}],"e":"par"},{"c":[{"c":[{"e":"text","t":"And this."}],"e":"spoilertext"}],"e":"par"},{"c":[{"c":[{"e":"text","t":"Finally a regular blockquote"}],"e":"par"}],"e":"blockquote"}]}````````````````````````````````
+
+Testing for unicode characters with incorrect lengths output.
+
+```````````````````````````````` example
+☃*aaa*bbb
+.
+{"document":[{"c":[{"e":"text","f":[[2,1,3]],"t":"☃aaabbb"}],"e":"par"}]}````````````````````````````````
+
+
+```````````````````````````````` example
+ɛ*aaa*bbb
+.
+{"document":[{"c":[{"e":"text","f":[[2,1,3]],"t":"ɛaaabbb"}],"e":"par"}]}````````````````````````````````
+
+
+
+```````````````````````````````` example
+ɛ*aa☃*bbb
+.
+{"document":[{"c":[{"e":"text","f":[[2,1,3]],"t":"ɛaa☃bbb"}],"e":"par"}]}````````````````````````````````
+
+
+```````````````````````````````` example
+ɛ`aaa`bbb
+.
+{"document":[{"c":[{"e":"text","f":[[64,1,3]],"t":"ɛaaabbb"}],"e":"par"}]}````````````````````````````````
+
+
+```````````````````````````````` example
+☃`aaa`bbb
+.
+{"document":[{"c":[{"e":"text","f":[[64,1,3]],"t":"☃aaabbb"}],"e":"par"}]}````````````````````````````````
+
+
+```````````````````````````````` example
+ɛ`aa☃`bbb
+.
+{"document":[{"c":[{"e":"text","f":[[64,1,3]],"t":"ɛaa☃bbb"}],"e":"par"}]}````````````````````````````````
+
+Test pathological input
+
+```````````````````````````````` example
+a*a*a*a*a*a*a*a*a*a*
+.
+{"document":[{"c":[{"e":"text","f":[[2,1,1],[2,3,1],[2,5,1],[2,7,1],[2,9,1]],"t":"aaaaaaaaaa"}],"e":"par"}]}````````````````````````````````

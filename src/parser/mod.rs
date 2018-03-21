@@ -1029,7 +1029,8 @@ impl<'a, 'o> Parser<'a, 'o> {
                 self.root,
                 &mut vec![],
                 &mut HashMap::new(),
-                &mut vec![]
+                &mut vec![],
+                &mut 0,
             );
         }
         self.root
@@ -1326,10 +1327,12 @@ impl<'a, 'o> Parser<'a, 'o> {
         unformatted_text: &mut Vec<u8>,
         current_format: &mut HashMap<u16, u16>,
         format_ranges: &mut Vec<[u16; 3]>,
+        range_idx: &mut u16,
     ) {
         unformatted_text.clear();
         current_format.clear();
         format_ranges.clear();
+        *range_idx = 0;
     }
     
     fn insert_format(&mut self, current_format: &mut HashMap<u16, u16>, val: u16) {
@@ -1374,6 +1377,7 @@ impl<'a, 'o> Parser<'a, 'o> {
         unformatted_text: &mut Vec<u8>,
         current_format: &mut HashMap<u16, u16>,
         format_ranges: &mut Vec<[u16; 3]>,
+        range_idx: &mut u16,
     ) {
         match node.data.borrow_mut().value {
             NodeValue::Text(ref text) => {
@@ -1384,12 +1388,12 @@ impl<'a, 'o> Parser<'a, 'o> {
                     }
                 }
                 if sum > 0 {
-                    let range_idx = unformatted_text.len() as u16;
-                    let range_length = text.len() as u16;
-                    let new_range = [sum, range_idx, range_length];
+                    let range_length = str::from_utf8(text).expect("utf8").chars().count() as u16;
+                    let new_range = [sum, *range_idx, range_length];
                     format_ranges.push(new_range);
                 }
                 unformatted_text.extend_from_slice(text);
+                *range_idx += str::from_utf8(text).expect("utf8").chars().count() as u16
             },
             NodeValue::Link(..)
             | NodeValue::UnformattedLink(..)
@@ -1414,7 +1418,7 @@ impl<'a, 'o> Parser<'a, 'o> {
                         text_node
                     );
                     node.insert_before(inline_text_node);
-                    self.reset_rtjson_node(unformatted_text, current_format, format_ranges);
+                    self.reset_rtjson_node(unformatted_text, current_format, format_ranges, range_idx);
                 }
             },
             NodeValue::Image(..) => {
@@ -1423,11 +1427,11 @@ impl<'a, 'o> Parser<'a, 'o> {
                 parent_paragraph.detach();
             }
             NodeValue::Code(ref literal) => {
-                let range_idx = unformatted_text.len() as u16;
-                let range_length = literal.len() as u16;
-                let new_range = [64, range_idx, range_length];
+                let range_length = str::from_utf8(literal).expect("utf8").chars().count() as u16;
+                let new_range = [64, *range_idx, range_length];
                 format_ranges.push(new_range);
                 unformatted_text.extend_from_slice(literal);
+                *range_idx += str::from_utf8(literal).expect("utf8").chars().count() as u16
             }
             NodeValue::Strong => self.insert_format(current_format, 1),
             NodeValue::Emph => self.insert_format(current_format, 2),
@@ -1442,7 +1446,8 @@ impl<'a, 'o> Parser<'a, 'o> {
                 c,
                 unformatted_text,
                 current_format,
-                format_ranges
+                format_ranges,
+                range_idx,
             );
         }
         match node.data.borrow().value {
@@ -1519,7 +1524,7 @@ impl<'a, 'o> Parser<'a, 'o> {
                         link_node
                     );
                     node.insert_before(inline_text_node);
-                    self.reset_rtjson_node(unformatted_text, current_format, format_ranges);
+                    self.reset_rtjson_node(unformatted_text, current_format, format_ranges, range_idx);
                     node.detach();
                 }
                 _ => {
@@ -1542,7 +1547,7 @@ impl<'a, 'o> Parser<'a, 'o> {
                             )
                         };
                         node.append(formatted_text_node);
-                        self.reset_rtjson_node(unformatted_text, current_format, format_ranges);
+                        self.reset_rtjson_node(unformatted_text, current_format, format_ranges, range_idx);
                     }
                 }
             }
@@ -1557,7 +1562,7 @@ impl<'a, 'o> Parser<'a, 'o> {
                 NodeValue::Code(..) => node.detach(),
                 NodeValue::Image(ref mut nl) => {
                     nl.e =  unformatted_text.to_vec();
-                    self.reset_rtjson_node(unformatted_text, current_format, format_ranges);
+                    self.reset_rtjson_node(unformatted_text, current_format, format_ranges, range_idx);
                 }
                 _ => ()
             }

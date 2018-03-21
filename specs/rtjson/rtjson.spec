@@ -83,7 +83,7 @@ Above this is a list.
 |:-|:-:|-:|
 |a |**bold**&#8203;***bold+italic***&#8203;*italic*|a |
 .
-{"document":[{"e":"table","h":[{"a":"L","c":[{"e":"text","t":"Col 1"}]},{"a":"C","c":[{"e":"text","t":"Col 2"}]},{"a":"R","c":[{"e":"text","t":"Col 3"}]}],"c":[[{"c":[{"e":"text","t":"a"}]},{"c":[{"e":"text","f":[[1,0,4],[3,7,11],[2,21,6]],"t":"bold​bold+italic​italic"}]},{"c":[{"e":"text","t":"a"}]}]]}]}````````````````````````````````
+{"document":[{"e":"table","h":[{"a":"L","c":[{"e":"text","t":"Col 1"}]},{"a":"C","c":[{"e":"text","t":"Col 2"}]},{"a":"R","c":[{"e":"text","t":"Col 3"}]}],"c":[[{"c":[{"e":"text","t":"a"}]},{"c":[{"e":"text","f":[[1,0,4],[3,5,11],[2,17,6]],"t":"bold​bold+italic​italic"}]},{"c":[{"e":"text","t":"a"}]}]]}]}````````````````````````````````
 
 ```````````````````````````````` example
 These are two tables:
