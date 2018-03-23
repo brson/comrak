@@ -1325,12 +1325,10 @@ impl<'a, 'o> Parser<'a, 'o> {
     fn reset_rtjson_node(
         &mut self,
         unformatted_text: &mut Vec<u8>,
-        current_format: &mut HashMap<u16, u16>,
         format_ranges: &mut Vec<[u16; 3]>,
         range_idx: &mut u16,
     ) {
         unformatted_text.clear();
-        current_format.clear();
         format_ranges.clear();
         *range_idx = 0;
     }
@@ -1418,7 +1416,7 @@ impl<'a, 'o> Parser<'a, 'o> {
                         text_node
                     );
                     node.insert_before(inline_text_node);
-                    self.reset_rtjson_node(unformatted_text, current_format, format_ranges, range_idx);
+                    self.reset_rtjson_node(unformatted_text, format_ranges, range_idx);
                 }
             },
             NodeValue::Image(..) => {
@@ -1524,7 +1522,7 @@ impl<'a, 'o> Parser<'a, 'o> {
                         link_node
                     );
                     node.insert_before(inline_text_node);
-                    self.reset_rtjson_node(unformatted_text, current_format, format_ranges, range_idx);
+                    self.reset_rtjson_node(unformatted_text, format_ranges, range_idx);
                     node.detach();
                 }
                 _ => {
@@ -1547,22 +1545,27 @@ impl<'a, 'o> Parser<'a, 'o> {
                             )
                         };
                         node.append(formatted_text_node);
-                        self.reset_rtjson_node(unformatted_text, current_format, format_ranges, range_idx);
+                        self.reset_rtjson_node(unformatted_text, format_ranges, range_idx);
                     }
                 }
             }
         } else {
             match node.data.borrow_mut().value {
-                NodeValue::Text(..) |
-                NodeValue::Emph |
-                NodeValue::Strong |
-                NodeValue::Strikethrough |
-                NodeValue::Underline |
-                NodeValue::Superscript => node.detach(),
-                NodeValue::Code(..) => node.detach(),
+                NodeValue::Text(..)
+                | NodeValue::Emph
+                | NodeValue::Strong
+                | NodeValue::Strikethrough
+                | NodeValue::Underline
+                | NodeValue::Superscript
+                | NodeValue::Code(..) => {
+                    for ch in node.children() {
+                        node.insert_before(ch);
+                    }
+                    node.detach()
+                },
                 NodeValue::Image(ref mut nl) => {
                     nl.e =  unformatted_text.to_vec();
-                    self.reset_rtjson_node(unformatted_text, current_format, format_ranges, range_idx);
+                    self.reset_rtjson_node(unformatted_text, format_ranges, range_idx);
                 }
                 _ => ()
             }

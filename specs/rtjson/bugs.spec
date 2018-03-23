@@ -164,7 +164,6 @@ Testing for unicode characters with incorrect lengths output.
 {"document":[{"c":[{"e":"text","f":[[2,1,3]],"t":"ɛaaabbb"}],"e":"par"}]}````````````````````````````````
 
 
-
 ```````````````````````````````` example
 ɛ*aa☃*bbb
 .
@@ -194,6 +193,23 @@ Test pathological input
 a*a*a*a*a*a*a*a*a*a*
 .
 {"document":[{"c":[{"e":"text","f":[[2,1,1],[2,3,1],[2,5,1],[2,7,1],[2,9,1]],"t":"aaaaaaaaaa"}],"e":"par"}]}````````````````````````````````
+
+We want no nodes to be dropped in the case of mixed or nested stylings.
+
+```````````````````````````````` example
+*This is a node [with a link](www.reddit.com) and another node.*
+.
+{"document":[{"c":[{"e":"text","f":[[2,0,15]],"t":"This is a node "},{"e":"link","f":[[2,0,11]],"t":"with a link","u":"www.reddit.com"},{"e":"text","f":[[2,0,18]],"t":" and another node."}],"e":"par"}]}````````````````````````````````
+
+```````````````````````````````` example
+*This is a node /u/redditlink and another node.*
+.
+{"document":[{"c":[{"e":"text","f":[[2,0,15]],"t":"This is a node "},{"e":"u/","l":true,"t":"redditlink"},{"e":"text","f":[[2,0,18]],"t":" and another node."}],"e":"par"}]}````````````````````````````````
+
+```````````````````````````````` example
+*This is a node >!a spoiler-node!< and another node.*
+.
+{"document":[{"c":[{"e":"text","f":[[2,0,15]],"t":"This is a node "},{"c":[{"e":"text","f":[[2,0,14]],"t":"a spoiler-node"}],"e":"spoilertext"},{"e":"text","f":[[2,0,18]],"t":" and another node."}],"e":"par"}]}````````````````````````````````
 
 Autolinking tests
 
