@@ -8,21 +8,21 @@ This should be used with rtjson.
 ```````````````````````````````` example
 nonoe www.reddit.com /r/or r/or either/or
 .
-{"document":[{"c":[{"e":"text","t":"nonoe www.reddit.com "},{"e":"r/","l":true,"t":"or"},{"e":"text","t":" "},{"e":"r/","t":"or"},{"e":"text","t":" either/or"}],"e":"par"}]}````````````````````````````````
+{"document":[{"c":[{"e":"text","t":"nonoe "},{"e":"link","t":"www.reddit.com","u":"http://www.reddit.com"},{"e":"text","t":" "},{"e":"r/","l":true,"t":"or"},{"e":"text","t":" "},{"e":"r/","t":"or"},{"e":"text","t":" either/or"}],"e":"par"}]}````````````````````````````````
 
 We also need to check links at the beginning
 
 ```````````````````````````````` example
 www.reddit.com nonoe /r/or r/or either/or
 .
-{"document":[{"c":[{"e":"text","t":"www.reddit.com nonoe "},{"e":"r/","l":true,"t":"or"},{"e":"text","t":" "},{"e":"r/","t":"or"},{"e":"text","t":" either/or"}],"e":"par"}]}````````````````````````````````
+{"document":[{"c":[{"e":"link","t":"www.reddit.com","u":"http://www.reddit.com"},{"e":"text","t":" nonoe "},{"e":"r/","l":true,"t":"or"},{"e":"text","t":" "},{"e":"r/","t":"or"},{"e":"text","t":" either/or"}],"e":"par"}]}````````````````````````````````
 
 ...and end of lines.
 
 ```````````````````````````````` example
 nonoe /r/or r/or either/or www.reddit.com
 .
-{"document":[{"c":[{"e":"text","t":"nonoe "},{"e":"r/","l":true,"t":"or"},{"e":"text","t":" "},{"e":"r/","t":"or"},{"e":"text","t":" either/or www.reddit.com"}],"e":"par"}]}````````````````````````````````
+{"document":[{"c":[{"e":"text","t":"nonoe "},{"e":"r/","l":true,"t":"or"},{"e":"text","t":" "},{"e":"r/","t":"or"},{"e":"text","t":" either/or "},{"e":"link","t":"www.reddit.com","u":"http://www.reddit.com"}],"e":"par"}]}````````````````````````````````
 
 We should also make sure that user redditlinks are being covered
 
@@ -194,3 +194,40 @@ Test pathological input
 a*a*a*a*a*a*a*a*a*a*
 .
 {"document":[{"c":[{"e":"text","f":[[2,1,1],[2,3,1],[2,5,1],[2,7,1],[2,9,1]],"t":"aaaaaaaaaa"}],"e":"par"}]}````````````````````````````````
+
+Autolinking tests
+
+```````````````````````````````` example
+http://www.google.com
+.
+{"document": [{"c": [{"u": "http://www.google.com", "e": "link", "t": "http://www.google.com"}], "e": "par"}]}````````````````````````````````
+
+```````````````````````````````` example
+https://www.google.com
+.
+{"document": [{"c": [{"u": "https://www.google.com", "e": "link", "t": "https://www.google.com"}], "e": "par"}]}````````````````````````````````
+
+```````````````````````````````` example
+www.google.com
+.
+{"document": [{"c": [{"u": "http://www.google.com", "e": "link", "t": "www.google.com"}], "e": "par"}]}````````````````````````````````
+
+This one is checking that a url containing /r/foo isn't mangled in some weird way
+
+```````````````````````````````` example
+https://www.reddit.com/r/ModSupport/comments/81dz9w/automod_removing_crossposts/
+.
+{"document": [{"c": [{"u": "https://www.reddit.com/r/ModSupport/comments/81dz9w/automod_removing_crossposts/", "e": "link", "t": "https://www.reddit.com/r/ModSupport/comments/81dz9w/automod_removing_crossposts/"}], "e": "par"}]}````````````````````````````````
+
+Finally, an example pulled from the wild:
+
+```````````````````````````````` example
+As seen here, naked URLs are not being parsed as URLs. If the URL is a Reddit
+link, the subreddit is parsed as a clickable link to that subreddit. For
+example,
+https://www.reddit.com/r/ModSupport/comments/81dz9w/automod_removing_crossposts/
+
+If the link is another link, it is merely displayed as plain text. For example,
+https://www.google.com/
+.
+{"document": [{"c": [{"e": "text", "t": "As seen here, naked URLs are not being parsed as URLs. If the URL is a Redditlink, the subreddit is parsed as a clickable link to that subreddit. Forexample,"}, {"u": "https://www.reddit.com/r/ModSupport/comments/81dz9w/automod_removing_crossposts/", "e": "link", "t": "https://www.reddit.com/r/ModSupport/comments/81dz9w/automod_removing_crossposts/"}], "e": "par"}, {"c": [{"e": "text", "t": "If the link is another link, it is merely displayed as plain text. For example,"}, {"u": "https://www.google.com/", "e": "link", "t": "https://www.google.com/"}], "e": "par"}]}````````````````````````````````
