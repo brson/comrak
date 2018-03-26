@@ -258,6 +258,10 @@ pub struct ComrakOptions {
     ///            "<p>This is a <div class="spoiler">spoilered text post</div></p>\n");
     /// ```
     pub ext_spoilertext: bool,
+
+    /// This is a catch-all for hacks that enable backwards compatibility with
+    /// Reddit R2 and the snudown markdown processor.
+    pub ext_reddit_quirks: bool,
 }
 
 #[derive(Clone)]
@@ -530,40 +534,9 @@ impl<'a, 'o> Parser<'a, 'o> {
                     self.add_child(*container, NodeValue::BlockQuote, blockquote_startpos + 1);
             } else if !indented
                 && unwrap_into(
-                    scanners::atx_heading_start(&line[self.first_nonspace..]),
+                    scanners::atx_heading_start(&line[self.first_nonspace..], self.options.ext_reddit_quirks),
                     &mut matched,
                 ) {
-                let heading_startpos = self.first_nonspace;
-                let offset = self.offset;
-                self.advance_offset(line, heading_startpos + matched - offset, false);
-                *container = self.add_child(
-                    *container,
-                    NodeValue::Heading(NodeHeading::default()),
-                    heading_startpos + 1,
-                );
-
-                let mut hashpos = line[self.first_nonspace..]
-                    .iter()
-                    .position(|&c| c == b'#')
-                    .unwrap() + self.first_nonspace;
-                let mut level = 0;
-                while line[hashpos] == b'#' {
-                    level += 1;
-                    hashpos += 1;
-                }
-
-                container.data.borrow_mut().value = NodeValue::Heading(NodeHeading {
-                    level: level,
-                    setext: false,
-                });
-
-            } else if !indented
-                    && unwrap_into(
-                    scanners::reddit_atx_heading_start(&line[self.first_nonspace..]),
-                    &mut matched,
-                )
-            {
-                // ZT: abstract ATX header functionality to make DRY
                 let heading_startpos = self.first_nonspace;
                 let offset = self.offset;
                 self.advance_offset(line, heading_startpos + matched - offset, false);
@@ -670,6 +643,30 @@ impl<'a, 'o> Parser<'a, 'o> {
                 NodeValue::List(..) => true,
                 _ => false,
             })
+                && {
+                    // Reddit prefers parsing table rows to lists for
+                    // backcompat, so e.g. we parse "- | cell | cell" as a table row
+                    // if we are already parsing tables.
+                    let parsing_table_rows = match container.data.borrow().value {
+                        NodeValue::Table(..) => true,
+                        _ => false,
+                    };
+                    // But - and, ugh - snudown only did this if there is
+                    // at least one pipe in the line. _Furthermore_, snudown
+                    // failed to escape pipes before parsing them as tables,
+                    // so e.g. it would parse "-\|b" as two cells: one containing "-\"
+                    // and another containing "b". _That's_ pretty darn bogus so
+                    // snoomark considers escapes when deciding to parse a potential
+                    // list as a table row, breaking compat with snudown. Probably
+                    // nobody will ever notice.
+                    let have_pipe = || line.windows(2).any(|pair| {
+                        pair[0] != b'\\' && pair[1] == b'|'
+                    });
+                    let skip_list_parsing = self.options.ext_reddit_quirks
+                        && parsing_table_rows
+                        && have_pipe();
+                    !skip_list_parsing
+                }
                 && unwrap_into_2(
                     parse_list_marker(
                         line,
@@ -986,8 +983,25 @@ impl<'a, 'o> Parser<'a, 'o> {
                             }
                         };
                         let count = self.first_nonspace - self.offset;
-                        self.advance_offset(&line, count, false);
-                        self.add_line(container, &line);
+
+                        // In a rare case the above `chop` operation can leave
+                        // the line shorter than the recorded `first_nonspace`
+                        // This happens with ATX headers containing no header
+                        // text, multiple spaces and trailing hashes, e.g
+                        //
+                        // ###     ###
+                        //
+                        // In this case `first_nonspace` indexes into the second
+                        // set of hashes, while `chop_trailing_hashtags` truncates
+                        // `line` to just `###` (the first three hashes).
+                        // In this case there's no text to add, and no further
+                        // processing to be done.
+                        let have_line_text = self.first_nonspace <= line.len();
+
+                        if have_line_text {
+                            self.advance_offset(&line, count, false);
+                            self.add_line(container, &line);
+                        }
                     } else {
                         let start_column = self.first_nonspace + 1;
                         container = self.add_child(container, NodeValue::Paragraph, start_column);

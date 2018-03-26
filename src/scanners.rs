@@ -23,8 +23,12 @@ fn is_match(rule: Rule, line: &[u8]) -> bool {
 }
 
 #[inline(always)]
-pub fn atx_heading_start(line: &[u8]) -> Option<usize> {
-    search(Rule::atx_heading_start, line)
+pub fn atx_heading_start(line: &[u8], reddit_quirks: bool) -> Option<usize> {
+    if !reddit_quirks {
+        search(Rule::atx_heading_start, line)
+    } else {
+        search(Rule::reddit_atx_heading_start, line)
+    }
 }
 
 #[inline(always)]
@@ -177,9 +181,4 @@ pub fn table_cell_end(line: &[u8]) -> Option<usize> {
 #[inline(always)]
 pub fn table_row_end(line: &[u8]) -> Option<usize> {
     search(Rule::table_row_end, line)
-}
-
-// extensions by reddit
-pub fn reddit_atx_heading_start(line: &[u8]) -> Option<usize> {
-    search(Rule::atx_heading_start, line)
 }

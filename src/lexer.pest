@@ -1,4 +1,5 @@
 atx_heading_start = { "#"{1, 6} ~ (" " | "\t" | "\r" | "\n") }
+reddit_atx_heading_start = { "#"{1, 6} }
 
 open_code_fence = _{ open_code_fence_match ~ (!("`" | "\r" | "\n" | "\x00") ~ any)* ~ ("\r" | "\n") }
 open_code_fence_match = { "`"{3,} | "~"{3,} }

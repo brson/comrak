@@ -303,6 +303,7 @@ fn main() {
         ext_footnotes: false,
         ext_header_ids: None,
         ext_spoilertext: true,
+        ext_reddit_quirks: true,
     };
 
     if matches.is_present("spec") {

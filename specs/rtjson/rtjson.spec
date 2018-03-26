@@ -280,3 +280,19 @@ Spoiler nested within another spoiler (not sure what the behavior is)
 *This is an italic sentence with >!this!< inside it.*
 .
 {"document":[{"c":[{"e":"text","t":"This "},{"c":[{"e":"text","f":[[2,16,8]],"t":"areallylongword followed by something"}],"e":"s"},{"e":"text","t":" EMAIL_OK_SET"}],"e":"par"}]}````````````````````````````````
+
+Headers can contain no text
+
+```````````````````````````````` example
+#
+Bloop
+.
+{"document": [{"e": "h", "l": 1}, {"c": [{"e": "text", "t": "Bloop"}], "e": "par"}]}````````````````````````````````
+
+Headers can be separated by tabs
+
+```````````````````````````````` example
+#	Bleep
+Bloop
+.
+{"document": [{"c": [{"e": "raw", "t": "Bleep"}], "e": "h", "l": 1}, {"c": [{"e": "text", "t": "Bloop"}], "e": "par"}]}````````````````````````````````

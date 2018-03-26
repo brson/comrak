@@ -265,3 +265,165 @@ Test a link with % in it.
 http://sfpublicworks.org/sites/default/files/Broadway%20Chinatown%20Factsheet.pdf
 .
 {"document":[{"c":[{"e":"link","t":"http://sfpublicworks.org/sites/default/files/Broadway%20Chinatown%20Factsheet.pdf","u":"http://sfpublicworks.org/sites/default/files/Broadway%20Chinatown%20Factsheet.pdf"}],"e":"par"}]}````````````````````````````````
+
+Reddit quirk - headers don't need spaces between hashes and headertext. CREATE-1363
+
+```````````````````````````````` example
+#Bleep
+Bloop
+.
+{"document": [{"c": [{"e": "raw", "t": "Bleep"}], "e": "h", "l": 1}, {"c": [{"e": "text", "t": "Bloop"}], "e": "par"}]}````````````````````````````````
+
+... and that makes tables on subsequent lines parse as tables
+
+```````````````````````````````` example
+###Header
+A|B|C|D
+:--|:--|:-:|:-:
+a|b|c|d
+.
+{"document": [{"c": [{"e": "raw", "t": "Header"}], "e": "h", "l": 3}, {"h": [{"a": "L", "c": [{"e": "text", "t": "A"}]}, {"a": "L", "c": [{"e": "text", "t": "B"}]}, {"a": "C", "c": [{"e": "text", "t": "C"}]}, {"a": "C", "c": [{"e": "text", "t": "D"}]}], "c": [[{"c": [{"e": "text", "t": "a"}]}, {"c": [{"e": "text", "t": "b"}]}, {"c": [{"e": "text", "t": "c"}]}, {"c": [{"e": "text", "t": "d"}]}]], "e": "table"}]}````````````````````````````````
+
+```````````````````````````````` example
+##
+#
+### ###
+.
+{"document": [{"e": "h", "l": 2}, {"e": "h", "l": 1}, {"e": "h", "l": 3}]}````````````````````````````````
+
+```````````````````````````````` example
+##
+#
+###  ###
+.
+{"document": [{"e": "h", "l": 2}, {"e": "h", "l": 1}, {"e": "h", "l": 3}]}````````````````````````````````
+
+Tests for compatibility with snudown tables with trailing 'junk' in rows. CREATE-1363
+
+```````````````````````````````` example
+|A|B|C|
+|-|-|-|bleep
+|a|b|c|
+.
+{"document": [{"h": [{"a": "", "c": [{"e": "text", "t": "A"}]}, {"a": "", "c": [{"e": "text", "t": "B"}]}, {"a": "", "c": [{"e": "text", "t": "C"}]}], "c": [[{"c": [{"e": "text", "t": "a"}]}, {"c": [{"e": "text", "t": "b"}]}, {"c": [{"e": "text", "t": "c"}]}]], "e": "table"}]}````````````````````````````````
+
+```````````````````````````````` example
+|A|B|C|
+|-|-|-|
+|a|b|c|bloop
+.
+{"document": [{"h": [{"a": "", "c": [{"e": "text", "t": "A"}]}, {"a": "", "c": [{"e": "text", "t": "B"}]}, {"a": "", "c": [{"e": "text", "t": "C"}]}], "c": [[{"c": [{"e": "text", "t": "a"}]}, {"c": [{"e": "text", "t": "b"}]}, {"c": [{"e": "text", "t": "c"}]}]], "e": "table"}]}````````````````````````````````
+
+```````````````````````````````` example
+|A|B|C|
+|-|-|-|bleep
+|a|b|c|bloop
+.
+{"document": [{"h": [{"a": "", "c": [{"e": "text", "t": "A"}]}, {"a": "", "c": [{"e": "text", "t": "B"}]}, {"a": "", "c": [{"e": "text", "t": "C"}]}], "c": [[{"c": [{"e": "text", "t": "a"}]}, {"c": [{"e": "text", "t": "b"}]}, {"c": [{"e": "text", "t": "c"}]}]], "e": "table"}]}````````````````````````````````
+
+```````````````````````````````` example
+|A|B|C|
+|-|-|-| bleep
+|a|b|c| bloop
+.
+{"document": [{"h": [{"a": "", "c": [{"e": "text", "t": "A"}]}, {"a": "", "c": [{"e": "text", "t": "B"}]}, {"a": "", "c": [{"e": "text", "t": "C"}]}], "c": [[{"c": [{"e": "text", "t": "a"}]}, {"c": [{"e": "text", "t": "b"}]}, {"c": [{"e": "text", "t": "c"}]}]], "e": "table"}]}````````````````````````````````
+
+```````````````````````````````` example
+|A|B|C
+-|-|-|a
+|a|b|c
+.
+{"document": [{"h": [{"a": "", "c": [{"e": "text", "t": "A"}]}, {"a": "", "c": [{"e": "text", "t": "B"}]}, {"a": "", "c": [{"e": "text", "t": "C"}]}], "c": [[{"c": [{"e": "text", "t": "a"}]}, {"c": [{"e": "text", "t": "b"}]}, {"c": [{"e": "text", "t": "c"}]}]], "e": "table"}]}````````````````````````````````
+
+```````````````````````````````` example
+A|B|C|
+-|-|-|bleep|bloop|
+a|b|c|
+.
+{"document": [{"h": [{"a": "", "c": [{"e": "text", "t": "A"}]}, {"a": "", "c": [{"e": "text", "t": "B"}]}, {"a": "", "c": [{"e": "text", "t": "C"}]}], "c": [[{"c": [{"e": "text", "t": "a"}]}, {"c": [{"e": "text", "t": "b"}]}, {"c": [{"e": "text", "t": "c"}]}]], "e": "table"}]}````````````````````````````````
+
+```````````````````````````````` example
+A|B|C|
+-|-|-|
+a|b|c|bleep|bloop|
+.
+{"document": [{"h": [{"a": "", "c": [{"e": "text", "t": "A"}]}, {"a": "", "c": [{"e": "text", "t": "B"}]}, {"a": "", "c": [{"e": "text", "t": "C"}]}], "c": [[{"c": [{"e": "text", "t": "a"}]}, {"c": [{"e": "text", "t": "b"}]}, {"c": [{"e": "text", "t": "c"}]}]], "e": "table"}]}````````````````````````````````
+
+```````````````````````````````` example
+|A|B|C|
+|-|-|-|bleep
+|a|b|
+.
+{"document": [{"h": [{"a": "", "c": [{"e": "text", "t": "A"}]}, {"a": "", "c": [{"e": "text", "t": "B"}]}, {"a": "", "c": [{"e": "text", "t": "C"}]}], "c": [[{"c": [{"e": "text", "t": "a"}]}, {"c": [{"e": "text", "t": "b"}]}, {"c": []}]], "e": "table"}]}````````````````````````````````
+
+Finally a somewhat reduced real-world case of trailing junk in the marker row
+
+```````````````````````````````` example
+#Rotational Players
+
+| Name | Position | Year | Height / Weight | 24/7 Rating |Highlights|
+|:-------:|:-------:|:-----:|:----------------:|:------------:|:-----------:|+
+| Daniel McMillian | OLB/ILB | Senior | 6'1 / 230 | **** | [Here](https://www.youtube.com/watch?v=1sIHfGNutv8) |
+| Matt Rolin | ILB/OLB | Junior - Redshirt | 6'4 / 225 | **** | [Here](https://www.youtube.com/watch?v=kRtlakveW34) |
+
+Unfortunately we have almost no veteran depth this season.
+.
+{"document": [{"c": [{"e": "raw", "t": "Rotational Players"}], "e": "h", "l": 1}, {"h": [{"a": "C", "c": [{"e": "text", "t": "Name"}]}, {"a": "C", "c": [{"e": "text", "t": "Position"}]}, {"a": "C", "c": [{"e": "text", "t": "Year"}]}, {"a": "C", "c": [{"e": "text", "t": "Height / Weight"}]}, {"a": "C", "c": [{"e": "text", "t": "24/7 Rating"}]}, {"a": "C", "c": [{"e": "text", "t": "Highlights"}]}], "c": [[{"c": [{"e": "text", "t": "Daniel McMillian"}]}, {"c": [{"e": "text", "t": "OLB/ILB"}]}, {"c": [{"e": "text", "t": "Senior"}]}, {"c": [{"e": "text", "t": "6'1 / 230"}]}, {"c": [{"e": "text", "t": "****"}]}, {"c": [{"u": "https://www.youtube.com/watch?v=1sIHfGNutv8", "e": "link", "t": "Here"}]}], [{"c": [{"e": "text", "t": "Matt Rolin"}]}, {"c": [{"e": "text", "t": "ILB/OLB"}]}, {"c": [{"e": "text", "t": "Junior - Redshirt"}]}, {"c": [{"e": "text", "t": "6'4 / 225"}]}, {"c": [{"e": "text", "t": "****"}]}, {"c": [{"u": "https://www.youtube.com/watch?v=kRtlakveW34", "e": "link", "t": "Here"}]}]], "e": "table"}, {"c": [{"e": "text", "t": "Unfortunately we have almost no veteran depth this season."}], "e": "par"}]}````````````````````````````````
+
+Tests that table rows take precedence over lists. CREATE-1363
+
+```````````````````````````````` example
+A|B
+-|-
+-|b
+.
+{"document": [{"h": [{"a": "", "c": [{"e": "text", "t": "A"}]}, {"a": "", "c": [{"e": "text", "t": "B"}]}], "c": [[{"c": [{"e": "text", "t": "-"}]}, {"c": [{"e": "text", "t": "b"}]}]], "e": "table"}]}````````````````````````````````
+
+```````````````````````````````` example
+A|B
+-|-
+*|b
+.
+{"document": [{"h": [{"a": "", "c": [{"e": "text", "t": "A"}]}, {"a": "", "c": [{"e": "text", "t": "B"}]}], "c": [[{"c": [{"e": "text", "t": "*"}]}, {"c": [{"e": "text", "t": "b"}]}]], "e": "table"}]}````````````````````````````````
+
+```````````````````````````````` example
+A|B
+-|-
+ - | b
+.
+{"document": [{"h": [{"a": "", "c": [{"e": "text", "t": "A"}]}, {"a": "", "c": [{"e": "text", "t": "B"}]}], "c": [[{"c": [{"e": "text", "t": "-"}]}, {"c": [{"e": "text", "t": "b"}]}]], "e": "table"}]}````````````````````````````````
+
+Lines have to have at least one pipe to be parsed as rows instead of lists.
+The following contains two list items.
+
+```````````````````````````````` example
+A|B
+-|-
+a|b
+- 1
+- 2
+.
+{"document": [{"h": [{"a": "", "c": [{"e": "text", "t": "A"}]}, {"a": "", "c": [{"e": "text", "t": "B"}]}], "c": [[{"c": [{"e": "text", "t": "a"}]}, {"c": [{"e": "text", "t": "b"}]}]], "e": "table"}, {"c": [{"c": [{"c": [{"e": "text", "t": "1"}], "e": "par"}], "e": "li"}, {"c": [{"c": [{"e": "text", "t": "2"}], "e": "par"}], "e": "li"}], "e": "list", "o": false}]}````````````````````````````````
+
+This though is a table following by a single list item.
+
+```````````````````````````````` example
+A|B
+-|-
+a|b
+- 1 |
+- 2
+.
+{"document": [{"h": [{"a": "", "c": [{"e": "text", "t": "A"}]}, {"a": "", "c": [{"e": "text", "t": "B"}]}], "c": [[{"c": [{"e": "text", "t": "a"}]}, {"c": [{"e": "text", "t": "b"}]}], [{"c": [{"e": "text", "t": "- 1"}]}, {"c": []}]], "e": "table"}, {"c": [{"c": [{"c": [{"e": "text", "t": "2"}], "e": "par"}], "e": "li"}], "e": "list", "o": false}]}````````````````````````````````
+
+Escaped pipes aren't considered table delimiters, so this one is again two list
+items (this differs from snudown, which failed to escape the pipe here).
+
+```````````````````````````````` example
+A|B
+-|-
+a|b
+- 1 \|
+- 2
+.
+{"document": [{"h": [{"a": "", "c": [{"e": "text", "t": "A"}]}, {"a": "", "c": [{"e": "text", "t": "B"}]}], "c": [[{"c": [{"e": "text", "t": "a"}]}, {"c": [{"e": "text", "t": "b"}]}]], "e": "table"}, {"c": [{"c": [{"c": [{"e": "text", "t": "1 |"}], "e": "par"}], "e": "li"}, {"c": [{"c": [{"e": "text", "t": "2"}], "e": "par"}], "e": "li"}], "e": "list", "o": false}]}````````````````````````````````

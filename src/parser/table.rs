@@ -37,10 +37,22 @@ fn try_opening_header<'a, 'o>(
         None => return Some((container, false)),
     };
 
-    let marker_row = row(&line[parser.first_nonspace..]).unwrap();
+    let mut marker_row = row(&line[parser.first_nonspace..]).unwrap();
 
-    if header_row.len() != marker_row.len() {
-        return Some((container, false));
+    // snudown allowed the marker row to contain extra junk at the
+    // end of the line, here parsed as extra cells.
+    if !parser.options.ext_reddit_quirks {
+        if header_row.len() != marker_row.len() {
+            return Some((container, false));
+        }
+    } else {
+        // Though the marker row at least must be as long as the header row
+        if marker_row.len() < header_row.len() {
+            return Some((container, false));
+        } else {
+            // Drop extra marker cells ala snudown
+            marker_row.truncate(header_row.len());
+        }
     }
 
     let mut alignments = vec![];
