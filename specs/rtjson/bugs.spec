@@ -194,6 +194,17 @@ a*a*a*a*a*a*a*a*a*a*
 .
 {"document":[{"c":[{"e":"text","f":[[2,1,1],[2,3,1],[2,5,1],[2,7,1],[2,9,1]],"t":"aaaaaaaaaa"}],"e":"par"}]}````````````````````````````````
 
+These test are for the spoiler tag when they are not completed.
+
+```````````````````````````````` example
+This >!is an opening spoiler tag with no closer.
+
+This is a closing spoiler tag!< with no opener.
+
+This is a >!regular old spoiler!< tag.
+.
+{"document":[{"c":[{"e":"text","t":"This >!is an opening spoiler tag with no closer."}],"e":"par"},{"c":[{"e":"text","t":"This is a closing spoiler tag!< with no opener."}],"e":"par"},{"c":[{"e":"text","t":"This is a "},{"c":[{"e":"text","t":"regular old spoiler"}],"e":"spoilertext"},{"e":"text","t":" tag."}],"e":"par"}]}````````````````````````````````
+
 We want no nodes to be dropped in the case of mixed or nested stylings.
 
 ```````````````````````````````` example

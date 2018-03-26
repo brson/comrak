@@ -105,7 +105,7 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
             '>' => {
                 self.pos += 1;
                 if self.peek_char() == Some(&(b'!')) {
-                    new_inl = Some(self.handle_spoiler(b'!', true));
+                    new_inl = Some(self.handle_spoiler(true));
                 } else {
                     new_inl = Some(make_inline(self.arena, NodeValue::Text(b">".to_vec())));
                 }
@@ -130,7 +130,7 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
                     self.push_bracket(true, inl);
                 } else if self.peek_char() == Some(&(b'<')) {
                     self.pos -= 1;
-                    new_inl = Some(self.handle_spoiler(b'!', false));
+                    new_inl = Some(self.handle_spoiler(false));
                     self.pos += 1;
                 } else {
                     new_inl = Some(make_inline(self.arena, NodeValue::Text(b"!".to_vec())));
@@ -416,20 +416,19 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
         inl
     }
 
-    pub fn handle_spoiler(&mut self, c: u8, open: bool) -> &'a AstNode<'a> {
+    pub fn handle_spoiler(&mut self, open: bool) -> &'a AstNode<'a> {
+        let c = b'!';
         let (numdelims, _, _) = self.scan_delims(c);
+        let inl;
         let (can_open, can_close) = if open == true {
+            inl = make_inline(self.arena, NodeValue::Text(b">!".to_vec()));
             (true, false)
         } else {
+            inl = make_inline(self.arena, NodeValue::Text(b"!<".to_vec()));
             (false, true)
         };
 
-        let contents = self.input[self.pos - numdelims..self.pos].to_vec();
-        let inl = make_inline(self.arena, NodeValue::Text(contents));
-
-        if (can_open || can_close) && c != b'\'' && c != b'"' {
-            self.push_delimiter(c, can_open, can_close, inl);
-        }
+        self.push_delimiter(c, can_open, can_close, inl);
 
         inl
     }
@@ -559,7 +558,7 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
                 }
             } else if self.options.ext_superscript && opener_char == b'^' {
                 NodeValue::Superscript
-            } else if self.options.ext_spoilertext && opener_char == b'!' {
+            } else if self.options.ext_spoilertext && opener_char == b'>' {
                 NodeValue::SpoilerText
             } else if use_delims == 1 {
                 NodeValue::Emph
