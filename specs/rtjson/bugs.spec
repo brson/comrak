@@ -247,3 +247,10 @@ If the link is another link, it is merely displayed as plain text. For example,
 https://www.google.com/
 .
 {"document": [{"c": [{"e": "text", "t": "As seen here, naked URLs are not being parsed as URLs. If the URL is a Redditlink, the subreddit is parsed as a clickable link to that subreddit. Forexample,"}, {"u": "https://www.reddit.com/r/ModSupport/comments/81dz9w/automod_removing_crossposts/", "e": "link", "t": "https://www.reddit.com/r/ModSupport/comments/81dz9w/automod_removing_crossposts/"}], "e": "par"}, {"c": [{"e": "text", "t": "If the link is another link, it is merely displayed as plain text. For example,"}, {"u": "https://www.google.com/", "e": "link", "t": "https://www.google.com/"}], "e": "par"}]}````````````````````````````````
+
+Test a link with % in it.
+
+```````````````````````````````` example
+http://sfpublicworks.org/sites/default/files/Broadway%20Chinatown%20Factsheet.pdf
+.
+{"document":[{"c":[{"e":"link","t":"http://sfpublicworks.org/sites/default/files/Broadway%20Chinatown%20Factsheet.pdf","u":"http://sfpublicworks.org/sites/default/files/Broadway%20Chinatown%20Factsheet.pdf"}],"e":"par"}]}````````````````````````````````

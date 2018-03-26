@@ -11,7 +11,7 @@ pub fn process_glyphs<'a>(
     contents: &mut Vec<u8>
 ) {
     lazy_static! {
-        static ref RE: Regex = Regex::new(r"([\^%]{1,10})(\([\w\s\(\)]+\)|\S+)").unwrap();
+        static ref RE: Regex = Regex::new(r"([\^]{1,10})(\([\w\s\(\)]+\)|\S+)").unwrap();
     }
 
     let owned_contents =  contents.to_owned();
@@ -34,7 +34,7 @@ pub fn process_glyphs<'a>(
         let mut wrapped = false;
         for c in prefix.iter() {
             match *c {
-                b'^' | b'%' => idx += 1,
+                b'^' => idx += 1,
                 b'(' => {
                     let suffix = slice.iter().rev().next().unwrap();
                     if *suffix == b')' {
