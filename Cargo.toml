@@ -1,6 +1,6 @@
 [package]
 name = "snoomark"
-version = "1.0.8"
+version = "1.0.9"
 authors = ["Shaq Johnson <shaq@reddit.com>", "Zean Tsoi <zean@reddit.com>"]
 description = "A fork of GitHub's comrak CommonMark parser with Reddit flavor."
 homepage = "https://github.com/reddit/snoomark"
