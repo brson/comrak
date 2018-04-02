@@ -115,7 +115,7 @@ impl<'a> Iterator for Spec<'a> {
     }
 }
 
-fn spec_test (args: &Vec<&str>, opts: parser::ComrakOptions) {
+fn spec_test (args: &Vec<&str>, opts: parser::ComrakOptions) -> Result<(), ()> {
     let mut spec_text = String::new();
     for fs in args {
         spec_text.push_str(&read_file(&fs).replace("→","\t"));
@@ -200,6 +200,12 @@ fn spec_test (args: &Vec<&str>, opts: parser::ComrakOptions) {
     println!("\n{}/{}", tests_run - tests_failed, tests_run );
     print!("{}", fail_report);
     println!("\n {} test succeeded out of {} test run.", tests_run - tests_failed, tests_run );
+
+    if tests_failed == 0 {
+        Ok(())
+    } else {
+        Err(())
+    }
 }
 
 fn read_file(filename: &str) -> String {
@@ -307,7 +313,10 @@ fn main() {
     };
 
     if matches.is_present("spec") {
-        spec_test(&matches.values_of("spec").unwrap().collect::<Vec<_>>(), options);
+        let r = spec_test(&matches.values_of("spec").unwrap().collect::<Vec<_>>(), options);
+        if r.is_err() {
+            process::exit(1);
+        }
     }
 
     process::exit(0);

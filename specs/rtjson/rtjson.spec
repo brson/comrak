@@ -258,28 +258,32 @@ This >!areallylongword [*followed*](www.example.com "Hoping captions still work"
 ```````````````````````````````` example
 This >!areallylongword /u/followed by something!< EMAIL_OK_SET
 .
-{"document":[{"c":[{"e":"text","t":"This "},{"c":[{"e":"text","t":"areallylongword "},{"e":"u/","l":true,"t":"followed"},{"e":"text","t":" by something"}],"e":"spoilertext"},{"e":"text","t":" EMAIL_OK_SET"}],"e":"par"}]}````````````````````````````````
+{"document":[{"c":[{"e":"text","t":"This "},{"c":[{"e":"text","t":"areallylongword "},{"e":"u/","l":true,"t":"followed"},{"e":"text","t":" by something"}],"e":"spoilertext"},{"e":"text","t":" EMAIL_OK_SET"}],"e":"par"}]}
+````````````````````````````````
 
 String with opening marker (!>), but no closing marker
 
 ```````````````````````````````` example
 This is a string with an >!opener but no closer
 .
-{"document":[{"c":[{"e":"text","t":"This is a string with an >!opener but no closer"}],"e":"par"}]}````````````````````````````````
+{"document":[{"c":[{"e":"text","t":"This is a string with an >!opener but no closer"}],"e":"par"}]}
+````````````````````````````````
 
 Spoiler contained within a formatting run, e.g., *These italics include !>spoilertext<!*
 
 ```````````````````````````````` example
 This is a string with a >!Spoiler and then >!another spoiler!< inside of it.!<
 .
-{"document":[{"c":[{"e":"text","t":"This is a string with a "},{"c":[{"e":"text","t":"Spoiler and then "},{"c":[{"e":"text","t":"another spoiler"}],"e":"spoilertext"},{"e":"text","t":" inside of it."}],"e":"spoilertext"}],"e":"par"}]}````````````````````````````````
+{"document":[{"c":[{"e":"text","t":"This is a string with a "},{"c":[{"e":"text","t":"Spoiler and then "},{"c":[{"e":"text","t":"another spoiler"}],"e":"spoilertext"},{"e":"text","t":" inside of it."}],"e":"spoilertext"}],"e":"par"}]}
+````````````````````````````````
 
 Spoiler nested within another spoiler (not sure what the behavior is)
 
 ```````````````````````````````` example
 *This is an italic sentence with >!this!< inside it.*
 .
-{"document":[{"c":[{"e":"text","t":"This "},{"c":[{"e":"text","f":[[2,16,8]],"t":"areallylongword followed by something"}],"e":"s"},{"e":"text","t":" EMAIL_OK_SET"}],"e":"par"}]}````````````````````````````````
+{"document":[{"c":[{"e":"text","f":[[2,0,32]],"t":"This is an italic sentence with "},{"c":[{"e":"text","f":[[2,0,4]],"t":"this"}],"e":"spoilertext"},{"e":"text","f":[[2,0,11]],"t":" inside it."}],"e":"par"}]}
+````````````````````````````````
 
 Headers can contain no text
 
@@ -287,7 +291,8 @@ Headers can contain no text
 #
 Bloop
 .
-{"document": [{"e": "h", "l": 1}, {"c": [{"e": "text", "t": "Bloop"}], "e": "par"}]}````````````````````````````````
+{"document": [{"e": "h", "l": 1}, {"c": [{"e": "text", "t": "Bloop"}], "e": "par"}]}
+````````````````````````````````
 
 Headers can be separated by tabs
 
@@ -295,4 +300,5 @@ Headers can be separated by tabs
 #	Bleep
 Bloop
 .
-{"document": [{"c": [{"e": "raw", "t": "Bleep"}], "e": "h", "l": 1}, {"c": [{"e": "text", "t": "Bloop"}], "e": "par"}]}````````````````````````````````
+{"document": [{"c": [{"e": "raw", "t": "Bleep"}], "e": "h", "l": 1}, {"c": [{"e": "text", "t": "Bloop"}], "e": "par"}]}
+````````````````````````````````
