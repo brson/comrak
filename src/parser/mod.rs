@@ -1383,6 +1383,30 @@ impl<'a, 'o> Parser<'a, 'o> {
         *format_ranges = new_format;
     }
 
+    fn output_format_range(
+            &mut self,
+            unformatted_text: &mut Vec<u8>,
+            current_format: &mut HashMap<u16, u16>,
+            format_ranges: &mut Vec<[u16; 3]>,
+            range_idx: &mut u16,
+            text: &Vec<u8>,
+    ) {
+        let mut sum: u16 = 0;
+        for (key, val) in current_format.iter() {
+            if *val > 0 {
+                sum += *key;
+            }
+        }
+
+        let range_length = str::from_utf8(text).expect("utf8").chars().count() as u16;
+        if sum > 0 {
+            let new_range = [sum, *range_idx, range_length];
+            format_ranges.push(new_range);
+        }
+        unformatted_text.extend_from_slice(text);
+        *range_idx += range_length;
+    }
+
     fn postprocess_rtjson_ast(
         &mut self,
         node: &'a AstNode<'a>,
@@ -1393,19 +1417,13 @@ impl<'a, 'o> Parser<'a, 'o> {
     ) {
         match node.data.borrow_mut().value {
             NodeValue::Text(ref text) => {
-                let mut sum: u16 = 0;
-                for (key, val) in current_format.iter() {
-                    if *val > 0 {
-                        sum += *key;
-                    }
-                }
-                if sum > 0 {
-                    let range_length = str::from_utf8(text).expect("utf8").chars().count() as u16;
-                    let new_range = [sum, *range_idx, range_length];
-                    format_ranges.push(new_range);
-                }
-                unformatted_text.extend_from_slice(text);
-                *range_idx += str::from_utf8(text).expect("utf8").chars().count() as u16
+                self.output_format_range(
+                    unformatted_text,
+                    current_format,
+                    format_ranges,
+                    range_idx,
+                    text
+                );
             },
             NodeValue::Link(..)
             | NodeValue::UnformattedLink(..)
@@ -1444,6 +1462,40 @@ impl<'a, 'o> Parser<'a, 'o> {
                 format_ranges.push(new_range);
                 unformatted_text.extend_from_slice(literal);
                 *range_idx += str::from_utf8(literal).expect("utf8").chars().count() as u16
+            },
+            NodeValue::HtmlBlock(ref nhb) => {
+                self.output_format_range(
+                    unformatted_text,
+                    current_format,
+                    format_ranges,
+                    range_idx,
+                    &nhb.literal,
+                );
+
+                let text_node = if format_ranges.is_empty() {
+                    NodeValue::Text(
+                        unformatted_text.to_vec(),
+                    )
+                } else {
+                    self.consolidate_format(format_ranges);
+                    NodeValue::FormattedText(
+                        unformatted_text.to_vec(),
+                        format_ranges.to_owned()
+                    )
+                };
+                let par_inl = inlines::make_inline(
+                    self.arena,
+                    NodeValue::Paragraph
+                );
+                let inline_text_node = inlines::make_inline(
+                    self.arena,
+                    text_node
+                );
+                par_inl.append(inline_text_node);
+
+                node.insert_before(par_inl);
+                self.reset_rtjson_node(unformatted_text, format_ranges, range_idx);
+                node.detach();
             }
             NodeValue::Strong => self.insert_format(current_format, 1),
             NodeValue::Emph => self.insert_format(current_format, 2),

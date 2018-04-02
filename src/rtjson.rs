@@ -117,7 +117,7 @@ impl<'o> RTJsonFormatter<'o> {
                     "c": int
                 }))
             }
-            NodeValue::HtmlBlock(_) => None,
+            NodeValue::HtmlBlock(ref nhb) => unreachable!(),
             NodeValue::ThematicBreak | NodeValue::LineBreak |
             NodeValue:: SoftBreak => None,
             NodeValue::Code(_) | NodeValue::Strong | NodeValue::Emph | NodeValue::Superscript |
