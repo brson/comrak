@@ -1389,7 +1389,7 @@ impl<'a, 'o> Parser<'a, 'o> {
             current_format: &mut HashMap<u16, u16>,
             format_ranges: &mut Vec<[u16; 3]>,
             range_idx: &mut u16,
-            text: &Vec<u8>,
+            text: &[u8],
     ) {
         let mut sum: u16 = 0;
         for (key, val) in current_format.iter() {
@@ -1425,6 +1425,16 @@ impl<'a, 'o> Parser<'a, 'o> {
                     text
                 );
             },
+            NodeValue::SoftBreak => {
+                self.output_format_range(
+                    unformatted_text,
+                    current_format,
+                    format_ranges,
+                    range_idx,
+                    &[32],
+                );
+                node.detach();
+            }
             NodeValue::Link(..)
             | NodeValue::UnformattedLink(..)
             | NodeValue::RedditLink(..)

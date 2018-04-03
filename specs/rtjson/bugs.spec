@@ -66,7 +66,7 @@ The test above account for known bugs and fixes.
 u/reddit
 /u/reddit
 .
-{"document":[{"c":[{"e":"text","t":"a。u/reddit"},{"e":"u/","t":"reddit"},{"e":"u/","l":true,"t":"reddit"}],"e":"par"}]}
+{"document":[{"c":[{"e":"text","t":"a。u/reddit "},{"e":"u/","t":"reddit"},{"e":"text","t":" "},{"e":"u/","l":true,"t":"reddit"}],"e":"par"}]}
 ````````````````````````````````
 
 The redditlink should always be rendered if it starts with a slash.
@@ -75,7 +75,7 @@ The redditlink should always be rendered if it starts with a slash.
 。/u/reddit
 。//u/reddit
 .
-{"document":[{"c":[{"e":"text","t":"。/"},{"e":"u/","t":"reddit"},{"e":"text","t":"。/"},{"e":"u/","l":true,"t":"reddit"}],"e":"par"}]}
+{"document":[{"c":[{"e":"text","t":"。/"},{"e":"u/","t":"reddit"},{"e":"text","t":" 。/"},{"e":"u/","l":true,"t":"reddit"}],"e":"par"}]}
 ````````````````````````````````
 
 There was a bug where we were getting a panic on the malformed strings
@@ -290,7 +290,7 @@ https://www.reddit.com/r/ModSupport/comments/81dz9w/automod_removing_crossposts/
 If the link is another link, it is merely displayed as plain text. For example,
 https://www.google.com/
 .
-{"document": [{"c": [{"e": "text", "t": "As seen here, naked URLs are not being parsed as URLs. If the URL is a Redditlink, the subreddit is parsed as a clickable link to that subreddit. Forexample,"}, {"u": "https://www.reddit.com/r/ModSupport/comments/81dz9w/automod_removing_crossposts/", "e": "link", "t": "https://www.reddit.com/r/ModSupport/comments/81dz9w/automod_removing_crossposts/"}], "e": "par"}, {"c": [{"e": "text", "t": "If the link is another link, it is merely displayed as plain text. For example,"}, {"u": "https://www.google.com/", "e": "link", "t": "https://www.google.com/"}], "e": "par"}]}
+{"document": [{"c": [{"e": "text", "t": "As seen here, naked URLs are not being parsed as URLs. If the URL is a Reddit link, the subreddit is parsed as a clickable link to that subreddit. For example, "}, {"u": "https://www.reddit.com/r/ModSupport/comments/81dz9w/automod_removing_crossposts/", "e": "link", "t": "https://www.reddit.com/r/ModSupport/comments/81dz9w/automod_removing_crossposts/"}], "e": "par"}, {"c": [{"e": "text", "t": "If the link is another link, it is merely displayed as plain text. For example, "}, {"u": "https://www.google.com/", "e": "link", "t": "https://www.google.com/"}], "e": "par"}]}
 ````````````````````````````````
 
 Test a link with % in it.
@@ -512,4 +512,62 @@ stuff
 Begining <script> alert('test'); </script> Lines that don't matter <bogustag>stuff</bogustag> stuff
 .
 {"document":[{"c":[{"e":"text","t":"<h1>header</h1> Studd in between <h2>header</h2> more stuff in between <ul><li>a</li></ul>\n"}],"e":"par"},{"c":[{"e":"text","t":"Begining <script> alert('test'); </script> Lines that don't matter <bogustag>stuff</bogustag> stuff"}],"e":"par"}]}
+````````````````````````````````
+
+Soft line breaks
+
+```````````````````````````````` example
+line
+line
+line
+.
+{"document": [{"c": [{"e": "text", "t": "line line line"}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+_line
+line
+line_
+.
+{"document": [{"c": [{"e": "text", "t": "line line line", "f": [[2, 0, 14]]}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+line
+[link](http://example.com)
+line
+.
+{"document": [{"c": [{"e": "text", "t": "line "}, {"u": "http://example.com", "e": "link", "t": "link"}, {"e": "text", "t": " line"}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+_line
+[link](http://example.com)
+line_
+.
+{"document": [{"c": [{"e": "text", "t": "line ", "f": [[2, 0, 5]]}, {"u": "http://example.com", "e": "link", "t": "link", "f": [[2, 0, 4]]}, {"e": "text", "t": " line", "f": [[2, 0, 5]]}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+line
+ line
+ line
+.
+{"document": [{"c": [{"e": "text", "t": "line line line"}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+line
+_line_
+line
+.
+{"document": [{"c": [{"e": "text", "t": "line line line", "f": [[2, 5, 4]]}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+line 
+ _line_ 
+line 
+.
+{"document": [{"c": [{"e": "text", "t": "line line line", "f": [[2, 5, 4]]}], "e": "par"}]}
 ````````````````````````````````
