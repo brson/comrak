@@ -503,8 +503,8 @@ stuff
 
 stuff
 .
-{"document":[{"c":[{"e":"text","t":"Edit: this post works now, but none of the following are displayed:"}],"e":"par"},{"c":[{"e":"text","t":"stuff"}],"e":"par"},{"c":[{"e":"text","t":"<!-- comment -->\n"}],"e":"par"},{"c":[{"e":"text","t":"<h1>header</h1>\n"}],"e":"par"},{"c":[{"e":"text","t":"<h2>header</h2>\n"}],"e":"par"},{"c":[{"e":"text","t":"<ul><li>a</li></ul>\n"}],"e":"par"},{"c":[{"e":"text","t":"<script> alert('test'); </script>\n"}],"e":"par"},{"c":[{"e":"text","t":"<bogustag>stuff</bogustag>"}],"e":"par"},{"c":[{"e":"text","t":"stuff"}],"e":"par"}]}````````````````````````````````
-
+{"document":[{"c":[{"e":"text","t":"Edit: this post works now, but none of the following are displayed:"}],"e":"par"},{"c":[{"e":"text","t":"stuff"}],"e":"par"},{"c":[{"e":"text","t":"<!-- comment -->\n"}],"e":"par"},{"c":[{"e":"text","t":"<h1>header</h1>\n"}],"e":"par"},{"c":[{"e":"text","t":"<h2>header</h2>\n"}],"e":"par"},{"c":[{"e":"text","t":"<ul><li>a</li></ul>\n"}],"e":"par"},{"c":[{"e":"text","t":"<script> alert('test'); </script>\n"}],"e":"par"},{"c":[{"e":"text","t":"<bogustag>stuff</bogustag>"}],"e":"par"},{"c":[{"e":"text","t":"stuff"}],"e":"par"}]}
+````````````````````````````````
 
 ```````````````````````````````` example
 <h1>header</h1> Studd in between <h2>header</h2> more stuff in between <ul><li>a</li></ul>
