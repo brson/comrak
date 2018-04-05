@@ -571,3 +571,19 @@ line
 .
 {"document": [{"c": [{"e": "text", "t": "line line line", "f": [[2, 5, 4]]}], "e": "par"}]}
 ````````````````````````````````
+
+Some regression tests that spoilertext parsing doesn't eat extra exclamation marks
+
+This generates empty spoilertext
+
+```````````````````````````````` example
+a>!!<b
+.
+{"document": [{"c": [{"e": "text", "t": "a"}, {"c": [], "e": "spoilertext"}, {"e": "text", "t": "b"}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+>!!a!!<
+.
+{"document": [{"c": [{"c": [{"e": "text", "t": "!a!"}], "e": "spoilertext"}], "e": "par"}]}
+````````````````````````````````

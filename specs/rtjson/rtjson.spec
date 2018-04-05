@@ -302,3 +302,74 @@ Bloop
 .
 {"document": [{"c": [{"e": "raw", "t": "Bleep"}], "e": "h", "l": 1}, {"c": [{"e": "text", "t": "Bloop"}], "e": "par"}]}
 ````````````````````````````````
+
+Escaped non-spoilertext.
+
+```````````````````````````````` example
+\>!spoilertext!<
+.
+{"document": [{"c": [{"e": "text", "t": ">!spoilertext!<"}], "e": "par"}]}
+````````````````````````````````
+
+This one actually ends up as a blockquote
+
+```````````````````````````````` example
+>\!spoilertext!<
+.
+{"document": [{"c": [{"c": [{"e": "text", "t": "!spoilertext!<"}], "e": "par"}], "e": "blockquote"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+>!spoilertext\!<
+.
+{"document": [{"c": [{"e": "text", "t": ">!spoilertext!<"}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+>!spoilertext!\<
+.
+{"document": [{"c": [{"e": "text", "t": ">!spoilertext!<"}], "e": "par"}]}
+````````````````````````````````
+
+Spoilertext doesn't presently need to be leading and trailing whitespace-delimited
+like other emphasis
+
+```````````````````````````````` example
+a>!b!<c
+.
+{"document": [{"c": [{"e": "text", "t": "a"}, {"c": [{"e": "text", "t": "b"}], "e": "spoilertext"}, {"e": "text", "t": "c"}], "e": "par"}]}
+````````````````````````````````
+
+Nor do spoilertext delimiters need to be flanking text like other emphasis
+
+```````````````````````````````` example
+a >! b !< c
+.
+{"document": [{"c": [{"e": "text", "t": "a "}, {"c": [{"e": "text", "t": " b "}], "e": "spoilertext"}, {"e": "text", "t": " c"}], "e": "par"}]}
+````````````````````````````````
+
+Spoilertext doesn't care about matching quotes
+
+```````````````````````````````` example
+>!"spoilertext!<"!<
+.
+{"document": [{"c": [{"c": [{"e": "text", "t": "\"spoilertext"}], "e": "spoilertext"}, {"e": "text", "t": "\"!<"}], "e": "par"}]}
+````````````````````````````````
+
+Leftmost opener gets precedent when they are mismatched
+
+This is spoilertext, not emphasis
+
+```````````````````````````````` example
+>! _spoilertext!<a_
+.
+{"document": [{"c": [{"c": [{"e": "text", "t": " _spoilertext"}], "e": "spoilertext"}, {"e": "text", "t": "a_"}], "e": "par"}]}
+````````````````````````````````
+
+This is emphasis, not spoilertext
+
+```````````````````````````````` example
+_a>!spoilertext_ !<
+.
+{"document": [{"c": [{"e": "text", "t": "a>!spoilertext !<", "f": [[2, 0, 14]]}], "e": "par"}]}
+````````````````````````````````

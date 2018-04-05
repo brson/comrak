@@ -105,6 +105,7 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
             '>' => {
                 self.pos += 1;
                 if self.peek_char() == Some(&(b'!')) {
+                    self.pos += 1;
                     new_inl = Some(self.handle_spoiler(true));
                 } else {
                     new_inl = Some(make_inline(self.arena, NodeValue::Text(b">".to_vec())));
@@ -129,9 +130,8 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
                     new_inl = Some(inl);
                     self.push_bracket(true, inl);
                 } else if self.peek_char() == Some(&(b'<')) {
-                    self.pos -= 1;
-                    new_inl = Some(self.handle_spoiler(false));
                     self.pos += 1;
+                    new_inl = Some(self.handle_spoiler(false));
                 } else {
                     new_inl = Some(make_inline(self.arena, NodeValue::Text(b"!".to_vec())));
                 }
@@ -417,8 +417,6 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
     }
 
     pub fn handle_spoiler(&mut self, open: bool) -> &'a AstNode<'a> {
-        let c = b'!';
-        let (numdelims, _, _) = self.scan_delims(c);
         let inl;
         let (can_open, can_close) = if open == true {
             inl = make_inline(self.arena, NodeValue::Text(b">!".to_vec()));
@@ -428,7 +426,7 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
             (false, true)
         };
 
-        self.push_delimiter(c, can_open, can_close, inl);
+        self.push_delimiter(b'!', can_open, can_close, inl);
 
         inl
     }
