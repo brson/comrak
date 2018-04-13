@@ -128,7 +128,7 @@ www.thisisalink.com
 
 ```````````````````````````````` example
 1. 
-   * 1 level [hello](www.reddit.com) nested - ul
+   * 1 level [hello](http://www.reddit.com) nested - ul
 2. 0 levels nested - ol
 3. 0 levels nested - ol
    1. 1 level nested - ol
@@ -138,7 +138,7 @@ www.thisisalink.com
       * 2 levels nested - ul
 4. 0 levels nested - ol
 .
-{"document":[{"c":[{"c":[{"c":[{"e":"text","t":""}],"e":"par"},{"c":[{"c":[{"c":[{"e":"text","t":"1 level "},{"e":"link","t":"hello","u":"www.reddit.com"},{"e":"text","t":" nested - ul"}],"e":"par"}],"e":"li"}],"e":"list","o":false}],"e":"li"},{"c":[{"c":[{"e":"text","t":"0 levels nested - ol"}],"e":"par"}],"e":"li"},{"c":[{"c":[{"e":"text","t":"0 levels nested - ol"}],"e":"par"},{"c":[{"c":[{"c":[{"e":"text","t":"1 level nested - ol"}],"e":"par"},{"c":[{"c":[{"c":[{"e":"text","t":"2 levels nested - ol"}],"e":"par"}],"e":"li"},{"c":[{"c":[{"e":"text","t":"2 levels nested - ol"}],"e":"par"}],"e":"li"}],"e":"list","o":true}],"e":"li"},{"c":[{"c":[{"e":"text","t":"1 level nested - ol"}],"e":"par"},{"c":[{"c":[{"c":[{"e":"text","t":"2 levels nested - ul"}],"e":"par"}],"e":"li"}],"e":"list","o":false}],"e":"li"}],"e":"list","o":true}],"e":"li"},{"c":[{"c":[{"e":"text","t":"0 levels nested - ol"}],"e":"par"}],"e":"li"}],"e":"list","o":true}]}````````````````````````````````
+{"document":[{"c":[{"c":[{"c":[{"e":"text","t":""}],"e":"par"},{"c":[{"c":[{"c":[{"e":"text","t":"1 level "},{"e":"link","t":"hello","u":"http://www.reddit.com"},{"e":"text","t":" nested - ul"}],"e":"par"}],"e":"li"}],"e":"list","o":false}],"e":"li"},{"c":[{"c":[{"e":"text","t":"0 levels nested - ol"}],"e":"par"}],"e":"li"},{"c":[{"c":[{"e":"text","t":"0 levels nested - ol"}],"e":"par"},{"c":[{"c":[{"c":[{"e":"text","t":"1 level nested - ol"}],"e":"par"},{"c":[{"c":[{"c":[{"e":"text","t":"2 levels nested - ol"}],"e":"par"}],"e":"li"},{"c":[{"c":[{"e":"text","t":"2 levels nested - ol"}],"e":"par"}],"e":"li"}],"e":"list","o":true}],"e":"li"},{"c":[{"c":[{"e":"text","t":"1 level nested - ol"}],"e":"par"},{"c":[{"c":[{"c":[{"e":"text","t":"2 levels nested - ul"}],"e":"par"}],"e":"li"}],"e":"list","o":false}],"e":"li"}],"e":"list","o":true}],"e":"li"},{"c":[{"c":[{"e":"text","t":"0 levels nested - ol"}],"e":"par"}],"e":"li"}],"e":"list","o":true}]}````````````````````````````````
 
 ```````````````````````````````` example
 * First item
@@ -182,9 +182,9 @@ foo^^^bar
 Lets try the same thing with links
 
 ```````````````````````````````` example
-[**This is some __bold__ text.**](www.reddit.com)
+[**This is some __bold__ text.**](http://www.reddit.com)
 .
-{"document":[{"c":[{"e":"link","f":[[1,0,23]],"t":"This is some bold text.","u":"www.reddit.com"}],"e":"par"}]}````````````````````````````````
+{"document":[{"c":[{"e":"link","f":[[1,0,23]],"t":"This is some bold text.","u":"http://www.reddit.com"}],"e":"par"}]}````````````````````````````````
 
 Now we also allow images with captions for our parser. An exclamation point allows us to point towards our image using the format 
 ![alt](/mediaid "caption")
@@ -249,9 +249,9 @@ This >!areallylongword ~followed~ *by* something!< EMAIL_OK_SET
 
 
 ```````````````````````````````` example
-This >!areallylongword [*followed*](www.example.com "Hoping captions still work") by something!< EMAIL_OK_SET
+This >!areallylongword [*followed*](http://www.example.com "Hoping captions still work") by something!< EMAIL_OK_SET
 .
-{"document":[{"c":[{"e":"text","t":"This "},{"c":[{"e":"text","t":"areallylongword "},{"a":"Hoping captions still work","e":"link","f":[[2,0,8]],"t":"followed","u":"www.example.com"},{"e":"text","t":" by something"}],"e":"spoilertext"},{"e":"text","t":" EMAIL_OK_SET"}],"e":"par"}]}````````````````````````````````
+{"document":[{"c":[{"e":"text","t":"This "},{"c":[{"e":"text","t":"areallylongword "},{"a":"Hoping captions still work","e":"link","f":[[2,0,8]],"t":"followed","u":"http://www.example.com"},{"e":"text","t":" by something"}],"e":"spoilertext"},{"e":"text","t":" EMAIL_OK_SET"}],"e":"par"}]}````````````````````````````````
 
 
 

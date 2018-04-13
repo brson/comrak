@@ -234,9 +234,9 @@ This is a >!regular old spoiler!< tag.
 We want no nodes to be dropped in the case of mixed or nested stylings.
 
 ```````````````````````````````` example
-*This is a node [with a link](www.reddit.com) and another node.*
+*This is a node [with a link](http://www.reddit.com) and another node.*
 .
-{"document":[{"c":[{"e":"text","f":[[2,0,15]],"t":"This is a node "},{"e":"link","f":[[2,0,11]],"t":"with a link","u":"www.reddit.com"},{"e":"text","f":[[2,0,18]],"t":" and another node."}],"e":"par"}]}
+{"document":[{"c":[{"e":"text","f":[[2,0,15]],"t":"This is a node "},{"e":"link","f":[[2,0,11]],"t":"with a link","u":"http://www.reddit.com"},{"e":"text","f":[[2,0,18]],"t":" and another node."}],"e":"par"}]}
 ````````````````````````````````
 
 ```````````````````````````````` example
@@ -586,4 +586,38 @@ a>!!<b
 >!!a!!<
 .
 {"document": [{"c": [{"c": [{"e": "text", "t": "!a!"}], "e": "spoilertext"}], "e": "par"}]}
+````````````````````````````````
+
+Reject javascript: schemes
+
+```````````````````````````````` example
+[foobar](javascript:alert\(1\))
+.
+{"document":[{"c":[{"e":"text","t":"[foobar](javascript:alert(1))"}],"e":"par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+javascript:alert\(1\)
+.
+{"document":[{"c":[{"e":"text","t":"javascript:alert(1)"}],"e":"par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+javascript:alert(1)
+.
+{"document":[{"c":[{"e":"text","t":"javascript:alert(1)"}],"e":"par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+[foo]
+
+[foo]: javascript:alert\(1\)
+.
+{"document":[{"c":[{"e":"text","t":"[foo]"}],"e":"par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+[foobar](    javascript:alert\(1\))
+.
+{"document":[{"c":[{"e":"text","t":"[foobar](    javascript:alert(1))"}],"e":"par"}]}
 ````````````````````````````````

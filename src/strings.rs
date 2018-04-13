@@ -239,3 +239,22 @@ pub fn normalize_label(i: &[u8]) -> Vec<u8> {
     }
     v.into_bytes()
 }
+
+// This is a quick hack to fix a production bug. Think harder about it
+// and clean up later.
+// Per snudown:
+// https://github.com/reddit/snudown/blob/master/src/autolink.c#L33
+pub fn validate_url_scheme(url: &[u8]) -> bool {
+    let url = match str::from_utf8(url) {
+        Ok(url) => url,
+        Err(_) => return false,
+    };
+
+    static valid_schemes: &[&str] = &[
+        "http://", "https://", "ftp://", "mailto://",
+        "/", "git://", "steam://", "irc://", "news://", "mumble://",
+        "ssh://", "ircs://", "ts3server://", "#"
+    ];
+
+    valid_schemes.iter().any(|scheme| url.starts_with(scheme))
+}

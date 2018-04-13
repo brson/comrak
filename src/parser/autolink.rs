@@ -2,6 +2,7 @@ use ctype::{isalnum, isalpha, isspace};
 use nodes::{AstNode, NodeLink, NodeValue};
 use parser::inlines::make_inline;
 use std::str;
+use strings;
 use regex::Regex;
 use typed_arena::Arena;
 use unicode_categories::UnicodeCategories;
@@ -92,6 +93,10 @@ fn www_match<'a>(
 
     let mut url = b"http://".to_vec();
     url.extend_from_slice(&contents[i..link_end + i]);
+
+    if !strings::validate_url_scheme(&url) {
+        return None;
+    }
 
     let inl = make_inline(
         arena,
@@ -239,6 +244,11 @@ fn url_match<'a>(
     link_end = autolink_delim(&contents[i..], link_end);
 
     let url = contents[i - rewind..i + link_end].to_vec();
+
+    if !strings::validate_url_scheme(&url) {
+        return None;
+    }
+
     let inl = make_inline(
         arena,
         NodeValue::Link(NodeLink {
@@ -321,6 +331,10 @@ fn email_match<'a>(
 
     let mut url = b"mailto:".to_vec();
     url.extend_from_slice(&contents[i - rewind..link_end + i]);
+
+    if !strings::validate_url_scheme(&url) {
+        return None;
+    }
 
     let inl = make_inline(
         arena,

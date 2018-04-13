@@ -851,6 +851,20 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
                 self.pos = endall + 1;
                 let url = strings::clean_url(&self.input[starturl..endurl]);
                 let title = strings::clean_title(&self.input[starttitle..endtitle]);
+                if !strings::validate_url_scheme(&url){
+                    if !is_image {
+                        self.pos = initial_pos;
+                        self.brackets.pop();
+                        return Some(make_inline(self.arena, NodeValue::Text(b"]".to_vec())));
+                    } else {
+                        static media: &[&[u8]] = &[b"img", b"gif", b"vid"];
+                        if media.iter().any(|t| t == &title.as_slice()) {
+                            self.pos = initial_pos;
+                            self.brackets.pop();
+                            return Some(make_inline(self.arena, NodeValue::Text(b"]".to_vec())));
+                        }
+                    }
+                }
                 self.close_bracket_match(is_image, url, title);
                 return None;
             } else {
@@ -880,6 +894,11 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
         };
 
         if let Some(reff) = reff {
+            if !strings::validate_url_scheme(&reff.url) {
+                self.pos = initial_pos;
+                self.brackets.pop();
+                return Some(make_inline(self.arena, NodeValue::Text(b"]".to_vec())));
+            }
             self.close_bracket_match(is_image, reff.url.clone(), reff.title.clone());
             return None;
         }
