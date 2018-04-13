@@ -240,18 +240,18 @@ pub fn normalize_label(i: &[u8]) -> Vec<u8> {
     v.into_bytes()
 }
 
-// This is a quick hack to fix a production bug. Think harder about it
-// and clean up later.
-// Per snudown:
+// Determine whether a url is "safe", especially that it
+// is not "javascript:".
+// Similar to snudown:
 // https://github.com/reddit/snudown/blob/master/src/autolink.c#L33
 pub fn validate_url_scheme(url: &[u8]) -> bool {
     let url = match str::from_utf8(url) {
         Ok(url) => url,
         Err(_) => return false,
-    };
+    }.to_lowercase();
 
     static valid_schemes: &[&str] = &[
-        "http://", "https://", "ftp://", "mailto://",
+        "http://", "https://", "ftp://", "mailto:",
         "/", "git://", "steam://", "irc://", "news://", "mumble://",
         "ssh://", "ircs://", "ts3server://", "#"
     ];

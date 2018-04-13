@@ -886,20 +886,6 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
                 self.pos = endall + 1;
                 let url = strings::clean_url(&self.input[starturl..endurl]);
                 let title = strings::clean_title(&self.input[starttitle..endtitle]);
-                if !strings::validate_url_scheme(&url){
-                    if !is_image {
-                        self.pos = initial_pos;
-                        self.brackets.pop();
-                        return Some(make_inline(self.arena, NodeValue::Text(b"]".to_vec())));
-                    } else {
-                        static media: &[&[u8]] = &[b"img", b"gif", b"vid"];
-                        if media.iter().any(|t| t == &title.as_slice()) {
-                            self.pos = initial_pos;
-                            self.brackets.pop();
-                            return Some(make_inline(self.arena, NodeValue::Text(b"]".to_vec())));
-                        }
-                    }
-                }
                 self.close_bracket_match(is_image, url, title);
                 return None;
             } else {
@@ -929,11 +915,6 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
         };
 
         if let Some(reff) = reff {
-            if !strings::validate_url_scheme(&reff.url) {
-                self.pos = initial_pos;
-                self.brackets.pop();
-                return Some(make_inline(self.arena, NodeValue::Text(b"]".to_vec())));
-            }
             self.close_bracket_match(is_image, reff.url.clone(), reff.title.clone());
             return None;
         }
@@ -970,6 +951,17 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
     }
 
     pub fn close_bracket_match(&mut self, is_image: bool, url: Vec<u8>, title: Vec<u8>) {
+        // Only accept certain url schemes, particularly reject javascript:
+        let good_url = strings::validate_url_scheme(&url);
+
+        // Reddit extension - images are actually 'rich text media' and urls are
+        // actually base36 hashes
+        use regex::bytes::Regex;
+        lazy_static! {
+            static ref BASE36: Regex = Regex::new(r"^[[:alnum:]]+$").unwrap();
+        }
+        let good_url = if !is_image { good_url } else { BASE36.is_match(&url) };
+
         let nl = NodeLink {
             url: url,
             title: title,
@@ -989,11 +981,21 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
         );
 
         let mut brackets_len = self.brackets.len();
-        self.brackets[brackets_len - 1].inl_text.insert_before(inl);
-        let mut tmpch = self.brackets[brackets_len - 1].inl_text.next_sibling();
-        while let Some(tmp) = tmpch {
-            tmpch = tmp.next_sibling();
-            inl.append(tmp);
+        if good_url {
+            // If it's a good url then insert the new link node before the opening
+            // bracket, move all the link text to a child of the link node,
+            // then (further down) detach the opening bracket from the AST.
+            self.brackets[brackets_len - 1].inl_text.insert_before(inl);
+            let mut tmpch = self.brackets[brackets_len - 1].inl_text.next_sibling();
+            while let Some(tmp) = tmpch {
+                tmpch = tmp.next_sibling();
+                inl.append(tmp);
+            }
+        } else {
+            // If it's a bogus URL then we don't have to do anything special,
+            // the `detach` call below will remove the opening bracket from the
+            // AST, the remaining link text will still exist, and the url and
+            // title will just evaporate.
         }
         self.brackets[brackets_len - 1].inl_text.detach();
         let previous_delimiter = self.brackets[brackets_len - 1].previous_delimiter;
