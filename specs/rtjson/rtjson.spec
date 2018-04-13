@@ -373,3 +373,351 @@ _a>!spoilertext_ !<
 .
 {"document": [{"c": [{"e": "text", "t": "a>!spoilertext !<", "f": [[2, 0, 14]]}], "e": "par"}]}
 ````````````````````````````````
+
+Superscript time, baby.
+
+```````````````````````````````` example
+some ^basic superscript
+.
+{"document": [{"c": [{"e": "text", "t": "some basic superscript", "f": [[32, 5, 5]]}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+some ^(basic superscript)
+.
+{"document": [{"c": [{"e": "text", "t": "some basic superscript", "f": [[32, 5, 17]]}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+some ^(basic
+superscript) across lines
+.
+{"document": [{"c": [{"e": "text", "t": "some basic superscript across lines", "f": [[32, 5, 17]]}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+^(I'm a redditor)
+.
+{"document": [{"c": [{"e": "text", "t": "I'm a redditor", "f": [[32, 0, 14]]}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+^(we're looking at you i.reddit.com)
+.
+{"document": [{"c": [{"e": "text", "t": "we're looking at you i.reddit.com", "f": [[32, 0, 33]]}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+^(put some ☎ here)
+.
+{"document": [{"c": [{"e": "text", "t": "put some \u260e here", "f": [[32, 0, 15]]}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+^☎☎☎
+.
+{"document": [{"c": [{"e": "text", "t": "\u260e\u260e\u260e", "f": [[32, 0, 3]]}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+This should not \^be superscript
+.
+{"document": [{"c": [{"e": "text", "t": "This should not ^be superscript"}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+This should not \^(be superscript)
+.
+{"document": [{"c": [{"e": "text", "t": "This should not ^(be superscript)"}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+What about ^(this http://example.com autolink)?
+.
+{"document": [{"c": [{"e": "text", "t": "What about this ", "f": [[32, 11, 5]]}, {"u": "http://example.com", "e": "link", "t": "http://example.com", "f": [[32, 0, 18]]}, {"e": "text", "t": " autolink?", "f": [[32, 0, 9]]}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+What about ^(this [explicit](http://example.com) link)?
+.
+{"document": [{"c": [{"e": "text", "t": "What about this ", "f": [[32, 11, 5]]}, {"u": "http://example.com", "e": "link", "t": "explicit", "f": [[32, 0, 8]]}, {"e": "text", "t": " link?", "f": [[32, 0, 5]]}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+What about ^(this _emphasis_ here)?
+.
+{"document": [{"c": [{"e": "text", "t": "What about this emphasis here?", "f": [[32, 11, 5], [34, 16, 8], [32, 24, 5]]}], "e": "par"}]}
+````````````````````````````````
+
+This is a plain-text caret because it is followed by whitespace
+
+```````````````````````````````` example
+^
+.
+{"document": [{"c": [{"e": "text", "t": "^"}], "e": "par"}]}
+````````````````````````````````
+
+This is a superscripted caret.
+
+```````````````````````````````` example
+^^
+.
+{"document":[{"c":[{"e":"text","f":[[32,0,1]],"t":"^"}],"e":"par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+something ^ something else
+.
+{"document": [{"c": [{"e": "text", "t": "something ^ something else"}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+some not ^ (superscript i imagine)
+.
+{"document": [{"c": [{"e": "text", "t": "some not ^ (superscript i imagine)"}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+this surprisingly is a superscript caret ^^ here
+.
+{"document": [{"c": [{"e": "text", "t": "this surprisingly is a superscript caret ^ here", "f": [[32, 41, 1]]}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+^[link](http://example.com)
+.
+{"document": [{"c": [{"u": "http://example.com", "e": "link", "t": "link", "f": [[32, 0, 4]]}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+^test[link](http://example.com)text
+.
+{"document": [{"c": [{"e": "text", "t": "test", "f": [[32, 0, 4]]}, {"u": "http://example.com", "e": "link", "t": "link", "f": [[32, 0, 4]]}, {"e": "text", "t": "text", "f": [[32, 0, 4]]}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+^
+.
+{"document": [{"c": [{"e": "text", "t": "^"}], "e": "par"}]}
+````````````````````````````````
+
+This is, perhaps suprisingly, a superscripted caret
+
+```````````````````````````````` example
+^^
+.
+{"document": [{"c": [{"e": "text", "t": "^", "f": [[32, 0, 1]]}], "e": "par"}]}
+````````````````````````````````
+
+Nested superscript is parsed, but not yet reflected in the rendering
+
+```````````````````````````````` example
+this is ^super^duper
+.
+{"document": [{"c": [{"e": "text", "t": "this is superduper", "f": [[32, 8, 10]]}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+this is ^(super ^duper yeah)
+.
+{"document": [{"c": [{"e": "text", "t": "this is super duper yeah", "f": [[32, 8, 16]]}], "e": "par"}]}
+````````````````````````````````
+
+Again, nested superscript parsed but not rendered
+
+```````````````````````````````` example
+this is ^(super ^(duper fooper) yeah)
+.
+{"document": [{"c": [{"e": "text", "t": "this is super duper fooper yeah", "f": [[32, 8, 23]]}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+^
+a
+.
+{"document": [{"c": [{"e": "text", "t": "^ a"}], "e": "par"}]}
+````````````````````````````````
+
+Again, nested.
+
+```````````````````````````````` example
+^^(a)
+.
+{"document": [{"c": [{"e": "text", "t": "a", "f": [[32, 0, 1]]}], "e": "par"}]}
+````````````````````````````````
+
+Weird case, parse ends at first space
+
+```````````````````````````````` example
+^^(a b)
+.
+{"document": [{"c": [{"e": "text", "t": "^(a b)", "f": [[32, 0, 3]]}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+^(^(a))
+.
+{"document": [{"c": [{"e": "text", "t": "a", "f": [[32, 0, 1]]}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+^(foo
+.
+{"document": [{"c": [{"e": "text", "t": "^(foo"}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+^\(parens\)
+.
+{"document": [{"c": [{"e": "text", "t": "(parens)", "f": [[32, 0, 8]]}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+^\(parens)
+.
+{"document": [{"c": [{"e": "text", "t": "(parens)", "f": [[32, 0, 8]]}], "e": "par"}]}
+````````````````````````````````
+
+Tabs
+
+```````````````````````````````` example
+^test	tab
+.
+{"document": [{"c": [{"e": "text", "t": "test\ttab", "f": [[32, 0, 4]]}], "e": "par"}]}
+````````````````````````````````
+
+This case parses differently than snudown, the second simple superscript not
+being recognized
+
+```````````````````````````````` example
+this is ^(super ^duper)
+.
+{"document": [{"c": [{"e": "text", "t": "this is super ^duper", "f": [[32, 8, 12]]}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+this is ^(super ^duper yeah)
+.
+{"document": [{"c": [{"e": "text", "t": "this is super duper yeah", "f": [[32, 8, 16]]}], "e": "par"}]}
+````````````````````````````````
+
+
+```````````````````````````````` example
+this is ^super)
+.
+{"document": [{"c": [{"e": "text", "t": "this is super)", "f": [[32, 8, 6]]}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+- a ^b
+.
+{"document": [{"c": [{"c": [{"c": [{"e": "text", "t": "a b", "f": [[32, 2, 1]]}], "e": "par"}], "e": "li"}], "e": "list", "o": false}]}
+````````````````````````````````
+
+```````````````````````````````` example
+^(>!test!<)
+.
+{"document": [{"c": [{"c": [{"e": "text", "t": "test", "f": [[32, 0, 4]]}], "e": "spoilertext"}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+^>!test!<
+.
+{"document": [{"c": [{"c": [{"e": "text", "t": "test", "f": [[32, 0, 4]]}], "e": "spoilertext"}], "e": "par"}]}
+````````````````````````````````
+
+Not spoilertext, broken at first space
+
+```````````````````````````````` example
+^>!te st!<
+.
+{"document": [{"c": [{"e": "text", "t": ">!te st!<", "f": [[32, 0, 4]]}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+raw html ^<br>
+.
+{"document": [{"c": [{"e": "text", "t": "raw html <br>", "f": [[32, 9, 4]]}], "e": "par"}]}
+````````````````````````````````
+
+Formatting ranges here seem questionable to me since they don't superscript the
+space between "a" and "b"...
+
+```````````````````````````````` example
+^(_a_ *b*)
+.
+{"document": [{"c": [{"e": "text", "t": "a b", "f": [[34, 0, 1], [32, 1, 1], [34, 2, 1]]}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+^a&nbsp;b
+.
+{"document": [{"c": [{"e": "text", "t": "a\u00a0b", "f": [[32, 0, 3]]}], "e": "par"}]}
+````````````````````````````````
+
+Parsed nested, but not rendered
+
+```````````````````````````````` example
+^a&nbsp;^b
+.
+{"document": [{"c": [{"e": "text", "t": "a\u00a0b", "f": [[32, 0, 3]]}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+^a&#32;b
+.
+{"document": [{"c": [{"e": "text", "t": "a b", "f": [[32, 0, 3]]}], "e": "par"}]}
+````````````````````````````````
+
+Parsed nested, but not rendered
+
+```````````````````````````````` example
+^a&#32;^b
+.
+{"document": [{"c": [{"e": "text", "t": "a b", "f": [[32, 0, 3]]}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+^(a (b\) c)
+.
+{"document": [{"c": [{"e": "text", "t": "a (b) c", "f": [[32, 0, 7]]}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+^[broken link](http://example.com)
+.
+{"document": [{"c": [{"e": "text", "t": "^"}, {"u": "http://example.com", "e": "link", "t": "broken link"}], "e": "par"}]}
+````````````````````````````````
+
+Some weird cases with nested "simple" superscript. Correct parsing of these is
+debatable, and usually snoomark is different from snudown.
+
+Here, the third caret isn't closed.
+
+```````````````````````````````` example
+^^(^^(a))
+.
+{"document": [{"c": [{"e": "text", "t": "^a", "f": [[32, 0, 2]]}], "e": "par"}]}
+````````````````````````````````
+
+Here, the third and fifth
+
+```````````````````````````````` example
+^^(^^(^))
+.
+{"document": [{"c": [{"e": "text", "t": "^^", "f": [[32, 0, 2]]}], "e": "par"}]}
+````````````````````````````````
+
+Simple superscript with emphasis
+
+```````````````````````````````` example
+^_emphasis_
+.
+{"document": [{"c": [{"e": "text", "t": "emphasis", "f": [[34, 0, 8]]}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+^*emphasis*
+.
+{"document": [{"c": [{"e": "text", "t": "emphasis", "f": [[34, 0, 8]]}], "e": "par"}]}
+````````````````````````````````

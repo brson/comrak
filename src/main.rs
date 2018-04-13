@@ -187,8 +187,15 @@ fn spec_test (args: &Vec<&str>, opts: parser::ComrakOptions) -> Result<(), ()> {
         } else if our_rendering == test.expected {
             print!(".");
         } else {
-            fail_report += format!("\nFAIL {}:\n\n---input---\n{}\n\n---wanted---\n{}\n\n---got---\n{}\n",
-                test.n, test.input, test.expected, our_rendering).as_str();
+            if !rtjson {
+                fail_report += format!("\nFAIL {}:\n\n---input---\n{}\n\n---wanted---\n{}\n\n---got---\n{}\n",
+                                       test.n, test.input, test.expected, our_rendering).as_str();
+            } else {
+                let expected = compare.to_string();
+                let actual = value.to_string();
+                fail_report += format!("\nFAIL {}:\n\n---input---\n{}\n\n---wanted---\n{}\n\n---got---\n{}\n",
+                                       test.n, test.input, expected, actual).as_str();
+            }
             print!("X");
             tests_failed += 1;
         }

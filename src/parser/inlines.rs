@@ -23,6 +23,7 @@ pub struct Subject<'a: 'd, 'r, 'o, 'd, 'i> {
     pub refmap: &'r mut HashMap<Vec<u8>, Reference>,
     delimiter_arena: &'d Arena<Delimiter<'a, 'd>>,
     last_delimiter: Option<&'d Delimiter<'a, 'd>>,
+    simple_superscript_openers: usize,
     brackets: Vec<Bracket<'a, 'd>>,
     pub backticks: [usize; MAXBACKTICKS + 1],
     pub scanned_for_backticks: bool,
@@ -64,6 +65,7 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
             refmap: refmap,
             delimiter_arena: delimiter_arena,
             last_delimiter: None,
+            simple_superscript_openers: 0,
             brackets: vec![],
             backticks: [0; MAXBACKTICKS + 1],
             scanned_for_backticks: false,
@@ -81,6 +83,12 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
         if options.ext_superscript {
             s.special_chars[b'^' as usize] = true;
         }
+        if options.ext_reddit_quirks {
+                assert!(!(options.ext_superscript && options.ext_reddit_quirks),
+                        "ext_superscript and ext_reddit_quirks are incompatible");
+            s.special_chars[b'^' as usize] = true;
+            s.special_chars[b')' as usize] = true;
+        }
         s
     }
 
@@ -89,6 +97,10 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
     }
 
     pub fn parse_inline(&mut self, node: &'a AstNode<'a>) -> bool {
+        if self.handle_reddit_simple_superscript_closer(node) {
+            return true;
+        }
+
         let new_inl: Option<&'a AstNode<'a>>;
         let c = match self.peek_char() {
             None => return false,
@@ -140,6 +152,10 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
                 new_inl = Some(self.handle_delim(b'~'));
             } else if self.options.ext_superscript && c == '^' {
                 new_inl = Some(self.handle_delim(b'^'));
+            } else if self.options.ext_reddit_quirks && c == '^' {
+                new_inl = Some(self.handle_reddit_superscript_opener());
+            } else if self.options.ext_reddit_quirks && c == ')' {
+                new_inl = Some(self.handle_reddit_superscript_closer());
             } else {
                 let endpos = self.find_special_char();
                 let mut contents = self.input[self.pos..endpos].to_vec();
@@ -305,6 +321,8 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
                 if closer.unwrap().delim_char == b'*' || closer.unwrap().delim_char == b'_'
                     || (self.options.ext_strikethrough && closer.unwrap().delim_char == b'~')
                     || (self.options.ext_superscript && closer.unwrap().delim_char == b'^')
+                    || (self.options.ext_reddit_quirks && closer.unwrap().delim_char == b'^')
+                    || (self.options.ext_reddit_quirks && closer.unwrap().delim_char == b'.')
                     || (self.options.ext_spoilertext && closer.unwrap().delim_char == b'!')
                 {
                     if opener_found {
@@ -590,6 +608,12 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
                 .unwrap()
         };
 
+        // HACK: For "simple" superscript parsing, e.g. `^_foo_` emphasis can be
+        // left-flanking following a caret. It's possible this could allow bad
+        // emphasis where process_emphasis doesn't interpret the caret as
+        // superscript but does interpret the following emphasis.
+        let is_superscript_caret = |ch| ch == '^' && self.simple_superscript_openers > 0;
+
         let left_flanking = numdelims > 0 && !after_char.is_whitespace()
             && !(after_char.is_punctuation() && !before_char.is_whitespace()
                 && !before_char.is_punctuation());
@@ -600,7 +624,7 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
         if c == b'_' {
             (
                 numdelims,
-                left_flanking && (!right_flanking || before_char.is_punctuation()),
+                left_flanking && (!right_flanking || before_char.is_punctuation() || is_superscript_caret(before_char)),
                 right_flanking && (!left_flanking || after_char.is_punctuation()),
             )
         } else if c == b'\'' || c == b'"' {
@@ -639,18 +663,27 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
         let opener_char = opener.inl.data.borrow().value.text().unwrap()[0];
         let mut opener_num_chars = opener.inl.data.borrow().value.text().unwrap().len();
         let mut closer_num_chars = closer.inl.data.borrow().value.text().unwrap().len();
+
+        // Decide how many "*"s or "_" to truncate from the delimiters, and thus
+        // whether to insert an `Emph` (1) or `Strong` (2) node.
         let use_delims = if closer_num_chars >= 2 && opener_num_chars >= 2 {
             2
         } else {
             1
         };
 
-        opener_num_chars -= use_delims;
-        closer_num_chars -= use_delims;
+        let is_strikethrough = self.options.ext_strikethrough && opener_char == b'~';
+        let is_reddit_superscript = self.options.ext_reddit_quirks && opener_char == b'^';
 
-        if self.options.ext_strikethrough && opener_char == b'~' {
+        // The number of chars (bytes) we'll have truncate the delimiter nodes
+        // to. At 0 bytes they'll be dropped from the AST and the delimiter
+        // stack.
+        if is_strikethrough || is_reddit_superscript {
             opener_num_chars = 0;
             closer_num_chars = 0;
+        } else {
+            opener_num_chars -= use_delims;
+            closer_num_chars -= use_delims;
         }
 
         opener
@@ -687,6 +720,8 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
                     NodeValue::Strikethrough
                 }
             } else if self.options.ext_superscript && opener_char == b'^' {
+                NodeValue::Superscript
+            } else if self.options.ext_reddit_quirks && opener_char == b'^' {
                 NodeValue::Superscript
             } else if self.options.ext_spoilertext && opener_char == b'>' {
                 NodeValue::SpoilerText
@@ -1018,6 +1053,137 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
             self.pos = startpos;
             None
         }
+    }
+
+    fn handle_reddit_superscript_opener(&mut self) -> &'a AstNode<'a> {
+        // Reddit handles superscript differently from comrak, With
+        // either `^nonwhitespace` or `^(any inlines)`. snudown's
+        // superscript implementation is a bit notorious for it's weird
+        // and accidental behavior, and snoomark doesn't try to emulate
+        // it perfectly, but rather to do something reasonable.
+
+        let new_inl: &'a AstNode<'a>;
+
+        self.pos += 1;
+
+        let next_char = self.peek_char().cloned();
+
+        let next_is_whitespace_or_end = next_char.map(|c| {
+            strings::is_space_or_tab(c) || strings::is_line_end_char(c)
+        }).unwrap_or(true);
+
+        if next_is_whitespace_or_end {
+            // Just a text caret
+            new_inl = make_inline(self.arena, NodeValue::Text(b"^".to_vec()));
+        } else if next_char == Some(b'(') {
+            // The easy syntax, `^(...)`, where we can just push the
+            // opening delimiter, wait for the closing delimiter, and
+            // let `postprocess_emphasis` sort it out later.
+            self.pos += 1;
+            let del = make_inline(self.arena, NodeValue::Text(b"^(".to_vec()));
+            self.push_delimiter(b'^', true, false, &del);
+            new_inl = del;
+        } else {
+            // The completely baffling case, `^...`, here called "simple
+            // superscript", where the closing delimiter is whitespace. We don't
+            // want to be doing a lot of parsing work every time we encounter
+            // whitespace like we do with other delimiters, so we're only going
+            // to do that when we know we're scanning a simple superscript.
+            //
+            // Simple superscript can be nested arbitrarily deep, as long as no
+            // whitespace is encountered, and the nesting is completely unwound
+            // by a single whitespace. e.g.
+            //
+            //     "^a^^b^^^c "
+            //
+            // is 6 levels of superscript, terminated by a space.
+            //
+            // The good news is that since we don't need to match delimiters we
+            // can know definitely that we're parsing superscript once we've
+            // reached this point, and start scanning for whitespace.
+            //
+            // Aside: This turns out not to be true in cases like:
+            //
+            //    ^^(^foo)
+            //
+            // (Under the current parser that third caret doesn't end up being
+            // superscript and is inserted as text).
+            //
+            // So what we're going to do is push another kind of delimiter
+            // opener onto the delimiter stack, bump the
+            // `simple_superscript_openers` counter, and turn whitespace into
+            // "special" chars so that `find_special_char` will stop at
+            // whitespace, where we'll dump a `simple_superscript_openers`
+            // number of matching closing delimiters onto the delimiter stack
+            // when we see whitespace, newlines, or eof.
+            //
+            // We use '.' as the delim char instead of '^' because this the
+            // closing delimiter is diferent from the parenthesized superscript,
+            // which already uses '^'.
+            //
+            // Parenthesized superscript can't be nested inside simple
+            // superscript - it's just too much trouble to parse.
+            //
+            // FIXME: In hindsight, this may not be the simplest or most
+            // intuitive algorithm. It might be better to: when hitting a `^`,
+            // scan forward to the next space, and lower all the intervening
+            // text to a new kind of AST node, SimpleSuperscript, which is
+            // marked as `contains_inlines`, to be further processed by the
+            // block parser's inline expansion. The results would be similar in
+            // common cases, and probably more closely resemble what snudown
+            // does.
+
+            let del = make_inline(self.arena, NodeValue::Text(b"^".to_vec()));
+            self.push_delimiter(b'.', true, false, &del);
+            new_inl = del;
+
+            self.simple_superscript_openers += 1;
+            self.special_chars[b' ' as usize] = true;
+            self.special_chars[b'\t' as usize] = true;
+        }
+
+        new_inl
+    }
+
+    fn handle_reddit_superscript_closer(&mut self) -> &'a AstNode<'a> {
+        // The closing delimiter for parenthesized superscript
+        self.pos += 1;
+        let del = make_inline(self.arena, NodeValue::Text(b")".to_vec()));
+        self.push_delimiter(b'^', false, true, &del);
+        del
+    }
+
+    fn handle_reddit_simple_superscript_closer(&mut self, node: &'a AstNode<'a>) -> bool {
+        // Short circuit this parse if we find a closer for our simple
+        // superscript, close the superscript without consuming any chars, then
+        // resume parsing. Unfortunately we have to do this first to catch the
+        // eof case - this seems to be the only place in the inline syntax where
+        // eof is a delimiter that needs to be processed like this.
+        if self.simple_superscript_openers > 0 {
+            let next = self.peek_char().cloned();
+            let close = match next {
+                None |
+                Some(b' ') |
+                Some(b'\t') |
+                Some(b'\r') |
+                Some(b'\n') => true,
+                _ => false
+            };
+            if close {
+                for _ in 0..self.simple_superscript_openers {
+                    let del = make_inline(self.arena, NodeValue::Text(b"".to_vec()));
+                    self.push_delimiter(b'.', false, true, &del);
+                    node.append(del);
+                }
+
+                self.simple_superscript_openers = 0;
+                self.special_chars[b' ' as usize] = false;
+                self.special_chars[b'\t' as usize] = false;
+                return true;
+            }
+        }
+
+        false
     }
 
     pub fn spnl(&mut self) {

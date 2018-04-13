@@ -13,14 +13,17 @@ run() {
 	echo
 }
 
-run cargo build
+if [[ -n "$SPECS_ONLY" ]]; then
+	run cargo build
 
-if [[ errors -ne 0 ]]; then
-	echo -e "\nbuild failed\n"
-	exit 1
+	if [[ errors -ne 0 ]]; then
+		echo -e "\nbuild failed\n"
+		exit 1
+	fi
+
+	run cargo test
 fi
 
-run cargo test
 run cargo run -- --rtjson --spec specs/rtjson/rtjson.spec
 run cargo run -- --rtjson --spec specs/rtjson/bugs.spec
 
