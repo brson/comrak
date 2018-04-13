@@ -738,6 +738,7 @@ impl<'a, 'o> Parser<'a, 'o> {
                         && have_pipe();
                     !skip_list_parsing
                 }
+                && self.indent < 4
                 && unwrap_into_2(
                     parse_list_marker(
                         line,

@@ -1230,11 +1230,8 @@ pub fn manual_scan_link_url(input: &[u8], reddit_quirks: bool) -> Option<usize> 
                 break;
             } else if b == b'\\' {
                 i += 2;
-            } else if !reddit_quirks && (isspace(b) || b == b'<') {
+            } else if b == b'\n' || b == b'<' {
                 return None;
-            } else if reddit_quirks && ((isspace(b) && b != b' ') || b == b'<') {
-                // ^ Reddit allows space in links (but not newlines and tabs)
-                i += 1;
             } else {
                 i += 1;
             }
