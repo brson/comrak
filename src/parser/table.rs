@@ -28,7 +28,8 @@ fn try_opening_header<'a, 'o>(
     container: &'a AstNode<'a>,
     line: &[u8],
 ) -> Option<(&'a AstNode<'a>, bool)> {
-    if scanners::table_start(&line[parser.first_nonspace..]).is_none() {
+    if scanners::table_start(&line[parser.first_nonspace..],
+                             parser.options.ext_reddit_quirks).is_none() {
         return Some((container, false));
     }
 
@@ -52,6 +53,15 @@ fn try_opening_header<'a, 'o>(
         } else {
             // Drop extra marker cells ala snudown
             marker_row.truncate(header_row.len());
+        }
+        // Additionally, we've still got to verify that all the marker cells
+        // contain only marker characters.
+        for cell in &marker_row {
+            let has_junk = scanners::table_marker(cell)
+                .map(|end| end != cell.len()).unwrap_or(true);
+            if has_junk {
+                return Some((container, false));
+            }
         }
     }
 

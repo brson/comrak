@@ -46,10 +46,14 @@ link_title = { "\"" ~ (escaped_char | (!("\"" | "\x00") ~ any))* ~ "\"" | "'" ~ 
 
 table_spacechar = _{ " " | "\t" | "\x0b" | "\x0c" }
 table_newline = _{ "\r"? ~ "\n" }
-table_marker = _{ table_spacechar* ~ ":"? ~ "-"+ ~ ":"? ~ table_spacechar* }
+// Reddit quirk - comrak doesn't produce tokens for this case but we've got
+// to use this rule to verify table marker cells
+table_marker = { table_spacechar* ~ ":"? ~ "-"+ ~ ":"? ~ table_spacechar* }
 table_cell = { ( escaped_char | !("|" | "\r" | "\n") ~ any)* }
 
-table_start = { "|"? ~ table_marker ~ ("|" ~ table_marker)* ~ "|"? ~ table_spacechar* | table_newline }
+table_start = { "|"? ~ table_marker ~ ("|" ~ table_marker)* ~ "|"? ~ table_spacechar* ~ table_newline }
+// Reddit quirk - the table header row can contain trailing junk after the final pipe.
+table_start_reddit = { "|"? ~ table_marker ~ ("|" ~ table_marker)* ~ (("|"? ~ table_spacechar* ~ table_newline) | "|") }
 table_cell_end = { "|" ~ table_spacechar* ~ table_newline? }
 table_row_end = { table_spacechar* ~ table_newline }
 

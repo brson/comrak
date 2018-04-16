@@ -164,8 +164,12 @@ pub fn link_title(line: &[u8]) -> Option<usize> {
 }
 
 #[inline(always)]
-pub fn table_start(line: &[u8]) -> Option<usize> {
-    search(Rule::table_start, line)
+pub fn table_start(line: &[u8], reddit_quirks: bool) -> Option<usize> {
+    if !reddit_quirks {
+        search(Rule::table_start, line)
+    } else {
+        search(Rule::table_start_reddit, line)
+    }
 }
 
 #[inline(always)]
@@ -181,4 +185,9 @@ pub fn table_cell_end(line: &[u8]) -> Option<usize> {
 #[inline(always)]
 pub fn table_row_end(line: &[u8]) -> Option<usize> {
     search(Rule::table_row_end, line)
+}
+
+#[inline(always)]
+pub fn table_marker(line: &[u8]) -> Option<usize> {
+    search(Rule::table_marker, line)
 }
