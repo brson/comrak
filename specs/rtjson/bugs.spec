@@ -593,7 +593,7 @@ Reject javascript: schemes
 ```````````````````````````````` example
 [foobar](javascript:alert\(1\))
 .
-{"document":[{"c":[{"e":"text","t":"[foobar](javascript:alert(1))"}],"e":"par"}]}
+{"document":[{"c":[{"e":"text","t":"foobar"}],"e":"par"}]}
 ````````````````````````````````
 
 ```````````````````````````````` example
@@ -613,11 +613,101 @@ javascript:alert(1)
 
 [foo]: javascript:alert\(1\)
 .
-{"document":[{"c":[{"e":"text","t":"[foo]"}],"e":"par"}]}
+{"document":[{"c":[{"e":"text","t":"foo"}],"e":"par"}]}
 ````````````````````````````````
 
 ```````````````````````````````` example
 [foobar](    javascript:alert\(1\))
 .
-{"document":[{"c":[{"e":"text","t":"[foobar](    javascript:alert(1))"}],"e":"par"}]}
+{"document":[{"c":[{"e":"text","t":"foobar"}],"e":"par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+![foobar](javascript:alert\(1\))
+.
+{"document":[{"c":[{"e":"text","t":"foobar"}],"e":"par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+![img](javascript:alert\(1\))
+.
+{"document":[{"c":[{"e":"text","t":"img"}],"e":"par"}]}
+````````````````````````````````
+
+Reddit only allows hashes as 'image' (media) urls
+
+```````````````````````````````` example
+![img](http://example.com)
+.
+{"document":[{"c":[{"e":"text","t":"img"}],"e":"par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+![img](щ)
+.
+{"document":[{"c":[{"e":"text","t":"img"}],"e":"par"}]}
+````````````````````````````````
+
+Make sure various schemes we expect to work do
+
+```````````````````````````````` example
+[a](http://example.com)
+.
+{"document":[{"c":[{"e":"link","t":"a","u":"http://example.com"}],"e":"par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+[a](https://example.com)
+.
+{"document":[{"c":[{"e":"link","t":"a","u":"https://example.com"}],"e":"par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+[a](ftp://example.com)
+.
+{"document":[{"c":[{"e":"link","t":"a","u":"ftp://example.com"}],"e":"par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+[a](#example)
+.
+{"document":[{"c":[{"e":"link","t":"a","u":"#example"}],"e":"par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+[a](/example)
+.
+{"document":[{"c":[{"e":"link","t":"a","u":"/example"}],"e":"par"}]}
+````````````````````````````````
+
+Oh, also, the url sanitizer is case-insensitive.
+
+```````````````````````````````` example
+[a](HTTP://example.com)
+.
+{"document":[{"c":[{"e":"link","t":"a","u":"HTTP://example.com"}],"e":"par"}]}
+````````````````````````````````
+
+The url sanitizer does _not_ accept relative urls, similar to snudown, but
+dissimilar to CM.
+
+```````````````````````````````` example
+[a](b)
+.
+{"document":[{"c":[{"e":"text","t":"a"}],"e":"par"}]}
+````````````````````````````````
+
+Make sure www and email autolinking still work with the
+url sanitization.
+
+```````````````````````````````` example
+a@b.com
+.
+{"document":[{"c":[{"e":"link","t":"a@b.com","u":"mailto:a@b.com"}],"e":"par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+www.example.com
+.
+{"document":[{"c":[{"e":"link","t":"www.example.com","u":"http://www.example.com"}],"e":"par"}]}
 ````````````````````````````````
