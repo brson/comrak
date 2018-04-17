@@ -17,7 +17,7 @@ travis-ci = { repository = "kivikakk/comrak" }
 lto = true
 
 [[bin]]
-name = "comrak"
+name = "snoomark"
 required-features = ["clap"]
 doc = false
 
