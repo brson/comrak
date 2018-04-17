@@ -122,8 +122,12 @@ impl<'o> RTJsonFormatter<'o> {
                     "e": "hr"
                 }))
             },
+            NodeValue::LineBreak => {
+                Some(json!({
+                    "e": "br"
+                }))
+            },
             NodeValue::HtmlBlock(ref nhb) => unreachable!(),
-            NodeValue::LineBreak |
             NodeValue:: SoftBreak => None,
             NodeValue::Code(_) | NodeValue::Strong | NodeValue::Emph | NodeValue::Superscript |
             NodeValue::Strikethrough | NodeValue::Underline => unreachable!(),

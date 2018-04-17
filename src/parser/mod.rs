@@ -1437,7 +1437,8 @@ impl<'a, 'o> Parser<'a, 'o> {
             NodeValue::Link(..)
             | NodeValue::UnformattedLink(..)
             | NodeValue::RedditLink(..)
-            | NodeValue::SpoilerText => {
+            | NodeValue::SpoilerText
+            | NodeValue::LineBreak => {
                 if !unformatted_text.is_empty() {
 
                     let text_node = if format_ranges.is_empty() {
