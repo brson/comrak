@@ -13,7 +13,7 @@ run() {
 	echo
 }
 
-if [[ -n "$SPECS_ONLY" ]]; then
+if [[ -z "$SPECS_ONLY" ]]; then
 	run cargo build
 
 	if [[ errors -ne 0 ]]; then
