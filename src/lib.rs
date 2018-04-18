@@ -6,7 +6,7 @@
 //!
 //! You can use `comrak::markdown_to_html` directly:
 //!
-//! ```
+//! ```ignore
 //! use comrak::{markdown_to_html, ComrakOptions};
 //! assert_eq!(markdown_to_html("Hello, **世界**!", &ComrakOptions::default()),
 //!            "<p>Hello, <strong>世界</strong>!</p>\n");
@@ -15,7 +15,7 @@
 //! Or you can parse the input into an AST yourself, manipulate it, and then use your desired
 //! formatter:
 //!
-//! ```
+//! ```ignore
 //! extern crate comrak;
 //! extern crate typed_arena;
 //! use typed_arena::Arena;
