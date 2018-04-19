@@ -18,6 +18,20 @@ Hello, this is a paragraph.
 .
 {"document":[{"e":"h","l":3,"c":[{"e":"raw","t":"This heading contains plain text, "},{"e":"link","t":"a link","u":"https://reddit.com"},{"e":"raw","t":", and a "},{"e":"u/","t":"username"},{"e":"raw","t":"."}]},{"e":"par","c":[{"e":"text","t":"Hello, this is a paragraph."}]}]}````````````````````````````````
 
+We also have multiple header levels that work with empty text.
+
+```````````````````````````````` example
+###
+
+##
+
+#
+
+Hello, this is a paragraph.
+.
+{"document":[{"c":[{"e":"raw","t":""}],"e":"h","l":3},{"c":[{"e":"raw","t":""}],"e":"h","l":2},{"c":[{"e":"raw","t":""}],"e":"h","l":1},{"c":[{"e":"text","t":"Hello, this is a paragraph."}],"e":"par"}]}````````````````````````````````
+
+
 ```````````````````````````````` example
 >This post begins with a blockquote.
 
@@ -291,7 +305,7 @@ Headers can contain no text
 #
 Bloop
 .
-{"document": [{"e": "h", "l": 1}, {"c": [{"e": "text", "t": "Bloop"}], "e": "par"}]}
+{"document": [{"e": "h", "l": 1, "c":[{"e":"raw","t":""}]}, {"c": [{"e": "text", "t": "Bloop"}], "e": "par"}]}
 ````````````````````````````````
 
 Headers can be separated by tabs

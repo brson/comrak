@@ -98,6 +98,10 @@ impl<'o> RTJsonFormatter<'o> {
                 Some(json!({
                     "e": "h",
                     "l": nch.level,
+                    "c": json!([{
+                        "e":"raw",
+                        "t":""
+                    }])
                 }))
             }
             NodeValue::CodeBlock(ref ncb) => {
