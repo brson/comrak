@@ -72,7 +72,7 @@ pub struct ComrakOptions {
     /// [Soft line breaks](http://spec.commonmark.org/0.27/#soft-line-breaks) in the input
     /// translate into hard line breaks in the output.
     ///
-    /// ```
+    /// ```ignore
     /// # use comrak::{markdown_to_html, ComrakOptions};
     /// let mut options = ComrakOptions::default();
     /// assert_eq!(markdown_to_html("Hello.\nWorld.\n", &options),
@@ -86,7 +86,7 @@ pub struct ComrakOptions {
 
     /// GitHub-style `<pre lang="xyz">` is used for fenced code blocks with info tags.
     ///
-    /// ```
+    /// ```ignore
     /// # use comrak::{markdown_to_html, ComrakOptions};
     /// let mut options = ComrakOptions::default();
     /// assert_eq!(markdown_to_html("``` rust\nfn hello();\n```\n", &options),
@@ -100,7 +100,7 @@ pub struct ComrakOptions {
 
     /// The wrap column when outputting CommonMark.
     ///
-    /// ```
+    /// ```ignore
     /// # extern crate typed_arena;
     /// # extern crate comrak;
     /// # use comrak::{parse_document, ComrakOptions, format_commonmark};
@@ -126,7 +126,7 @@ pub struct ComrakOptions {
     /// [strikethrough extension](https://github.github.com/gfm/#strikethrough-extension-)
     /// from the GFM spec.
     ///
-    /// ```
+    /// ```ignore
     /// # use comrak::{markdown_to_html, ComrakOptions};
     /// let options = ComrakOptions {
     ///   ext_strikethrough: true,
@@ -141,7 +141,7 @@ pub struct ComrakOptions {
     /// [tagfilter extension](https://github.github.com/gfm/#disallowed-raw-html-extension-)
     /// from the GFM spec.
     ///
-    /// ```
+    /// ```ignore
     /// # use comrak::{markdown_to_html, ComrakOptions};
     /// let options = ComrakOptions {
     ///   ext_tagfilter: true,
@@ -155,7 +155,7 @@ pub struct ComrakOptions {
     /// Enables the [table extension](https://github.github.com/gfm/#tables-extension-)
     /// from the GFM spec.
     ///
-    /// ```
+    /// ```ignore
     /// # use comrak::{markdown_to_html, ComrakOptions};
     /// let options = ComrakOptions {
     ///   ext_table: true,
@@ -170,7 +170,7 @@ pub struct ComrakOptions {
     /// Enables the [autolink extension](https://github.github.com/gfm/#autolinks-extension-)
     /// from the GFM spec.
     ///
-    /// ```
+    /// ```ignore
     /// # use comrak::{markdown_to_html, ComrakOptions};
     /// let options = ComrakOptions {
     ///   ext_autolink: true,
@@ -188,7 +188,7 @@ pub struct ComrakOptions {
     /// Note that the spec does not define the precise output, so only the bare essentials are
     /// rendered.
     ///
-    /// ```
+    /// ```ignore
     /// # use comrak::{markdown_to_html, ComrakOptions};
     /// let options = ComrakOptions {
     ///   ext_tasklist: true,
@@ -202,7 +202,7 @@ pub struct ComrakOptions {
 
     /// Enables the superscript Comrak extension.
     ///
-    /// ```
+    /// ```ignore
     /// # use comrak::{markdown_to_html, ComrakOptions};
     /// let options = ComrakOptions {
     ///   ext_superscript: true,
@@ -215,7 +215,7 @@ pub struct ComrakOptions {
 
     /// Enables the header IDs Comrak extension.
     ///
-    /// ```
+    /// ```ignore
     /// # use comrak::{markdown_to_html, ComrakOptions};
     /// let options = ComrakOptions {
     ///   ext_header_ids: Some("user-content-".to_string()),
@@ -231,7 +231,7 @@ pub struct ComrakOptions {
     /// For usage, see `src/tests.rs`.  The extension is modelled after
     /// [Kramdown](https://kramdown.gettalong.org/syntax.html#footnotes).
     ///
-    /// ```
+    /// ```ignore
     /// # use comrak::{markdown_to_html, ComrakOptions};
     /// let options = ComrakOptions {
     ///   ext_footnotes: true,
@@ -247,7 +247,7 @@ pub struct ComrakOptions {
     /// For usage, see `src/tests.rs`.  The extension is modelled after
     /// [Kramdown](https://kramdown.gettalong.org/syntax.html#footnotes).
     ///
-    /// ```
+    /// ```ignore
     /// # use comrak::{markdown_to_html, ComrakOptions};
     /// let options = ComrakOptions {
     ///   ext_spoilertext: true,

@@ -36,15 +36,16 @@ pest = "1.0"
 pest_derive = "1.0"
 
 [features]
-default = ["clap"]
-dev = ["clap", "clippy"]
+default = ["clap", "cpython"]
+dev = ["clap", "clippy", "cpython"]
 
 [lib]
 name = "snoomark"
-crate-type = ["cdylib"]
+crate-type = ["cdylib", "rlib"]
 
 [dependencies.cpython]
 git = "https://github.com/dgrunwald/rust-cpython.git"
 rev = "b7090799b652c77220bdb266937538a6e900119c"
 default-features = false
 features = ["python27-sys", "extension-module-2-7"]
+optional = true
