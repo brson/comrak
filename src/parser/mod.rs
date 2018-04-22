@@ -408,7 +408,12 @@ impl<'a, 'o> Parser<'a, 'o> {
         self.blank = false;
         self.partially_consumed_tab = false;
 
-        if self.line_number == 0 && line.len() >= 3 && unsafe { str::from_utf8_unchecked(line) }.chars().next().unwrap() == '\u{feff}' {
+        if self.line_number == 0 && line.len() >= 3
+            && unsafe { str::from_utf8_unchecked(line) }
+                .chars()
+                .next()
+                .unwrap() == '\u{feff}'
+        {
             self.offset += 3;
         }
 
