@@ -402,7 +402,6 @@ impl<'a, 'o> Parser<'a, 'o> {
             } else {
                 line
             };
-
         self.offset = 0;
         self.column = 0;
         self.blank = false;
@@ -1332,7 +1331,8 @@ impl<'a, 'o> Parser<'a, 'o> {
                                 }
                             }
                         }
-                        NodeValue::Link(..) | NodeValue::RedditLink(..) | NodeValue::Image(..) => {
+                        NodeValue::Link(..) | NodeValue::RedditLink(..) |
+                        NodeValue::Image(..) | NodeValue::Media(..) => {
                             this_bracket = true;
                             break;
                         }
@@ -1531,10 +1531,13 @@ impl<'a, 'o> Parser<'a, 'o> {
                     self.reset_rtjson_node(unformatted_text, format_ranges, range_idx);
                 }
             },
-            NodeValue::Image(..) => {
+            NodeValue::Media(..) => {
                 let parent_paragraph = node.parent().unwrap();
                 parent_paragraph.insert_before(node);
                 parent_paragraph.detach();
+            }
+            NodeValue::Image(..) => {
+                unreachable!("rtjson preduces media elements, not image");
             }
             NodeValue::Code(ref literal) => {
                 let range_length = str::from_utf8(literal).expect("utf8").chars().count() as u16;
@@ -1712,7 +1715,7 @@ impl<'a, 'o> Parser<'a, 'o> {
                     }
                     node.detach()
                 },
-                NodeValue::Image(ref mut nl) => {
+                NodeValue::Media(ref mut nl) => {
                     nl.e =  unformatted_text.to_vec();
                     self.reset_rtjson_node(unformatted_text, format_ranges, range_idx);
                 }

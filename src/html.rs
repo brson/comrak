@@ -638,6 +638,7 @@ impl<'o> HtmlFormatter<'o> {
             } else {
                 try!(self.output.write_all(b"</div>"));
             }
+            NodeValue::Media(..) => (/* rtjson-specific */)
         }
         Ok(false)
     }

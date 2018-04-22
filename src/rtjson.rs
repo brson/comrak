@@ -314,7 +314,7 @@ impl<'o> RTJsonFormatter<'o> {
                     "l":nl.l,
                 }))
             }
-            NodeValue::Image(ref nl) => {
+            NodeValue::Media(ref nl) => {
                 if !&nl.title.is_empty() {
                     Some(json!({
                         "e":  String::from_utf8(nl.e.to_owned()).unwrap(),
@@ -394,6 +394,7 @@ impl<'o> RTJsonFormatter<'o> {
                     "c": [],
                 }))
             }
+            NodeValue::Image(..) => unreachable!()
         }
     }
 }

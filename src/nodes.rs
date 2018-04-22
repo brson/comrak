@@ -69,9 +69,6 @@ pub enum NodeValue {
     /// **Block**.  A table cell.  Contains **inlines**.
     TableCell,
 
-    /// **Inline**.  FormattedString
-    FormattedText(Vec<u8>, Vec<[u16; 3]>),
-
     /// **Inline**.  [Textual content](https://github.github.com/gfm/#textual-content).  All text
     /// in a document will be contained in a `Text` node.
     Text(Vec<u8>),
@@ -108,26 +105,34 @@ pub enum NodeValue {
     /// title.
     Link(NodeLink),
 
-    /// **Inline**. A RedditLink
-    RedditLink(NodeLink),
-
-    /// **Inline**.  FormattedLink
-    FormattedLink(NodeFormatLink),
-
-    /// **Inline**.  UnformattedLink
-    UnformattedLink(NodeFormatLink),
-
     /// **Inline**.  An [image](https://github.github.com/gfm/#images).
-    Image(NodeImage),
+    Image(NodeLink),
 
     /// **Inline**.  A footnote reference; the `Vec<u8>` is the referent footnote's name.
     FootnoteReference(Vec<u8>),
 
-    /// **Inline**.  Underline
+    // Reddit-specific nodes follow
+
+    /// **Inline* (I think) - special syntax for Reddit media nodes
+    Media(NodeMedia),
+
+    /// **Inline**.  FormattedString. Reddit extension
+    FormattedText(Vec<u8>, Vec<[u16; 3]>),
+
+    /// **Inline**.  Underline. Reddit extension.
     Underline,
 
-    /// **Inline** SpoilerText
+    /// **Inline** SpoilerText. Reddit extension.
     SpoilerText,
+
+    /// **Inline**. A RedditLink
+    RedditLink(NodeLink),
+
+    /// **Inline**.  An RTJSON FormattedLink
+    FormattedLink(NodeFormatLink),
+
+    /// **Inline**.  An RTJSNO UnformattedLink
+    UnformattedLink(NodeFormatLink),
 }
 
 /// Alignment of a single table cell.
@@ -158,13 +163,13 @@ pub struct NodeLink {
     /// `alt` text is supplied in the image inline text.
     pub title: Vec<u8>,
 
-    /// The l field for the leading slash.
+    /// The l field for the leading slash in reddit/user links
     pub l: bool,
 }
 
 /// The details of a link's destination, or an image's source.
 #[derive(Debug, Clone)]
-pub struct NodeImage {
+pub struct NodeMedia {
     /// The element [img, vid, gif] of the link
     pub e: Vec<u8>,
 
