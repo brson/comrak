@@ -1359,11 +1359,11 @@ impl<'a, 'o> Parser<'a, 'o> {
         format_ranges.clear();
         *range_idx = 0;
     }
-    
+
     fn insert_format(&mut self, current_format: &mut HashMap<u16, u16>, val: u16) {
         *current_format.entry(val).or_insert(0) += 1;
     }
-    
+
     fn remove_format(&mut self, current_format: &mut HashMap<u16, u16>, val: u16) {
         *current_format.entry(val).or_insert(1) -= 1;
     }
@@ -1636,7 +1636,7 @@ impl<'a, 'o> Parser<'a, 'o> {
             },
             _ => (),
         }
-        
+
         match node.data.borrow().value {
             NodeValue::Strong => self.remove_format(current_format, 1),
             NodeValue::Emph => self.remove_format(current_format, 2),
