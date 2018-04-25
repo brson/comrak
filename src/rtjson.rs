@@ -220,7 +220,7 @@ impl<'o> RTJsonFormatter<'o> {
                     "e": "br"
                 }))
             },
-            NodeValue::HtmlBlock(ref nhb) => unreachable!(),
+            NodeValue::HtmlBlock(..) => unreachable!(),
             NodeValue:: SoftBreak => None,
             NodeValue::Code(_) | NodeValue::Strong | NodeValue::Emph | NodeValue::Superscript |
             NodeValue::Strikethrough | NodeValue::Underline => unreachable!(),
@@ -386,7 +386,7 @@ impl<'o> RTJsonFormatter<'o> {
                 }
             }
             NodeValue::FootnoteDefinition(..) => None,
-            NodeValue::HtmlInline(ref nd) => unreachable!(),
+            NodeValue::HtmlInline(..) => unreachable!(),
             NodeValue::FootnoteReference(..) => None,
             NodeValue::SpoilerText => {
                 Some(json!({
