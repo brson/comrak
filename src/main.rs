@@ -52,7 +52,7 @@ fn render_html(text: &str, opts: &parser::ComrakOptions) -> String {
 fn render_rtjson(text: &str, opts: &parser::ComrakOptions) -> String {
     let arena = Arena::new();
     let root = parser::parse_document(&arena, text, opts);
-    let rendered_rtjson = rtjson::format_document(root, &parser::ComrakOptions::default());
+    let rendered_rtjson = rtjson::format_document(root);
     rendered_rtjson.0.to_string()
 }
 
