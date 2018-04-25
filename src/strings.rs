@@ -250,11 +250,11 @@ pub fn validate_url_scheme(url: &[u8]) -> bool {
         Err(_) => return false,
     }.to_lowercase();
 
-    static valid_schemes: &[&str] = &[
+    static VALID_SCHEMES: &[&str] = &[
         "http://", "https://", "ftp://", "mailto:",
         "/", "git://", "steam://", "irc://", "news://", "mumble://",
         "ssh://", "ircs://", "ts3server://", "#"
     ];
 
-    valid_schemes.iter().any(|scheme| url.starts_with(scheme))
+    VALID_SCHEMES.iter().any(|scheme| url.starts_with(scheme))
 }
