@@ -394,14 +394,13 @@ impl<'a, 'o> Parser<'a, 'o> {
 
     fn process_line(&mut self, line: &[u8]) {
         let mut new_line: Vec<u8>;
-        let line =
-            if line.is_empty() || !strings::is_line_end_char(*line.last().unwrap()) {
-                new_line = line.into();
-                new_line.push(b'\n');
-                &new_line
-            } else {
-                line
-            };
+        let line = if line.is_empty() || !strings::is_line_end_char(*line.last().unwrap()) {
+            new_line = line.into();
+            new_line.push(b'\n');
+            &new_line
+        } else {
+            line
+        };
         self.offset = 0;
         self.column = 0;
         self.blank = false;
@@ -570,8 +569,8 @@ impl<'a, 'o> Parser<'a, 'o> {
                     setext: false,
                 });
 
-            } else if !indented &&
-                       unwrap_into(
+            } else if !indented
+                && unwrap_into(
                     scanners::open_code_fence(&line[self.first_nonspace..]),
                     &mut matched,
                 ) {
@@ -923,15 +922,13 @@ impl<'a, 'o> Parser<'a, 'o> {
             }
         }
 
-        container.data.borrow_mut().last_line_blank = self.blank &&
-            match container.data.borrow().value {
-                NodeValue::BlockQuote |
-                NodeValue::Heading(..) |
-                NodeValue::ThematicBreak => false,
+        container.data.borrow_mut().last_line_blank = self.blank
+            && match container.data.borrow().value {
+                NodeValue::BlockQuote | NodeValue::Heading(..) | NodeValue::ThematicBreak => false,
                 NodeValue::CodeBlock(ref ncb) => !ncb.fenced,
                 NodeValue::Item(..) => {
-                    container.first_child().is_some() ||
-                        container.data.borrow().start_line != self.line_number
+                    container.first_child().is_some()
+                        || container.data.borrow().start_line != self.line_number
                 }
                 _ => true,
             };
@@ -942,13 +939,12 @@ impl<'a, 'o> Parser<'a, 'o> {
             tmp = parent;
         }
 
-        if !self.current.same_node(last_matched_container) &&
-            container.same_node(last_matched_container) && !self.blank &&
-            match self.current.data.borrow().value {
+        if !self.current.same_node(last_matched_container)
+            && container.same_node(last_matched_container) && !self.blank
+            && match self.current.data.borrow().value {
                 NodeValue::Paragraph => true,
                 _ => false,
-            }
-        {
+            } {
             self.add_line(self.current, line);
         } else {
             while !self.current.same_node(last_matched_container) {
