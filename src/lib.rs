@@ -110,3 +110,14 @@ pub fn markdown_to_html(md: &str, options: &ComrakOptions) -> String {
     format_html(root, options, &mut s).unwrap();
     String::from_utf8(s).unwrap()
 }
+
+/// Render Markdown to Markdown.
+///
+/// See the documentation of the crate root for an example.
+pub fn markdown_to_markdown(md: &str, options: &ComrakOptions) -> String {
+    let arena = Arena::new();
+    let root = parse_document(&arena, md, options);
+    let mut s = Vec::new();
+    format_commonmark(root, options, &mut s).unwrap();
+    String::from_utf8(s).unwrap()
+}
