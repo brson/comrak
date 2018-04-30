@@ -19,55 +19,93 @@ impl<'o> RTJsonFormatter<'o> {
         }
     }
 
-    fn format_children<'a>(&mut self, node: &'a AstNode<'a>, content: &mut serde_json::Value) {
-        let mut vals = Vec::with_capacity(128);
-        for n in node.children() {
-            let js = self.format(n).to_owned();
-            match js {
-                Some(k) => vals.push(k),
-                None => (),
-            }
-        }
-        *content = json!(vals);
-    }
+    fn format<'a>(&mut self, root_node: &'a AstNode<'a>) -> Option<serde_json::Value> {
 
-    fn format<'a>(&mut self, node: &'a AstNode<'a>) -> Option<serde_json::Value> {
-        let mut content = &mut json!({});
-        self.format_children(node, content);
-        let mut json = match self.format_node(node) {
-            Some(k) => k,
-            None => serde_json::Value::Null
-        };
-        if json == serde_json::Value::Null {
-            return None
-        }
-        match node.data.borrow().value {
-            NodeValue::Document => {
-                json["document"] = content.to_owned();
-            }
-            NodeValue::Table(..) => {
-                let mut vals = vec![];
-                for val in content.as_array_mut().unwrap() {
-                    if val.get("h") != None {
-                        json["h"] = val.get("h").unwrap_or(&serde_json::Value::Null).to_owned();
-                    } else {
-                        vals.push(val.get("c").unwrap_or(&serde_json::Value::Null));
+        // This is another iterative traversal of the AST, with
+        // pre-child-traversal, and post-child-traversal phases.
+        //
+        // For every node this is collecting the child node json into
+        // the `accum` vec-of-vecs, moving that json to the node's own
+        // json, then pushing its json onto `accum`.
+        //
+        // More specifically, during pre-order traversal, we push a new child
+        // accumulator onto `accum` for the children to add their contents to;
+        // during post-order-traversal, we pop the vec of children, and push the
+        // node's own content.
+
+        enum Phase { Pre, Post }
+
+        let mut stack = vec![(root_node, Phase::Pre)];
+        let mut accum = vec![vec![]];
+
+        while let Some((node, phase)) = stack.pop() {
+            match phase {
+                Phase::Pre => {
+                    // Add a new accumulator for the children of this node
+                    accum.push(vec![]);
+
+                    // Push the node back on to the stack to accumulate the
+                    // results of traversing the children.
+                    stack.push((node, Phase::Post));
+
+                    // Push the children onto the stack, in reverse order, so
+                    // they are processed in order.
+                    stack.extend(node.reverse_children().map(|cn| (cn, Phase::Pre)));
+                }
+                Phase::Post => {
+                    // Then format the node, without the child content in place
+                    let mut json = match self.format_node(node) {
+                        Some(k) => k,
+                        None => serde_json::Value::Null
+                    };
+                    if json == serde_json::Value::Null {
+                        continue
                     }
-                }
-                json["c"] = json!(vals);
-            }
-            NodeValue::TableRow(..) => {
-                match json.clone().get_mut("h") {
-                    Some(_h) => json["h"] = content.to_owned(),
-                    None => json["c"] = content.to_owned(),
-                }
-            }
-            _ => {
-                if !content.as_array().unwrap().is_empty() {
-                    json["c"] = content.to_owned();
+
+                    let children = accum.pop().expect("json child nodes");
+                    let content = &mut json!(children);
+
+                    // Then add the child content to the node
+                    match node.data.borrow().value {
+                        NodeValue::Document => {
+                            json["document"] = content.to_owned();
+                        }
+                        NodeValue::Table(..) => {
+                            let mut vals = vec![];
+                            for val in content.as_array_mut().unwrap() {
+                                if val.get("h") != None {
+                                    json["h"] = val.get("h").unwrap_or(&serde_json::Value::Null).to_owned();
+                                } else {
+                                    vals.push(val.get("c").unwrap_or(&serde_json::Value::Null));
+                                }
+                            }
+                            json["c"] = json!(vals);
+                        }
+                        NodeValue::TableRow(..) => {
+                            match json.clone().get_mut("h") {
+                                Some(_h) => json["h"] = content.to_owned(),
+                                None => json["c"] = content.to_owned(),
+                            }
+                        }
+                        _ => {
+                            if !content.as_array().unwrap().is_empty() {
+                                json["c"] = content.to_owned();
+                            }
+                        }
+                    }
+
+                    // Finally, push this rendered node onto it's parent's list of
+                    // accumulated children.
+                    let last = accum.last_mut().expect("child accum");
+                    last.push(json);
                 }
             }
         }
+
+        let mut last_accum = accum.pop().expect("last accumulator");
+        assert!(accum.is_empty());
+        let json = last_accum.pop().expect("last json");
+        assert!(last_accum.is_empty());
         Some(json)
     }
 
