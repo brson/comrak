@@ -8,7 +8,7 @@ This should be used with rtjson.
 ```````````````````````````````` example
 nonoe www.reddit.com /r/or r/or either/or
 .
-{"document":[{"c":[{"e":"text","t":"nonoe "},{"e":"link","t":"www.reddit.com","u":"http://www.reddit.com"},{"e":"text","t":" "},{"e":"r/","l":true,"t":"or"},{"e":"text","t":" "},{"e":"r/","t":"or"},{"e":"text","t":" either/or"}],"e":"par"}]}
+{"document":[{"c":[{"e":"text","t":"nonoe "},{"e":"link","t":"www.reddit.com","u":"http://www.reddit.com"},{"e":"text","t":" "},{"e":"r/","l":true,"t":"or"},{"e":"text","t":" "},{"e":"r/","l":false,"t":"or"},{"e":"text","t":" either/or"}],"e":"par"}]}
 ````````````````````````````````
 
 We also need to check links at the beginning
@@ -16,7 +16,7 @@ We also need to check links at the beginning
 ```````````````````````````````` example
 www.reddit.com nonoe /r/or r/or either/or
 .
-{"document":[{"c":[{"e":"link","t":"www.reddit.com","u":"http://www.reddit.com"},{"e":"text","t":" nonoe "},{"e":"r/","l":true,"t":"or"},{"e":"text","t":" "},{"e":"r/","t":"or"},{"e":"text","t":" either/or"}],"e":"par"}]}
+{"document":[{"c":[{"e":"link","t":"www.reddit.com","u":"http://www.reddit.com"},{"e":"text","t":" nonoe "},{"e":"r/","l":true,"t":"or"},{"e":"text","t":" "},{"e":"r/","l":false,"t":"or"},{"e":"text","t":" either/or"}],"e":"par"}]}
 ````````````````````````````````
 
 ...and end of lines.
@@ -24,7 +24,7 @@ www.reddit.com nonoe /r/or r/or either/or
 ```````````````````````````````` example
 nonoe /r/or r/or either/or www.reddit.com
 .
-{"document":[{"c":[{"e":"text","t":"nonoe "},{"e":"r/","l":true,"t":"or"},{"e":"text","t":" "},{"e":"r/","t":"or"},{"e":"text","t":" either/or "},{"e":"link","t":"www.reddit.com","u":"http://www.reddit.com"}],"e":"par"}]}
+{"document":[{"c":[{"e":"text","t":"nonoe "},{"e":"r/","l":true,"t":"or"},{"e":"text","t":" "},{"e":"r/","l":false,"t":"or"},{"e":"text","t":" either/or "},{"e":"link","t":"www.reddit.com","u":"http://www.reddit.com"}],"e":"par"}]}
 ````````````````````````````````
 
 We should also make sure that user redditlinks are being covered
@@ -32,7 +32,7 @@ We should also make sure that user redditlinks are being covered
 ```````````````````````````````` example
 nonoe /u/or u/or eu/au
 .
-{"document":[{"c":[{"e":"text","t":"nonoe "},{"e":"u/","l":true,"t":"or"},{"e":"text","t":" "},{"e":"u/","t":"or"},{"e":"text","t":" eu/au"}],"e":"par"}]}
+{"document":[{"c":[{"e":"text","t":"nonoe "},{"e":"u/","l":true,"t":"or"},{"e":"text","t":" "},{"e":"u/","l":false,"t":"or"},{"e":"text","t":" eu/au"}],"e":"par"}]}
 ````````````````````````````````
 
 We have to make sure that nested styles get the proper rendering
@@ -66,7 +66,7 @@ The test above account for known bugs and fixes.
 u/reddit
 /u/reddit
 .
-{"document":[{"c":[{"e":"text","t":"a。u/reddit "},{"e":"u/","t":"reddit"},{"e":"text","t":" "},{"e":"u/","l":true,"t":"reddit"}],"e":"par"}]}
+{"document":[{"c":[{"e":"text","t":"a。u/reddit "},{"e":"u/","l":false,"t":"reddit"},{"e":"text","t":" "},{"e":"u/","l":true,"t":"reddit"}],"e":"par"}]}
 ````````````````````````````````
 
 The redditlink should always be rendered if it starts with a slash.
@@ -75,7 +75,7 @@ The redditlink should always be rendered if it starts with a slash.
 。/u/reddit
 。//u/reddit
 .
-{"document":[{"c":[{"e":"text","t":"。/"},{"e":"u/","t":"reddit"},{"e":"text","t":" 。/"},{"e":"u/","l":true,"t":"reddit"}],"e":"par"}]}
+{"document":[{"c":[{"e":"text","t":"。/"},{"e":"u/","l":false,"t":"reddit"},{"e":"text","t":" 。/"},{"e":"u/","l":true,"t":"reddit"}],"e":"par"}]}
 ````````````````````````````````
 
 There was a bug where we were getting a panic on the malformed strings
@@ -151,7 +151,7 @@ When a username has a hyphen in it we should support it.
 ```````````````````````````````` example
 u/hello-there- hello-there
 .
-{"document":[{"c":[{"e":"u/","t":"hello-there-"},{"e":"text","t":" hello-there"}],"e":"par"}]}
+{"document":[{"c":[{"e":"u/","l":false,"t":"hello-there-"},{"e":"text","t":" hello-there"}],"e":"par"}]}
 ````````````````````````````````
 
 Spoilertext should not turn into block quotes

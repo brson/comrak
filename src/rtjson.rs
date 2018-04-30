@@ -219,18 +219,11 @@ impl<'o> RTJsonFormatter<'o> {
                 }))
             }
             NodeValue::RedditLink(ref nl) => {
-                if nl.l == true {
-                    Some(json!({
-                        "e": String::from_utf8(nl.url.to_owned()).unwrap(),
-                        "t": String::from_utf8(nl.title.to_owned()).unwrap(),
-                        "l":nl.l,
-                    }))
-                } else {
-                    Some(json!({
-                        "e": String::from_utf8(nl.url.to_owned()).unwrap(),
-                        "t": String::from_utf8(nl.title.to_owned()).unwrap(),
-                    }))
-                }
+                Some(json!({
+                    "e": String::from_utf8(nl.url.to_owned()).unwrap(),
+                    "t": String::from_utf8(nl.title.to_owned()).unwrap(),
+                    "l":nl.l,
+                }))
             }
             NodeValue::Image(ref nl) => {
                 if !&nl.title.is_empty() {
