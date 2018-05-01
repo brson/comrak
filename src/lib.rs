@@ -160,37 +160,86 @@ pub fn from_json(py: Python, json: Value) -> PyObject {
         }
     }
 
-    match json {
-        Value::Number(x) => {
-            if let Some(n) = x.as_u64() {
-                obj!(n)
-            } else if let Some(n) = x.as_i64() {
-                obj!(n)
-            } else if let Some(n) = x.as_f64() {
-                obj!(n)
-            } else {
-                // We should never get to this point
-                unreachable!()
+    // Iterative traversal similar to `format` in rtjson.rs. Pre-traversal
+    // enqueues children for processing; post-traversal pops children and
+    // converts the node.
+
+    enum Phase { Pre, Post }
+    enum Parent<'a> { Array, Map(&'a str) }
+
+    let mut stack = vec![(&json, Phase::Pre, Parent::Array)];
+    let mut vec_accum = vec![vec![]];
+    let mut map_accum = vec![];
+
+    while let Some((json, phase, parent)) = stack.pop() {
+        match phase {
+            Phase::Pre => {
+                stack.push((json, Phase::Post, parent));
+                match *json {
+                    Value::Array(ref vec) => {
+                        vec_accum.push(vec![]);
+                        for item in vec.iter().rev() {
+                            stack.push((item, Phase::Pre, Parent::Array));
+                        }
+                    }
+                    Value::Object(ref map) => {
+                        map_accum.push(vec![]);
+                        for (key, value) in map.iter().rev() {
+                            stack.push((value, Phase::Pre, Parent::Map(key)))
+                        }
+                    }
+                    _ => ()
+                }
+            }
+            Phase::Post => {
+                let pyval = match *json {
+                    Value::Number(ref x) => {
+                        if let Some(n) = x.as_u64() {
+                            obj!(n)
+                        } else if let Some(n) = x.as_i64() {
+                            obj!(n)
+                        } else if let Some(n) = x.as_f64() {
+                            obj!(n)
+                        } else {
+                            // We should never get to this point
+                            unreachable!()
+                        }
+                    }
+                    Value::String(ref x) => PyUnicode::new(py, &x).into_object(),
+                    Value::Bool(x) => obj!(x),
+                    Value::Array(..) => {
+                        let elements = vec_accum.pop().expect("py vec accumulator");
+                        PyList::new(py, &elements[..]).into_object()
+                    }
+                    Value::Object(..) => {
+                        let elements = map_accum.pop().expect("py map accumulator");
+                        let dict = PyDict::new(py);
+                        for (key, value) in elements {
+                            dict.set_item(py, key, value);
+                        }
+                        dict.into_object()
+                    }
+                    Value::Null => py.None(),
+                };
+
+                match parent {
+                    Parent::Array => {
+                        vec_accum.last_mut().expect("py vec accumulator").push(pyval);
+                    }
+                    Parent::Map(key) => {
+                        map_accum.last_mut().expect("py map accumulator").push((key, pyval));
+                    }
+                }
             }
         }
-        Value::String(x) => PyUnicode::new(py, &x).into_object(),
-        Value::Bool(x) => obj!(x),
-        Value::Array(vec) => {
-            let mut elements = Vec::new();
-            for item in vec {
-                elements.push(from_json(py, item));
-            }
-            PyList::new(py, &elements[..]).into_object()
-        }
-        Value::Object(map) => {
-            let dict = PyDict::new(py);
-            for (key, value) in map {
-                dict.set_item(py, key, from_json(py, value));
-            }
-            dict.into_object()
-        }
-        Value::Null => py.None(),
     }
+
+    assert!(map_accum.is_empty());
+    let mut last_accum = vec_accum.pop().expect("last accumulator");
+    assert!(vec_accum.is_empty());
+    let pyval = last_accum.pop().expect("last json");
+    assert!(last_accum.is_empty());
+    pyval
 }
 
 // logic implemented as a normal rust function
