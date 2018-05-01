@@ -56,6 +56,7 @@ pub fn format_document<'a>(root: &'a AstNode<'a>) -> Json {
 struct RTJsonFormatter;
 
 impl RTJsonFormatter {
+    #[flame]
     fn format<'a>(&self, root_node: &'a AstNode<'a>) -> Option<serde_json::Value> {
 
         // This is another iterative traversal of the AST, with
@@ -151,6 +152,7 @@ impl RTJsonFormatter {
         Some(json)
     }
 
+    #[flame]
     fn format_node<'a>(&self, node: &'a AstNode<'a>) -> Option<serde_json::Value> {
         match node.data.borrow().value {
             NodeValue::Document => {

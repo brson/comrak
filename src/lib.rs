@@ -63,12 +63,18 @@
 //! ```
 
 #![deny(missing_debug_implementations, missing_copy_implementations, trivial_casts,
-        trivial_numeric_casts, unstable_features, unused_import_braces)]
+        trivial_numeric_casts, unused_import_braces)]
 #![cfg_attr(feature = "dev", allow(unstable_features))]
 #![allow(unknown_lints, doc_markdown, cyclomatic_complexity)]
 
 #![cfg_attr(rustbuild, feature(staged_api, rustc_private))]
 #![cfg_attr(rustbuild, unstable(feature = "rustc_private", issue = "27812"))]
+#![feature(alloc_system)]
+#![feature(plugin, custom_attribute)]
+#![plugin(flamer)]
+
+extern crate flame;
+extern crate alloc_system;
 
 extern crate unicode_categories;
 extern crate typed_arena;
@@ -92,6 +98,8 @@ mod ctype;
 mod nodes;
 mod entity;
 mod strings;
+
+use std::fs::File;
 
 pub use parser::{parse_document, ComrakOptions};
 use typed_arena::Arena;
@@ -153,6 +161,7 @@ pub fn cm_to_rtjson(cm: String) -> Json {
 /// Convert from a `serde_json::Value` to a `cpython::PyObject`.
 /// Code originally inspired from library by Iliana Weller found at
 /// https://github.com/ilianaw/rust-cpython-json/blob/master/src/lib.rs
+#[flame]
 #[cfg(feature = "cpython")]
 pub fn from_json(py: Python, json: Json) -> PyObject {
     macro_rules! obj {
@@ -246,8 +255,10 @@ pub fn from_json(py: Python, json: Json) -> PyObject {
 // logic implemented as a normal rust function
 #[cfg(feature = "cpython")]
 fn cm_to_rtjson_py(py: Python, cm: String) -> PyResult<PyObject> {
+    let _guard = flame::start_guard("Running python binding");
     let out = cm_to_rtjson(cm);
     let res = from_json(py, out);
+    flame::dump_html(&mut File::create("flame-graph-python.html").unwrap()).unwrap();
     Ok(res)
 }
 
