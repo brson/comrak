@@ -63,33 +63,38 @@ impl<'o> RTJsonFormatter<'o> {
                     }
 
                     let children = accum.pop().expect("json child nodes");
-                    let content = &mut json!(children);
+                    let content = serde_json::Value::Array(children);
 
                     // Then add the child content to the node
                     match node.data.borrow().value {
                         NodeValue::Document => {
-                            json["document"] = content.to_owned();
+                            json["document"] = content;
                         }
                         NodeValue::Table(..) => {
                             let mut vals = vec![];
+                            let mut content = content;
                             for val in content.as_array_mut().unwrap() {
-                                if val.get("h") != None {
-                                    json["h"] = val.get("h").unwrap_or(&serde_json::Value::Null).to_owned();
-                                } else {
-                                    vals.push(val.get("c").unwrap_or(&serde_json::Value::Null));
+                                if let Some(map) = val.as_object_mut() {
+                                    if let Some(c) = map.remove("c") {
+                                        vals.push(c);
+                                    } else if let Some(h) = map.remove("h") {
+                                        json["h"] = h;
+                                    } else {
+                                        unreachable!();
+                                    }
                                 }
                             }
-                            json["c"] = json!(vals);
+                            json["c"] = serde_json::Value::Array(vals);
                         }
                         NodeValue::TableRow(..) => {
                             match json.clone().get_mut("h") {
-                                Some(_h) => json["h"] = content.to_owned(),
-                                None => json["c"] = content.to_owned(),
+                                Some(_h) => json["h"] = content,
+                                None => json["c"] = content,
                             }
                         }
                         _ => {
                             if !content.as_array().unwrap().is_empty() {
-                                json["c"] = content.to_owned();
+                                json["c"] = content;
                             }
                         }
                     }
