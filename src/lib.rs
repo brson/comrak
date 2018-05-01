@@ -95,6 +95,7 @@ mod strings;
 
 pub use parser::{parse_document, ComrakOptions};
 use typed_arena::Arena;
+use rtjson::Json;
 
 extern crate libc;
 #[cfg(feature = "cpython")]
@@ -124,7 +125,7 @@ py_module_initializer!(snoomark, initsnoomark, PyInit_snoomark, |py, m| {
 // declared in a separate module.
 // Note that the py_fn!() macro automatically converts the arguments from
 // Python objects to Rust values; and the Rust return value back into a Python object.
-pub fn cm_to_rtjson(cm: String) -> Value {
+pub fn cm_to_rtjson(cm: String) -> Json {
     let arena = Arena::new();
 
     let options = ComrakOptions {
@@ -153,7 +154,7 @@ pub fn cm_to_rtjson(cm: String) -> Value {
 /// Code originally inspired from library by Iliana Weller found at
 /// https://github.com/ilianaw/rust-cpython-json/blob/master/src/lib.rs
 #[cfg(feature = "cpython")]
-pub fn from_json(py: Python, json: Value) -> PyObject {
+pub fn from_json(py: Python, json: Json) -> PyObject {
     macro_rules! obj {
         ($x:ident) => {
             $x.into_py_object(py).into_object()
@@ -167,7 +168,7 @@ pub fn from_json(py: Python, json: Value) -> PyObject {
     enum Phase { Pre, Post }
     enum Parent<'a> { Array, Map(&'a str) }
 
-    let mut stack = vec![(&json, Phase::Pre, Parent::Array)];
+    let mut stack = vec![(&json.0, Phase::Pre, Parent::Array)];
     let mut vec_accum = vec![vec![]];
     let mut map_accum = vec![];
 

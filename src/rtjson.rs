@@ -2,10 +2,56 @@ use nodes::{TableAlignment, NodeValue, ListType, AstNode};
 use parser::ComrakOptions;
 use serde_json;
 
+// This is a wrapper type that does nothing but ensure that the JSON value is
+// destroyed without blowing the stack - deeply nested JSON dictionaries use
+// recursion. This is arguably a bug in serde_json.
+// FIXME: Remove when https://github.com/serde-rs/json/issues/440 is fixed.
+#[derive(Debug)]
+pub struct Json(pub serde_json::Value);
+
+impl Drop for Json {
+    fn drop(&mut self) {
+        // We're going to iteratively peel apart the entire tree, by removing
+        // child nodes from their parents and dropping them. The root is a
+        // special case since it's not passed by value, so we first have to
+        // remove its children and push them onto the stack, then we'll start
+        // iterating on the stack and taking apart their children.
+
+        let mut stack = vec![];
+
+        // This first step is pretty distasteful but I don't see offhad a better
+        // way to do it: while there are still values in the root dictionary,
+        // copy the entire key string, then remove the value by key.
+        let root_map = self.0.as_object_mut().expect("document root should be a map");
+        let mut key = String::new();
+        while !root_map.is_empty() {
+            key.clear();
+            key.push_str(root_map.keys().next().unwrap());
+            stack.push(root_map.remove(&key).unwrap());
+        }
+
+        while let Some(val) = stack.pop() {
+            match val {
+                serde_json::Value::Object(val) => {
+                    for (_, child) in val.into_iter() {
+                        stack.push(child);
+                    }
+                }
+                serde_json::Value::Array(val) => {
+                    for child in val.into_iter() {
+                        stack.push(child);
+                    }
+                }
+                _ => (),
+            }
+        }
+    }
+}
+
 /// Formats an AST as HTML, modified by the given options.
-pub fn format_document<'a>(root: &'a AstNode<'a>, options: &ComrakOptions) -> serde_json::Value {
+pub fn format_document<'a>(root: &'a AstNode<'a>, options: &ComrakOptions) -> Json {
     let mut f = RTJsonFormatter::new(options);
-    f.format(root).unwrap()
+    Json(f.format(root).unwrap())
 }
 
 struct RTJsonFormatter<'o> {
