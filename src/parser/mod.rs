@@ -1191,12 +1191,16 @@ impl<'a, 'o> Parser<'a, 'o> {
     }
 
     fn process_inlines_node(&mut self, node: &'a AstNode<'a>) {
-        if node.data.borrow().value.contains_inlines() {
-            self.parse_inlines(node);
-        }
+        let mut stack = vec![node];
 
-        for n in node.children() {
-            self.process_inlines_node(n);
+        while let Some(node) = stack.pop() {
+            if node.data.borrow().value.contains_inlines() {
+                self.parse_inlines(node);
+            }
+
+            for n in node.children() {
+                stack.push(n);
+            }
         }
     }
 
