@@ -250,3 +250,17 @@ fn cm_to_rtjson_py(py: Python, cm: String) -> PyResult<PyObject> {
     let res = from_json(py, out);
     Ok(res)
 }
+
+
+#[cfg(test)]
+mod tests {
+    use super::cm_to_rtjson;
+
+    #[test]
+    fn no_stack_smash() {
+        // Don't smash the stack on this deeply-nested blockquote
+        let big: String = ::std::iter::repeat('>').take(150_000).collect();
+        cm_to_rtjson(big);
+    }
+}
+
