@@ -1191,12 +1191,16 @@ impl<'a, 'o> Parser<'a, 'o> {
     }
 
     fn process_inlines_node(&mut self, node: &'a AstNode<'a>) {
-        if node.data.borrow().value.contains_inlines() {
-            self.parse_inlines(node);
-        }
+        let mut stack = vec![node];
 
-        for n in node.children() {
-            self.process_inlines_node(n);
+        while let Some(node) = stack.pop() {
+            if node.data.borrow().value.contains_inlines() {
+                self.parse_inlines(node);
+            }
+
+            for n in node.children() {
+                stack.push(n);
+            }
         }
     }
 
@@ -1293,45 +1297,49 @@ impl<'a, 'o> Parser<'a, 'o> {
     }
 
     fn postprocess_text_nodes(&mut self, node: &'a AstNode<'a>) {
-        let mut nch = node.first_child();
+        let mut stack = vec![node];
 
-        while let Some(n) = nch {
-            let mut this_bracket = false;
-            loop {
-                match n.data.borrow_mut().value {
-                    NodeValue::Text(ref mut root) => {
-                        let ns = match n.next_sibling() {
-                            Some(ns) => ns,
-                            _ => {
-                                self.postprocess_text_node(n, root);
-                                break;
-                            }
-                        };
+        while let Some(node) = stack.pop() {
+            let mut nch = node.first_child();
 
-                        match ns.data.borrow().value {
-                            NodeValue::Text(ref adj) => {
-                                root.extend_from_slice(adj);
-                                ns.detach();
-                            }
-                            _ => {
-                                self.postprocess_text_node(n, root);
-                                break;
+            while let Some(n) = nch {
+                let mut this_bracket = false;
+                loop {
+                    match n.data.borrow_mut().value {
+                        NodeValue::Text(ref mut root) => {
+                            let ns = match n.next_sibling() {
+                                Some(ns) => ns,
+                                _ => {
+                                    self.postprocess_text_node(n, root);
+                                    break;
+                                }
+                            };
+
+                            match ns.data.borrow().value {
+                                NodeValue::Text(ref adj) => {
+                                    root.extend_from_slice(adj);
+                                    ns.detach();
+                                }
+                                _ => {
+                                    self.postprocess_text_node(n, root);
+                                    break;
+                                }
                             }
                         }
+                        NodeValue::Link(..) | NodeValue::RedditLink(..) | NodeValue::Image(..) => {
+                            this_bracket = true;
+                            break;
+                        }
+                        _ => break,
                     }
-                    NodeValue::Link(..) | NodeValue::RedditLink(..) | NodeValue::Image(..) => {
-                        this_bracket = true;
-                        break;
-                    }
-                    _ => break,
                 }
-            }
 
-            if !this_bracket {
-                self.postprocess_text_nodes(n);
-            }
+                if !this_bracket {
+                    stack.push(n);
+                }
 
-            nch = n.next_sibling();
+                nch = n.next_sibling();
+            }
         }
     }
 
@@ -1408,12 +1416,64 @@ impl<'a, 'o> Parser<'a, 'o> {
 
     fn postprocess_rtjson_ast(
         &mut self,
-        node: &'a AstNode<'a>,
+        root_node: &'a AstNode<'a>,
         unformatted_text: &mut Vec<u8>,
         current_format: &mut HashMap<u16, u16>,
         format_ranges: &mut Vec<[u16; 3]>,
         range_idx: &mut u16,
     ) {
+        // This function does its work in a loop to avoid recursion. It has work
+        // to do on each node both before and after visiting children, so each
+        // node gets two turns on the work-stack.
+        enum Phase { Pre, Post };
+
+        let mut stack = vec![(root_node, Phase::Pre)];
+
+        while let Some((node, phase)) = stack.pop() {
+            match phase {
+                Phase::Pre => {
+                    let skip = self.postprocess_rtjson_ast_pre(
+                        node,
+                        unformatted_text,
+                        current_format,
+                        format_ranges,
+                        range_idx
+                    );
+
+                    if skip { continue }
+
+                    // Push the current working-node back onto the stack for
+                    // post-traversal processing, then the children onto the
+                    // stack in pre-traversal mode, in reverse order so that the
+                    // first child is processed first,
+                    stack.push((node, Phase::Post));
+                    stack.extend(node.reverse_children().map(|cn| (cn, Phase::Pre)));
+                }
+                Phase::Post => {
+                    self.postprocess_rtjson_ast_post(
+                        node,
+                        unformatted_text,
+                        current_format,
+                        format_ranges,
+                        range_idx
+                    );
+                }
+            }
+        }
+    }
+
+    // The pre-traversal phase of rtjson postprocessing
+    //
+    // If this function returns true than further processing
+    // of this subtree should be aborted.
+    fn postprocess_rtjson_ast_pre(
+        &mut self,
+        node: &'a AstNode<'a>,
+        unformatted_text: &mut Vec<u8>,
+        current_format: &mut HashMap<u16, u16>,
+        format_ranges: &mut Vec<[u16; 3]>,
+        range_idx: &mut u16,
+    ) -> bool {
         match node.data.borrow_mut().value {
             NodeValue::Text(ref text) => {
                 self.output_format_range(
@@ -1553,7 +1613,7 @@ impl<'a, 'o> Parser<'a, 'o> {
                     let new = inlines::make_inline(self.arena, NodeValue::Text(accum));
                     node.insert_before(new);
                     node.detach();
-                    return;
+                    return true;
                 }
             }
             NodeValue::Code(ref literal) => {
@@ -1605,15 +1665,18 @@ impl<'a, 'o> Parser<'a, 'o> {
             _ => ()
         }
 
-        for c in node.children() {
-            self.postprocess_rtjson_ast(
-                c,
-                unformatted_text,
-                current_format,
-                format_ranges,
-                range_idx,
-            );
-        }
+        false
+    }
+
+    // The post-traversal phase of rtjson postprocessing
+    fn postprocess_rtjson_ast_post(
+        &mut self,
+        node: &'a AstNode<'a>,
+        unformatted_text: &mut Vec<u8>,
+        current_format: &mut HashMap<u16, u16>,
+        format_ranges: &mut Vec<[u16; 3]>,
+        range_idx: &mut u16,
+    ) {
         match node.data.borrow().value {
             NodeValue::Item(..) => {
                 match node.children().next() {
