@@ -877,3 +877,11 @@ Same deal with three layers of links.
 .
 {"document": [{"c": [{"e": "text", "t": "[foo [bar "}, {"u": "/url", "e": "link", "t": "baz"}, {"e": "text", "t": "](/url2)](/url3)"}], "e": "par"}]}
 ````````````````````````````````
+
+"video" is a valid media element type
+
+```````````````````````````````` example
+![video](abcd)
+.
+{"document":[{"e":"video","id":"abcd"}]}
+````````````````````````````````

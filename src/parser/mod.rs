@@ -1576,7 +1576,8 @@ impl<'a, 'o> Parser<'a, 'o> {
                     Some(n) => {
                         match n.data.borrow().value {
                             NodeValue::Text(ref t) => {
-                                [b"img", b"vid", b"gif"].iter().any(|m| *m == t.as_slice())
+                                static MEDIA_TYPES: &[&[u8]] = &[b"img", b"video", b"gif"];
+                                MEDIA_TYPES.iter().any(|m| *m == t.as_slice())
                             }
                             _ => false,
                         }
