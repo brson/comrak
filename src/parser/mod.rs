@@ -1198,7 +1198,7 @@ impl<'a, 'o> Parser<'a, 'o> {
                 self.parse_inlines(node);
             }
 
-            for n in node.children() {
+            for n in node.reverse_children() {
                 stack.push(n);
             }
         }
