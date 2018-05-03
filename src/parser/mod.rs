@@ -1298,6 +1298,7 @@ impl<'a, 'o> Parser<'a, 'o> {
 
     fn postprocess_text_nodes(&mut self, node: &'a AstNode<'a>) {
         let mut stack = vec![node];
+        let mut children = vec![];
 
         while let Some(node) = stack.pop() {
             let mut nch = node.first_child();
@@ -1335,11 +1336,15 @@ impl<'a, 'o> Parser<'a, 'o> {
                 }
 
                 if !this_bracket {
-                    stack.push(n);
+                    children.push(n);
                 }
 
                 nch = n.next_sibling();
             }
+
+            // Push children onto work stack in reverse order so they are
+            // traversed in order
+            stack.extend(children.drain(..).rev());
         }
     }
 
