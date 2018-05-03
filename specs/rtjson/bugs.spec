@@ -885,3 +885,11 @@ Same deal with three layers of links.
 .
 {"document":[{"e":"video","id":"abcd"}]}
 ````````````````````````````````
+
+"gif" is a valid media element type
+
+```````````````````````````````` example
+![gif](abcd)
+.
+{"document":[{"e":"gif","id":"abcd"}]}
+````````````````````````````````
