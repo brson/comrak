@@ -893,3 +893,30 @@ Same deal with three layers of links.
 .
 {"document":[{"e":"gif","id":"abcd"}]}
 ````````````````````````````````
+
+## Media element behavior
+
+Just capturing a weird behavior of media elements. Ultimately I don't
+know if this is the correct behiavor.
+
+When an "image" element validates as a reddit meddia element, it is pulled out
+of the paragraph and dropped into the top-level document, and the paragraph is
+dropped, along with any content in it.
+
+Here the text disappears:
+
+```````````````````````````````` example
+what's the ![img](abcd) deal?
+
+.
+{"document": [{"e": "img", "id": "abcd"}]}
+````````````````````````````````
+
+Here the second image disappears, even though it's "valid":
+
+```````````````````````````````` example
+![img](abcd) ![gif](abcd)
+
+.
+{"document": [{"e": "img", "id": "abcd"}]}
+````````````````````````````````

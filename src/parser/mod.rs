@@ -1553,6 +1553,9 @@ impl<'a, 'o> Parser<'a, 'o> {
                 // the way the HTML renderer render's Image nodes' children as
                 // "plain" text.
 
+                // Just throw away any preceding text in this paragraph for now.
+                self.reset_rtjson_node(unformatted_text, format_ranges, range_idx);
+
                 let parents_are_cool = if let Some(parent) = node.parent() {
                     match parent.data.borrow().value {
                         NodeValue::Paragraph => {
@@ -1562,7 +1565,19 @@ impl<'a, 'o> Parser<'a, 'o> {
                                     _ => false,
                                 }
                             } else {
-                                unreachable!("images should have grandparents")
+                                // Weird case.
+                                //
+                                // This shouldn't come up in markdown submitted
+                                // by the RTE, but is possible syntactically.
+                                // Because below we detach the _parent_ paragraph
+                                // from the AST on first encounter of an Image,
+                                // it's possible for us to get back here and be
+                                // working on a detached subtree, in which case
+                                // anything we do is not going to show up in
+                                // the output.
+                                //
+                                // Just return false for now.
+                                false
                             }
                         }
                         _ => false,
