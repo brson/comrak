@@ -755,3 +755,12 @@ d
 .
 {"document":[{"c":[[{"c":[{"e":"text","t":"c"}]}],[{"c":[{"e":"text","t":"d"}]}]],"e":"table","h":[{"a":"C","c":[{"e":"text","t":"a"}]}]}]}
 ````````````````````````````````
+
+Reddit quirk - it's ok to have more than 6 leading hashes
+
+```````````````````````````````` example
+#######valhallaforolaf
+
+.
+{"document": [{"c": [{"e": "raw", "t": "#valhallaforolaf"}], "e": "h", "l": 6}]}
+````````````````````````````````
