@@ -1093,8 +1093,6 @@ pub fn make_inline<'a>(arena: &'a Arena<AstNode<'a>>, value: NodeValue) -> &'a A
         content: vec![],
         start_line: 0,
         start_column: 0,
-        end_line: 0,
-        end_column: 0,
         open: false,
         last_line_blank: false,
     };

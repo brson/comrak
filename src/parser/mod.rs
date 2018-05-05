@@ -34,8 +34,6 @@ pub fn parse_document<'a>(
         content: vec![],
         start_line: 0,
         start_column: 0,
-        end_line: 0,
-        end_column: 0,
         open: true,
         last_line_blank: false,
     })));
@@ -1047,28 +1045,6 @@ impl<'a, 'o> Parser<'a, 'o> {
     ) -> Option<&'a AstNode<'a>> {
         assert!(ast.open);
         ast.open = false;
-
-        if !self.linebuf.is_empty() {
-            ast.end_line = self.line_number;
-            ast.end_column = self.last_line_length;
-        } else if match ast.value {
-            NodeValue::Document => true,
-            NodeValue::CodeBlock(ref ncb) => ncb.fenced,
-            NodeValue::Heading(ref nh) => nh.setext,
-            _ => false,
-        } {
-            ast.end_line = self.line_number;
-            ast.end_column = self.linebuf.len();
-            if ast.end_column > 0 && self.linebuf[ast.end_column - 1] == b'\n' {
-                ast.end_column -= 1;
-            }
-            if ast.end_column > 0 && self.linebuf[ast.end_column - 1] == b'\r' {
-                ast.end_column -= 1;
-            }
-        } else {
-            ast.end_line = self.line_number - 1;
-            ast.end_column = self.last_line_length;
-        }
 
         let content = &mut ast.content;
         let mut pos = 0;
