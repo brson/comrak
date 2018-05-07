@@ -555,6 +555,12 @@ impl<'a, 'o> Parser<'a, 'o> {
                     hashpos += 1;
                 }
 
+                // The reddit-quirk atx_heading_start scan allows for lines with
+                // more than 6 leading hashes
+                if self.options.ext_reddit_quirks && level > 6 {
+                    level = 6;
+                }
+
                 container.data.borrow_mut().value = NodeValue::Heading(NodeHeading {
                     level: level,
                     setext: false,
