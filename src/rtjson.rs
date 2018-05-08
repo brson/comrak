@@ -9,6 +9,7 @@ use serde_json;
 pub struct Json(pub serde_json::Value);
 
 impl Drop for Json {
+    #[flame]
     fn drop(&mut self) {
         // We're going to iteratively peel apart the entire tree, by removing
         // child nodes from their parents and dropping them. The root is a

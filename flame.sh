@@ -2,7 +2,7 @@
 
 # Grab the release version of snoomark and run it
 
-FILE=./target/release/libsnoomark.dylib
+FILE=./target/release/libsnoomark.so
 
 
 cp $FILE ./snoomark.so

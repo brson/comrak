@@ -126,13 +126,74 @@ py_module_initializer!(snoomark, initsnoomark, PyInit_snoomark, |py, m| {
     let doc_string = format!("[{} {}] This module is implemented in Rust.", DOC_NAME, DOC_VERSION);
     try!(m.add(py, "__doc__", doc_string));
     try!(m.add(py, "cm_to_rtjson", py_fn!(py, cm_to_rtjson_py(cm: String))));
+    try!(m.add(py, "flame_exec_start", py_fn!(py, flame_exec_start())));
+    try!(m.add(py, "flame_exec_end", py_fn!(py, flame_exec_end())));
+    try!(m.add(py, "flame_convert_start", py_fn!(py, flame_convert_start())));
+    try!(m.add(py, "flame_convert_end", py_fn!(py, flame_convert_end())));
+    try!(m.add(py, "flame_dumps_start", py_fn!(py, flame_dumps_start())));
+    try!(m.add(py, "flame_dumps_end", py_fn!(py, flame_dumps_end())));
+    try!(m.add(py, "flame_del_start", py_fn!(py, flame_del_start())));
+    try!(m.add(py, "flame_del_end", py_fn!(py, flame_del_end())));
+    try!(m.add(py, "flame_write", py_fn!(py, flame_write())));
+    try!(m.add(py, "flame_clear", py_fn!(py, flame_clear())));
     Ok(())
 });
+
+fn flame_exec_start(py: Python) -> PyResult<PyObject> {
+    flame::start("exec");
+    Ok(py.None())
+}
+
+fn flame_exec_end(py: Python) -> PyResult<PyObject> {
+    flame::end("exec");
+    Ok(py.None())
+}
+
+fn flame_convert_start(py: Python) -> PyResult<PyObject> {
+    flame::start("convert");
+    Ok(py.None())
+}
+
+fn flame_convert_end(py: Python) -> PyResult<PyObject> {
+    flame::end("convert");
+    Ok(py.None())
+}
+
+fn flame_dumps_start(py: Python) -> PyResult<PyObject> {
+    flame::start("dumps");
+    Ok(py.None())
+}
+
+fn flame_dumps_end(py: Python) -> PyResult<PyObject> {
+    flame::end("dumps");
+    Ok(py.None())
+}
+
+fn flame_del_start(py: Python) -> PyResult<PyObject> {
+    flame::start("del");
+    Ok(py.None())
+}
+
+fn flame_del_end(py: Python) -> PyResult<PyObject> {
+    flame::end("del");
+    Ok(py.None())
+}
+
+fn flame_write(py: Python) -> PyResult<PyObject> {
+    flame::dump_html(&mut File::create("flamegraph.html").unwrap()).unwrap();
+    Ok(py.None())
+}
+
+fn flame_clear(py: Python) -> PyResult<PyObject> {
+    flame::clear();
+    Ok(py.None())
+}
 
 // rust-cpython aware function. All of our python interface could be
 // declared in a separate module.
 // Note that the py_fn!() macro automatically converts the arguments from
 // Python objects to Rust values; and the Rust return value back into a Python object.
+#[flame]
 pub fn cm_to_rtjson(cm: String) -> Json {
     let arena = Arena::new();
 
@@ -253,15 +314,13 @@ pub fn from_json(py: Python, json: Json) -> PyObject {
 }
 
 // logic implemented as a normal rust function
+#[flame]
 #[cfg(feature = "cpython")]
 fn cm_to_rtjson_py(py: Python, cm: String) -> PyResult<PyObject> {
-    let _guard = flame::start_guard("Running python binding");
     let out = cm_to_rtjson(cm);
     let res = from_json(py, out);
-    flame::dump_html(&mut File::create("flame-graph-python.html").unwrap()).unwrap();
     Ok(res)
 }
-
 
 #[cfg(test)]
 mod tests {
