@@ -96,7 +96,7 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
         self.brackets.pop().is_some()
     }
 
-    #[flame]
+    #[cfg_attr(feature = "flamegraphs", flame)]
     pub fn parse_inline(&mut self, node: &'a AstNode<'a>) -> bool {
         if self.handle_reddit_simple_superscript_closer(node) {
             return true;
@@ -236,7 +236,7 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
     // different emphasis. Note also that "_"- and "*"-delimited regions have
     // complex rules for which can be opening and/or closing delimiters,
     // determined in `scan_delims`.
-    #[flame]
+    #[cfg_attr(feature = "flamegraphs", flame)]
     pub fn process_emphasis(&mut self, stack_bottom: Option<&'d Delimiter<'a, 'd>>) {
         let mut closer = self.last_delimiter;
 
@@ -459,7 +459,7 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
         }
     }
 
-    #[flame]
+    #[cfg_attr(feature = "flamegraphs", flame)]
     pub fn find_special_char(&self) -> usize {
         for n in self.pos..self.input.len() {
             if self.special_chars[self.input[n] as usize] {
@@ -577,7 +577,7 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
         inl
     }
 
-    #[flame]
+    #[cfg_attr(feature = "flamegraphs", flame)]
     pub fn scan_delims(&mut self, c: u8) -> (usize, bool, bool) {
         let before_char = if self.pos == 0 {
             '\n'
@@ -638,7 +638,7 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
         }
     }
 
-    #[flame]
+    #[cfg_attr(feature = "flamegraphs", flame)]
     pub fn push_delimiter(&mut self, c: u8, can_open: bool, can_close: bool, inl: &'a AstNode<'a>) {
         let d = self.delimiter_arena.alloc(Delimiter {
             prev: Cell::new(self.last_delimiter),
@@ -660,7 +660,7 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
     //
     // As a side-effect, handle long "***" and "___" nodes by truncating them in
     // place to be re-matched by `process_emphasis`.
-    #[flame]
+    #[cfg_attr(feature = "flamegraphs", flame)]
     pub fn insert_emph(
         &mut self,
         opener: &'d Delimiter<'a, 'd>,
@@ -1071,7 +1071,7 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
         }
     }
 
-    #[flame]
+    #[cfg_attr(feature = "flamegraphs", flame)]
     fn handle_reddit_superscript_opener(&mut self) -> &'a AstNode<'a> {
         // Reddit handles superscript differently from comrak, With
         // either `^nonwhitespace` or `^(any inlines)`. snudown's
@@ -1162,7 +1162,7 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
         new_inl
     }
 
-    #[flame]
+    #[cfg_attr(feature = "flamegraphs", flame)]
     fn handle_reddit_superscript_closer(&mut self) -> &'a AstNode<'a> {
         // The closing delimiter for parenthesized superscript
         self.pos += 1;
@@ -1171,7 +1171,7 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
         del
     }
 
-    #[flame]
+    #[cfg_attr(feature = "flamegraphs", flame)]
     fn handle_reddit_simple_superscript_closer(&mut self, node: &'a AstNode<'a>) -> bool {
         // Short circuit this parse if we find a closer for our simple
         // superscript, close the superscript without consuming any chars, then
@@ -1264,7 +1264,7 @@ pub fn manual_scan_link_url(input: &[u8]) -> Option<usize> {
     }
 }
 
-#[flame]
+#[cfg_attr(feature = "flamegraphs", flame)]
 pub fn make_inline<'a>(arena: &'a Arena<AstNode<'a>>, value: NodeValue) -> &'a AstNode<'a> {
     let ast = Ast {
         value: value,

@@ -300,7 +300,7 @@ impl<'a, 'o> Parser<'a, 'o> {
         }
     }
 
-    #[flame]
+    #[cfg_attr(feature = "flamegraphs", flame)]
     pub fn feed(&mut self, s: &[u8], eof: bool) {
         let mut i = 0;
         let buffer = s;
@@ -361,7 +361,7 @@ impl<'a, 'o> Parser<'a, 'o> {
         }
     }
 
-    #[flame]
+    #[cfg_attr(feature = "flamegraphs", flame)]
     fn find_first_nonspace(&mut self, line: &[u8]) {
         self.first_nonspace = self.offset;
         self.first_nonspace_column = self.column;
@@ -394,7 +394,7 @@ impl<'a, 'o> Parser<'a, 'o> {
             && strings::is_line_end_char(line[self.first_nonspace]);
     }
 
-    #[flame]
+    #[cfg_attr(feature = "flamegraphs", flame)]
     fn process_line(&mut self, line: &[u8]) {
         let mut new_line: Vec<u8>;
         let line = if line.is_empty() || !strings::is_line_end_char(*line.last().unwrap()) {
@@ -440,7 +440,7 @@ impl<'a, 'o> Parser<'a, 'o> {
         }
     }
 
-    #[flame]
+    #[cfg_attr(feature = "flamegraphs", flame)]
     fn check_open_blocks(
         &mut self,
         line: &[u8],
@@ -461,7 +461,7 @@ impl<'a, 'o> Parser<'a, 'o> {
         }
     }
 
-    #[flame]
+    #[cfg_attr(feature = "flamegraphs", flame)]
     fn check_open_blocks_inner(
         &mut self,
         mut container: &'a AstNode<'a>,
@@ -514,7 +514,7 @@ impl<'a, 'o> Parser<'a, 'o> {
         (true, container, should_continue)
     }
 
-    #[flame]
+    #[cfg_attr(feature = "flamegraphs", flame)]
     fn open_new_blocks(&mut self, container: &mut &'a AstNode<'a>, line: &[u8], all_matched: bool) {
         let mut matched: usize = 0;
         let mut nl: NodeList = NodeList::default();
@@ -767,7 +767,7 @@ impl<'a, 'o> Parser<'a, 'o> {
         }
     }
 
-    #[flame]
+    #[cfg_attr(feature = "flamegraphs", flame)]
     fn advance_offset(&mut self, line: &[u8], mut count: usize, columns: bool) {
         while count > 0 {
             match line[self.offset] {
@@ -796,7 +796,7 @@ impl<'a, 'o> Parser<'a, 'o> {
         }
     }
 
-    #[flame]
+    #[cfg_attr(feature = "flamegraphs", flame)]
     fn parse_block_quote_prefix(&mut self, line: &[u8]) -> bool {
         let indent = self.indent;
         if indent <= 3 && line[self.first_nonspace] == b'>'  && line[self.first_nonspace + 1] != b'!' {
@@ -812,7 +812,7 @@ impl<'a, 'o> Parser<'a, 'o> {
         false
     }
 
-    #[flame]
+    #[cfg_attr(feature = "flamegraphs", flame)]
     fn parse_footnote_definition_block_prefix(&mut self, line: &[u8]) -> bool {
         if self.indent >= 4 {
             self.advance_offset(line, 4, true);
@@ -822,7 +822,7 @@ impl<'a, 'o> Parser<'a, 'o> {
         }
     }
 
-    #[flame]
+    #[cfg_attr(feature = "flamegraphs", flame)]
     fn parse_node_item_prefix(
         &mut self,
         line: &[u8],
@@ -841,7 +841,7 @@ impl<'a, 'o> Parser<'a, 'o> {
         }
     }
 
-    #[flame]
+    #[cfg_attr(feature = "flamegraphs", flame)]
     fn parse_code_block_prefix(
         &mut self,
         line: &[u8],
@@ -892,7 +892,7 @@ impl<'a, 'o> Parser<'a, 'o> {
         true
     }
 
-    #[flame]
+    #[cfg_attr(feature = "flamegraphs", flame)]
     fn parse_html_block_prefix(&mut self, t: u8) -> bool {
         match t {
             1 | 2 | 3 | 4 | 5 => true,
@@ -904,7 +904,7 @@ impl<'a, 'o> Parser<'a, 'o> {
         }
     }
 
-    #[flame]
+    #[cfg_attr(feature = "flamegraphs", flame)]
     fn add_child(
         &mut self,
         mut parent: &'a AstNode<'a>,
@@ -921,7 +921,7 @@ impl<'a, 'o> Parser<'a, 'o> {
         node
     }
 
-    #[flame]
+    #[cfg_attr(feature = "flamegraphs", flame)]
     fn add_text_to_container(
         &mut self,
         mut container: &'a AstNode<'a>,
@@ -1035,7 +1035,7 @@ impl<'a, 'o> Parser<'a, 'o> {
         }
     }
 
-    #[flame]
+    #[cfg_attr(feature = "flamegraphs", flame)]
     fn add_line(&mut self, node: &'a AstNode<'a>, line: &[u8]) {
         let mut ast = node.data.borrow_mut();
         assert!(ast.open);
@@ -1051,7 +1051,7 @@ impl<'a, 'o> Parser<'a, 'o> {
         }
     }
 
-    #[flame]
+    #[cfg_attr(feature = "flamegraphs", flame)]
     pub fn finish(&mut self) -> &'a AstNode<'a> {
         if !self.linebuf.is_empty() {
             let linebuf = mem::replace(&mut self.linebuf, vec![]);
@@ -1071,7 +1071,7 @@ impl<'a, 'o> Parser<'a, 'o> {
         self.root
     }
 
-    #[flame]
+    #[cfg_attr(feature = "flamegraphs", flame)]
     fn finalize_document(&mut self) {
         while !self.current.same_node(self.root) {
             self.current = self.finalize(self.current).unwrap();
@@ -1084,12 +1084,12 @@ impl<'a, 'o> Parser<'a, 'o> {
         }
     }
 
-    #[flame]
+    #[cfg_attr(feature = "flamegraphs", flame)]
     fn finalize(&mut self, node: &'a AstNode<'a>) -> Option<&'a AstNode<'a>> {
         self.finalize_borrowed(node, &mut *node.data.borrow_mut())
     }
 
-    #[flame]
+    #[cfg_attr(feature = "flamegraphs", flame)]
     fn finalize_borrowed(
         &mut self,
         node: &'a AstNode<'a>,
@@ -1211,12 +1211,12 @@ impl<'a, 'o> Parser<'a, 'o> {
         parent
     }
 
-    #[flame]
+    #[cfg_attr(feature = "flamegraphs", flame)]
     fn process_inlines(&mut self) {
         self.process_inlines_node(self.root);
     }
 
-    #[flame]
+    #[cfg_attr(feature = "flamegraphs", flame)]
     fn process_inlines_node(&mut self, node: &'a AstNode<'a>) {
         for node in node.descendants() {
             if node.data.borrow().value.contains_inlines() {
@@ -1225,7 +1225,7 @@ impl<'a, 'o> Parser<'a, 'o> {
         }
     }
 
-    #[flame]
+    #[cfg_attr(feature = "flamegraphs", flame)]
     fn parse_inlines(&mut self, node: &'a AstNode<'a>) {
         let delimiter_arena = Arena::new();
         let node_data = node.data.borrow();
@@ -1318,7 +1318,7 @@ impl<'a, 'o> Parser<'a, 'o> {
         }
     }
 
-    #[flame]
+    #[cfg_attr(feature = "flamegraphs", flame)]
     fn postprocess_text_nodes(&mut self, node: &'a AstNode<'a>) {
         let mut stack = vec![node];
         let mut children = vec![];
@@ -1372,7 +1372,7 @@ impl<'a, 'o> Parser<'a, 'o> {
         }
     }
 
-    #[flame]
+    #[cfg_attr(feature = "flamegraphs", flame)]
     fn reset_rtjson_node(
         &mut self,
         unformatted_text: &mut Vec<u8>,
@@ -1384,17 +1384,17 @@ impl<'a, 'o> Parser<'a, 'o> {
         *range_idx = 0;
     }
 
-    #[flame]
+    #[cfg_attr(feature = "flamegraphs", flame)]
     fn insert_format(&mut self, current_format: &mut HashMap<u16, u16>, val: u16) {
         *current_format.entry(val).or_insert(0) += 1;
     }
 
-    #[flame]
+    #[cfg_attr(feature = "flamegraphs", flame)]
     fn remove_format(&mut self, current_format: &mut HashMap<u16, u16>, val: u16) {
         *current_format.entry(val).or_insert(1) -= 1;
     }
 
-    #[flame]
+    #[cfg_attr(feature = "flamegraphs", flame)]
     fn consolidate_format(&mut self, format_ranges: &mut Vec<[u16; 3]>) {
         // TODO[shaq|Nov-27-2017]: This errors out on post longer than
         // 65K, can we possibly fix that or make a better exit happen
@@ -1423,7 +1423,7 @@ impl<'a, 'o> Parser<'a, 'o> {
         *format_ranges = new_format;
     }
 
-    #[flame]
+    #[cfg_attr(feature = "flamegraphs", flame)]
     fn output_format_range(
             &mut self,
             unformatted_text: &mut Vec<u8>,
@@ -1448,7 +1448,7 @@ impl<'a, 'o> Parser<'a, 'o> {
         *range_idx += range_length;
     }
 
-    #[flame]
+    #[cfg_attr(feature = "flamegraphs", flame)]
     fn postprocess_rtjson_ast(
         &mut self,
         root_node: &'a AstNode<'a>,
@@ -1856,7 +1856,7 @@ impl<'a, 'o> Parser<'a, 'o> {
         }
     }
 
-    #[flame]
+    #[cfg_attr(feature = "flamegraphs", flame)]
     fn postprocess_text_node(&mut self, node: &'a AstNode<'a>, text: &mut Vec<u8>) {
         if self.options.ext_tasklist {
             self.process_tasklist(node, text);
@@ -1869,7 +1869,7 @@ impl<'a, 'o> Parser<'a, 'o> {
         autolink::process_redditlinks(self.arena, node, text);
     }
 
-    #[flame]
+    #[cfg_attr(feature = "flamegraphs", flame)]
     fn process_tasklist(&mut self, node: &'a AstNode<'a>, text: &mut Vec<u8>) {
         lazy_static! {
             static ref TASKLIST: Regex = Regex::new(r"\A(\s*\[([xX ])\])(?:\z|\s)").unwrap();
@@ -1910,7 +1910,7 @@ impl<'a, 'o> Parser<'a, 'o> {
         node.insert_before(checkbox);
     }
 
-    #[flame]
+    #[cfg_attr(feature = "flamegraphs", flame)]
     fn parse_reference_inline(&mut self, content: &[u8]) -> Option<usize> {
         let delimiter_arena = Arena::new();
         let mut subj = inlines::Subject::new(

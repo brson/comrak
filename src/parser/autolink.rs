@@ -6,9 +6,8 @@ use strings;
 use regex::Regex;
 use typed_arena::Arena;
 use unicode_categories::UnicodeCategories;
-use flame;
 
-#[flame]
+#[cfg_attr(feature = "flamegraphs", flame)]
 pub fn process_autolinks<'a>(
     arena: &'a Arena<AstNode<'a>>,
     node: &'a AstNode<'a>,
@@ -356,7 +355,7 @@ fn email_match<'a>(
 
 // reddit extensions
 
-#[flame]
+#[cfg_attr(feature = "flamegraphs", flame)]
 pub fn process_redditlinks<'a>(
     arena: &'a Arena<AstNode<'a>>,
     node: &'a AstNode<'a>,
@@ -364,7 +363,14 @@ pub fn process_redditlinks<'a>(
 ) {
     lazy_static! {
         static ref RE: Regex = {
-            let _guard = flame::start_guard("init redditlinks regex");
+            #[cfg(feature = "flamegraphs")]
+            fn flame_guard() -> ::flame::SpanGuard { ::flame::start_guard("init redditlinks regex") }
+
+            #[cfg(not(feature = "flamegraphs"))]
+            fn flame_guard() { }
+
+            let _guard = flame_guard();
+
             Regex::new(r"(^|[\n\t\r-_.+!*'(),%#@?=/;:,+&$])((/?(r|u)/)([-\w]+))").unwrap()
         };
     }
