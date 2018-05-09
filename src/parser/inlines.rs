@@ -1,7 +1,7 @@
 use arena_tree::Node;
 use ctype::{ispunct, isspace};
 use entity;
-use nodes::{Ast, AstNode, NodeLink, NodeValue, NodeImage};
+use nodes::{Ast, AstNode, NodeLink, NodeValue, NodeMedia};
 use parser::{unwrap_into, unwrap_into_copy, AutolinkType, ComrakOptions, Reference};
 use scanners;
 use std::cell::{Cell, RefCell};
@@ -970,11 +970,19 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
         let inl = make_inline(
             self.arena,
             if is_image {
-                NodeValue::Image(NodeImage{
-                    e: b"".to_vec(),
-                    url: nl.url,
-                    title: nl.title,
-                })
+                if !self.options.rtjson {
+                    NodeValue::Image(NodeLink{
+                        url: nl.url,
+                        title: nl.title,
+                        l: false,
+                    })
+                } else {
+                    NodeValue::Media(NodeMedia{
+                        e: b"".to_vec(),
+                        url: nl.url,
+                        title: nl.title,
+                    })
+                }
             } else {
                 NodeValue::Link(nl)
             },

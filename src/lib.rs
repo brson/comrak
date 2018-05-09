@@ -146,7 +146,7 @@ pub fn cm_to_rtjson(cm: String) -> Json {
     };
 
     let root = parse_document(&arena, &cm, &options);
-    let rendered_rtjson = rtjson::format_document(root, &ComrakOptions::default());
+    let rendered_rtjson = rtjson::format_document(root);
     rendered_rtjson
 }
 

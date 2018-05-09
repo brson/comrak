@@ -19,10 +19,10 @@ make it a cell (`Cell` or `RefCell`) or use cells inside of it.
 #![allow(dead_code)]
 
 use std::cell::Cell;
+use std::fmt;
 
 /// A node inside a DOM-like tree.
 pub struct Node<'a, T: 'a> {
-    // ZT: add context to determine whether reddit-specific parsing required
     parent: Cell<Option<&'a Node<'a, T>>>,
     previous_sibling: Cell<Option<&'a Node<'a, T>>>,
     next_sibling: Cell<Option<&'a Node<'a, T>>>,
@@ -31,11 +31,12 @@ pub struct Node<'a, T: 'a> {
     pub data: T,
 }
 
-use std::fmt;
-
+/// A simple Debug implementation that prints the children as a tree, without
+/// ilooping through the various interior pointer cycles.
 impl<'a, T: 'a> fmt::Debug for Node<'a, T> where T: fmt::Debug {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        // FIXME: would be better not to build a vector
+        // FIXME: would be better not to build a vector for the children but I
+        // can't presently figure out the borrowing to use the debug_list API
         let mut children = vec![];
         let mut child = self.first_child.get();
         while let Some(inner_child) = child {

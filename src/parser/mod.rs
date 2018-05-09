@@ -394,21 +394,24 @@ impl<'a, 'o> Parser<'a, 'o> {
 
     fn process_line(&mut self, line: &[u8]) {
         let mut new_line: Vec<u8>;
-        let line =
-            if line.is_empty() || !strings::is_line_end_char(*line.last().unwrap()) {
-                new_line = line.into();
-                new_line.push(b'\n');
-                &new_line
-            } else {
-                line
-            };
-
+        let line = if line.is_empty() || !strings::is_line_end_char(*line.last().unwrap()) {
+            new_line = line.into();
+            new_line.push(b'\n');
+            &new_line
+        } else {
+            line
+        };
         self.offset = 0;
         self.column = 0;
         self.blank = false;
         self.partially_consumed_tab = false;
 
-        if self.line_number == 0 && line.len() >= 3 && unsafe { str::from_utf8_unchecked(line) }.chars().next().unwrap() == '\u{feff}' {
+        if self.line_number == 0 && line.len() >= 3
+            && unsafe { str::from_utf8_unchecked(line) }
+                .chars()
+                .next()
+                .unwrap() == '\u{feff}'
+        {
             self.offset += 3;
         }
 
@@ -566,8 +569,8 @@ impl<'a, 'o> Parser<'a, 'o> {
                     setext: false,
                 });
 
-            } else if !indented &&
-                       unwrap_into(
+            } else if !indented
+                && unwrap_into(
                     scanners::open_code_fence(&line[self.first_nonspace..]),
                     &mut matched,
                 ) {
@@ -919,15 +922,13 @@ impl<'a, 'o> Parser<'a, 'o> {
             }
         }
 
-        container.data.borrow_mut().last_line_blank = self.blank &&
-            match container.data.borrow().value {
-                NodeValue::BlockQuote |
-                NodeValue::Heading(..) |
-                NodeValue::ThematicBreak => false,
+        container.data.borrow_mut().last_line_blank = self.blank
+            && match container.data.borrow().value {
+                NodeValue::BlockQuote | NodeValue::Heading(..) | NodeValue::ThematicBreak => false,
                 NodeValue::CodeBlock(ref ncb) => !ncb.fenced,
                 NodeValue::Item(..) => {
-                    container.first_child().is_some() ||
-                        container.data.borrow().start_line != self.line_number
+                    container.first_child().is_some()
+                        || container.data.borrow().start_line != self.line_number
                 }
                 _ => true,
             };
@@ -938,13 +939,12 @@ impl<'a, 'o> Parser<'a, 'o> {
             tmp = parent;
         }
 
-        if !self.current.same_node(last_matched_container) &&
-            container.same_node(last_matched_container) && !self.blank &&
-            match self.current.data.borrow().value {
+        if !self.current.same_node(last_matched_container)
+            && container.same_node(last_matched_container) && !self.blank
+            && match self.current.data.borrow().value {
                 NodeValue::Paragraph => true,
                 _ => false,
-            }
-        {
+            } {
             self.add_line(self.current, line);
         } else {
             while !self.current.same_node(last_matched_container) {
@@ -1327,7 +1327,8 @@ impl<'a, 'o> Parser<'a, 'o> {
                                 }
                             }
                         }
-                        NodeValue::Link(..) | NodeValue::RedditLink(..) | NodeValue::Image(..) => {
+                        NodeValue::Link(..) | NodeValue::RedditLink(..) |
+                        NodeValue::Image(..) | NodeValue::Media(..) => {
                             this_bracket = true;
                             break;
                         }
@@ -1358,11 +1359,11 @@ impl<'a, 'o> Parser<'a, 'o> {
         format_ranges.clear();
         *range_idx = 0;
     }
-    
+
     fn insert_format(&mut self, current_format: &mut HashMap<u16, u16>, val: u16) {
         *current_format.entry(val).or_insert(0) += 1;
     }
-    
+
     fn remove_format(&mut self, current_format: &mut HashMap<u16, u16>, val: u16) {
         *current_format.entry(val).or_insert(1) -= 1;
     }
@@ -1526,10 +1527,13 @@ impl<'a, 'o> Parser<'a, 'o> {
                     self.reset_rtjson_node(unformatted_text, format_ranges, range_idx);
                 }
             },
-            NodeValue::Image(..) => {
+            NodeValue::Media(..) => {
                 let parent_paragraph = node.parent().unwrap();
                 parent_paragraph.insert_before(node);
                 parent_paragraph.detach();
+            }
+            NodeValue::Image(..) => {
+                unreachable!("rtjson preduces media elements, not image");
             }
             NodeValue::Code(ref literal) => {
                 let range_length = str::from_utf8(literal).expect("utf8").chars().count() as u16;
@@ -1632,7 +1636,7 @@ impl<'a, 'o> Parser<'a, 'o> {
             },
             _ => (),
         }
-        
+
         match node.data.borrow().value {
             NodeValue::Strong => self.remove_format(current_format, 1),
             NodeValue::Emph => self.remove_format(current_format, 2),
@@ -1707,7 +1711,7 @@ impl<'a, 'o> Parser<'a, 'o> {
                     }
                     node.detach()
                 },
-                NodeValue::Image(ref mut nl) => {
+                NodeValue::Media(ref mut nl) => {
                     nl.e =  unformatted_text.to_vec();
                     self.reset_rtjson_node(unformatted_text, format_ranges, range_idx);
                 }

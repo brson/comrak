@@ -1,5 +1,4 @@
 use nodes::{TableAlignment, NodeValue, ListType, AstNode};
-use parser::ComrakOptions;
 use serde_json;
 
 // This is a wrapper type that does nothing but ensure that the JSON value is
@@ -48,24 +47,16 @@ impl Drop for Json {
     }
 }
 
-/// Formats an AST as HTML, modified by the given options.
-pub fn format_document<'a>(root: &'a AstNode<'a>, options: &ComrakOptions) -> Json {
-    let mut f = RTJsonFormatter::new(options);
+/// Formats an AST as RTJSON
+pub fn format_document<'a>(root: &'a AstNode<'a>) -> Json {
+    let f = RTJsonFormatter;
     Json(f.format(root).unwrap())
 }
 
-struct RTJsonFormatter<'o> {
-    options: &'o ComrakOptions,
-}
+struct RTJsonFormatter;
 
-impl<'o> RTJsonFormatter<'o> {
-    fn new(options: &'o ComrakOptions) -> Self {
-        RTJsonFormatter {
-            options: options,
-        }
-    }
-
-    fn format<'a>(&mut self, root_node: &'a AstNode<'a>) -> Option<serde_json::Value> {
+impl RTJsonFormatter {
+    fn format<'a>(&self, root_node: &'a AstNode<'a>) -> Option<serde_json::Value> {
 
         // This is another iterative traversal of the AST, with
         // pre-child-traversal, and post-child-traversal phases.
@@ -160,7 +151,7 @@ impl<'o> RTJsonFormatter<'o> {
         Some(json)
     }
 
-    fn format_node<'a>(&mut self, node: &'a AstNode<'a>) -> Option<serde_json::Value> {
+    fn format_node<'a>(&self, node: &'a AstNode<'a>) -> Option<serde_json::Value> {
         match node.data.borrow().value {
             NodeValue::Document => {
                 Some(json!({
@@ -220,7 +211,7 @@ impl<'o> RTJsonFormatter<'o> {
                     "e": "br"
                 }))
             },
-            NodeValue::HtmlBlock(ref nhb) => unreachable!(),
+            NodeValue::HtmlBlock(..) => unreachable!(),
             NodeValue:: SoftBreak => None,
             NodeValue::Code(_) | NodeValue::Strong | NodeValue::Emph | NodeValue::Superscript |
             NodeValue::Strikethrough | NodeValue::Underline => unreachable!(),
@@ -314,7 +305,7 @@ impl<'o> RTJsonFormatter<'o> {
                     "l":nl.l,
                 }))
             }
-            NodeValue::Image(ref nl) => {
+            NodeValue::Media(ref nl) => {
                 if !&nl.title.is_empty() {
                     Some(json!({
                         "e":  String::from_utf8(nl.e.to_owned()).unwrap(),
@@ -386,7 +377,7 @@ impl<'o> RTJsonFormatter<'o> {
                 }
             }
             NodeValue::FootnoteDefinition(..) => None,
-            NodeValue::HtmlInline(ref nd) => unreachable!(),
+            NodeValue::HtmlInline(..) => unreachable!(),
             NodeValue::FootnoteReference(..) => None,
             NodeValue::SpoilerText => {
                 Some(json!({
@@ -394,6 +385,7 @@ impl<'o> RTJsonFormatter<'o> {
                     "c": [],
                 }))
             }
+            NodeValue::Image(..) => unreachable!()
         }
     }
 }
