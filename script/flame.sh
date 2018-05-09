@@ -1,10 +1,12 @@
 #!/bin/bash
 
+set -e
+
 # Grab the release version of snoomark and run it
 
 FILE=./target/release/libsnoomark.so
 
 
-cp $FILE ./snoomark.so
-python md-test.py $1
+cp -f $FILE ./target/release/snoomark.so
+python script/flame-test.py $1
 
