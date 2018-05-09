@@ -103,7 +103,7 @@ def do_test(converter, test, normalize, result_counts, rtjson):
 
 def convert_rtjson(md, extensions):
     tempspec = "spec-test-case.md"
-    with open(tempspec, "w") as f:
+    with open(tempspec, "w", encoding="utf-8") as f:
         f.write(md)
     out = subprocess.run(["python2", "script/cm_to_rtjson.py", tempspec], stdout=subprocess.PIPE)
     os.remove(tempspec)
