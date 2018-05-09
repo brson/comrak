@@ -89,6 +89,9 @@ extern crate pest;
 #[macro_use]
 extern crate pest_derive;
 extern crate twoway;
+#[macro_use]
+extern crate jetscii;
+extern crate memchr;
 
 mod arena_tree;
 mod parser;
@@ -240,5 +243,276 @@ pub fn cm_to_rtjson(py: Python, cm: String) -> PyResult<PyObject> {
 #[cfg_attr(feature = "flamegraphs", flame)]
 #[cfg(feature = "cpython")]
 fn cm_to_rtjson_py(py: Python, cm: String) -> PyResult<PyObject> {
+    if let Some(obj) = quick_render(py, &cm) {
+        return Ok(obj);
+    }
     cm_to_rtjson(py, cm)
+}
+
+// An optimization for simple documents that use minimal markup, rendering
+// directly from the source with minimal allocation and copying. It does one
+// initial scan, very fast, looking for bytes that indicate markup syntax, and
+// bailing to the slowpath. If it takes the fast path it does 3 more complete
+// scans of the text, and up to two copies of the text. Besides the necessary
+// allocations of Python objects, it only does 1 allocation, and that is cached
+// thread-local.
+#[cfg_attr(feature = "flamegraphs", flame)]
+fn quick_render(py: Python, cm: &str) -> Option<PyObject> {
+    use std::iter;
+    use ctype::isspace;
+    use std::cell::RefCell;
+
+    // Quickly decide whether the document requires full markdown processing, by
+    // scanning for characters that may indicate markdown syntax.
+
+    // Characters that might indicate markdown syntax this routine can't handle.
+    // The fast jetscii search here only supports searching up to 16 characters,
+    // so we're fonced to support some syntax to get below that limit.
+    let forbidden_chars = ascii_chars!(
+        '#', '_', '*', '=', '-', '~', '|', '[', '\\', '>', '^', '`', '&', '/', ':', '@'
+    );
+
+    // Larger documents are less likely to be candidates
+    const MAX_DOC_SIZE: usize = 640;
+
+    // Conditions for rejecting the document. Closures for lazy execution,
+    // should be inlined.
+
+    let too_big = || cm.len() > MAX_DOC_SIZE;
+    let empty = || cm.is_empty();
+    // Scan 1 - with jetscii, fast. This is the scan that will catch most of the
+    // cases the fast-path can't handle, and it's very fast, so we'll usually
+    // bail quickly.
+    let has_syntax = || forbidden_chars.find(cm).is_some();
+    // Scan 2 - www autolinking. This one's a bummer.
+    // This scan could possibly be incorporated into the line-splitting below
+    // using memchr2, but not sure it's worth it - it's pretty fast as-is. Using
+    // the twoway crate, but fastest with assembly, which we don't turn on.
+    // TODO: reimplement the twoway fastpath with simd intrinsics to accelerate this.
+    let has_www = || twoway::find_str(cm, "www.").is_some();
+
+    if too_big() || empty() || has_syntax() || has_www() {
+        return None;
+    }
+
+    // This document can (probably) be processed quickly. Process every line
+    // building up paragraphs, and handling special cases.
+
+    let doc_contents = PyList::new(py, &[]);
+
+    // A stored slice of the first line of the paragraph, to avoid copying
+    // it into `para_accum` in the case where the paragraph is one line,
+    // and to track whether we're parsing the first line of a paragraph
+    // or subsequent lines.
+    let mut first_line = None;
+    // The accumulated contents of the current paragaph. This is a thread
+    // local so it can be reused. This could also be a stack-allocated array
+    // of bytes, but that code is much uglier.
+    thread_local! {
+        static PARA_ACCUM: RefCell<String> = RefCell::new(String::new());
+    }
+
+    PARA_ACCUM.with(|p| {
+        let mut para_accum = p.borrow_mut();
+        para_accum.clear();
+
+        // Iterate over lines collecting paragraphs. The chained iterator here adds
+        // a blank line to force the last paragraph to close. This is using
+        // a custom line-splitting iterator that is faster than the one in std.
+        // Scan 3
+        for mut line in strings::fast_lines(cm).chain(iter::repeat("").take(1)) {
+
+            // If this is a blank line then output a paragraph of the accumulated text
+            if line.is_empty() || line.as_bytes().iter().all(|b| isspace(*b)) {
+                let pypara;
+                match (first_line, !para_accum.is_empty()) {
+                    (None, false) => {
+                        // This is a blank line following other blank lines.
+                        // It's nothing.
+                        continue
+                    }
+                    (Some(first_line), _) => {
+                        // Scan 4 - internally PyString will run is_ascii over
+                        // the string to decide whether to create a
+                        // bytestring or a unicode string.
+                        // TODO: accelerate is_ascii with simd
+                        // Copy 1 (directly from the source)
+                        pypara = PyString::new(py, first_line);
+                    }
+                    (None, true) => {
+                        // Scan 4
+                        // Copy 2 (from the paragraph accumulation buffer)
+                        pypara = PyString::new(py, &para_accum);
+                    }
+                }
+                para_accum.clear();
+                first_line = None;
+
+                let text = PyDict::new(py);
+                if text.set_item(py, "e", PyBytes::new(py, b"text")).is_err() {
+                    return None;
+                }
+                if text.set_item(py, "t", pypara).is_err() {
+                    return None;
+                }
+
+                let para_contents = PyList::new(py, &[text.into_object()]).into_object();
+
+                let para = PyDict::new(py);
+                if para.set_item(py, "e", PyBytes::new(py, b"par")).is_err() {
+                    return None;
+                }
+                if para.set_item(py, "c", para_contents).is_err() {
+                    return None;
+                }
+
+                doc_contents.insert_item(py, doc_contents.len(py), para.into_object());
+
+                continue
+            }
+
+            // It wasn't a blank line. We have to first check for
+            // a few cases that we can't handle - failures of speculative
+            // optimization, then store the line for later paragraph
+            // rendering.
+
+            let hardbreak = if line.len() > 2 {
+                debug_assert!(!line.as_bytes().iter().all(|b| isspace(*b)));
+                let mut last_2 = [0; 2];
+                last_2.copy_from_slice(&line.as_bytes()[line.len() - 2..]);
+                isspace(last_2[0]) && isspace(last_2[1])
+            } else {
+                false
+            };
+
+            if hardbreak {
+                // Speculation failure
+                return None;
+            }
+
+            let (leading_space, leading_space_bytes) = {
+                let mut leading_space = 0;
+                let mut leading_space_bytes = 0;
+                for ch in line.as_bytes().iter().cloned() {
+                    if ch == b' ' {
+                        leading_space += 1;
+                        leading_space_bytes += 1;
+                    } else if ch == b'\t' {
+                        // Adding four here probably isn't technically correct -
+                        // it should probably round to the nearest tab stop -
+                        // but for our purposes all that matters is whether the
+                        // leading space is greater or equal to 4.
+                        leading_space += 4;
+                        leading_space_bytes += 1;
+                    } else {
+                        break;
+                    }
+                }
+                (leading_space, leading_space_bytes)
+            };
+
+            let trailing_space_bytes = {
+                line.as_bytes().iter().rev().cloned()
+                    .take_while(|ch| isspace(*ch)).count()
+            };
+
+            // Trim line
+            let line = &line[leading_space_bytes..(line.len() - trailing_space_bytes)];
+
+            match (first_line, !para_accum.is_empty()) {
+                (None, false) => {
+                    // This is the first line of a new paragraph
+
+                    if unsupported_block(line, leading_space, true) {
+                        // Speculation failure
+                        return None;
+                    }
+
+                    first_line = Some(line);
+                }
+                (Some(ref fl), false) => {
+                    // This is the second line of a paragraph
+
+                    if unsupported_block(line, leading_space, false) {
+                        // Speculation failure
+                        return None;
+                    }
+
+                    // Allocation 1
+                    para_accum.reserve(MAX_DOC_SIZE);
+                    // Copy 1
+                    para_accum.push_str(fl);
+                    para_accum.push_str(" ");
+                    para_accum.push_str(line);
+
+                    first_line = None;
+                }
+                (None, true) => {
+                    // Remaining lines of a paragrah
+
+                    if unsupported_block(line, leading_space, false) {
+                        // Speculation failure
+                        return None;
+                    }
+
+                    // Copy 1
+                    para_accum.push_str(" ");
+                    para_accum.push_str(line);
+
+                    first_line = None;
+                }
+                (Some(..), true) => unreachable!()
+            }
+        }
+
+        debug_assert!(para_accum.is_empty());
+        debug_assert!(first_line.is_none());
+
+        let doc = PyDict::new(py);
+        if doc.set_item(py, "document", doc_contents.into_object()).is_err() {
+            return None;
+        }
+
+        Some(doc.into_object())
+    })
+}
+
+// Some less-common block types that aren't detected by the original
+// syntax scan will cause us to bail: code blocks and ordered lists.
+#[inline]
+fn unsupported_block(line: &str, leading_space: usize, opening_line: bool) -> bool {
+    use ctype::isspace;
+
+    if opening_line && leading_space >= 4 {
+        // Code block
+        return true;
+    }
+    if !opening_line && leading_space >= 4 {
+        // Not an ordered list
+        return false;
+    }
+
+    let line = line.as_bytes();
+
+    // The rest of this is scanning for ordered list syntax.
+    // As a reddit quirk, ordered lists must start with "1",
+    // which makes the testing here simple. Just look for
+    // "1. ", "1.\t", "1) ", "1)\t".
+    if line.len() < 2 {
+        // Not enough bytes to be an ordered list
+        return false;
+    }
+
+    if line[0] != b'1' {
+        return false;
+    }
+    if line[1] != b'.' && line[1] != b')' {
+        return false;
+    }
+
+    if line.len() > 2 && !isspace(line[2]) {
+        return false;
+    }
+
+    return true;
 }
