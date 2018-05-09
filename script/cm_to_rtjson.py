@@ -91,8 +91,8 @@ if __name__ == "__main__":
     assert repeat >= 1
 
     if bench:
-        print "running {} times".format(repeat)
-        print "processing {} bytes".format(repeat * len(md))
+        print("running {} times".format(repeat))
+        print("processing {} bytes".format(repeat * len(md)))
 
     bench_runs = []
 
@@ -145,7 +145,7 @@ if __name__ == "__main__":
         bench_runs.sort()
         bench_runs = bench_runs[:len(bench_runs) - to_remove]
         bench_runs = bench_runs[to_remove:]
-        print "using {} runs".format(len(bench_runs))
+        print("using {} runs".format(len(bench_runs)))
         bench_sum = sum(bench_runs)
         avg_time = bench_sum / len(bench_runs)
-        print "avg time: {} s".format(avg_time)
+        print("avg time: {} s".format(avg_time))

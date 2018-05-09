@@ -27,6 +27,9 @@ benchmarks and generate flamegraphs. See the comments in that file for details.
 `script/genspectest.py` will parse a document and generate output suitable for
 copying into a spec file as a new test case.
 
+`script/spec_tests.py` is a fork of the CommonMark spec testing script that
+supports testing rtjson with `--rtjson` flag.
+
 ## Generating flame graphs
 
 Generating flame graphs requires a nightly compiler and the "flamegraphs" feature.
