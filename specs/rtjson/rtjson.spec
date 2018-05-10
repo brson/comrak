@@ -1301,3 +1301,63 @@ And tables.
 .
 {"document": [{"c": [{"h": [{"a": "", "c": [{"e": "text", "t": "a"}]}, {"a": "", "c": [{"e": "text", "t": "b"}]}], "c": [[{"c": [{"e": "text", "t": "c"}]}, {"c": [{"e": "text", "t": "d"}]}]], "e": "table"}], "e": "blockquote"}]}
 ````````````````````````````````
+
+## CREATE-1749
+
+Ordered lists must start with "1".
+
+```````````````````````````````` example
+2. a
+.
+{"document": [{"c": [{"e": "text", "t": "2. a"}], "e": "par"}]}
+````````````````````````````````
+
+But "2" will parse for subsequent items.
+
+```````````````````````````````` example
+1. a
+2. b
+.
+{"document": [{"c": [{"c": [{"c": [{"e": "text", "t": "a"}], "e": "par"}], "e": "li"}, {"c": [{"c": [{"e": "text", "t": "b"}], "e": "par"}], "e": "li"}], "e": "list", "o": true}]}
+````````````````````````````````
+
+It's ok to get the numbers wrong after "1".
+
+```````````````````````````````` example
+1. a
+3. b
+.
+{"document": [{"c": [{"c": [{"c": [{"e": "text", "t": "a"}], "e": "par"}], "e": "li"}, {"c": [{"c": [{"e": "text", "t": "b"}], "e": "par"}], "e": "li"}], "e": "list", "o": true}]}
+````````````````````````````````
+
+Again sublists must start with "1".
+
+```````````````````````````````` example
+1. a
+    2. b
+.
+{"document": [{"c": [{"c": [{"c": [{"e": "text", "t": "a 2. b"}], "e": "par"}], "e": "li"}], "e": "list", "o": true}]}
+````````````````````````````````
+
+```````````````````````````````` example
+1. a
+    1. b
+.
+{"document": [{"c": [{"c": [{"c": [{"e": "text", "t": "a"}], "e": "par"}, {"c": [{"c": [{"c": [{"e": "text", "t": "b"}], "e": "par"}], "e": "li"}], "e": "list", "o": true}], "e": "li"}], "e": "list", "o": true}]}
+````````````````````````````````
+
+Again, not a sublist, just paragraph text.
+
+```````````````````````````````` example
+1. 2. b
+.
+{"document": [{"c": [{"c": [{"c": [{"e": "text", "t": "2. b"}], "e": "par"}], "e": "li"}], "e": "list", "o": true}]}
+````````````````````````````````
+
+A sublist.
+
+```````````````````````````````` example
+1. 1. b
+.
+{"document": [{"c": [{"c": [{"c": [{"e": "text", "t": ""}], "e": "par"}, {"c": [{"c": [{"c": [{"e": "text", "t": "b"}], "e": "par"}], "e": "li"}], "e": "list", "o": true}], "e": "li"}], "e": "list", "o": true}]}
+````````````````````````````````

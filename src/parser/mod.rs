@@ -683,6 +683,11 @@ impl<'a, 'o> Parser<'a, 'o> {
                             NodeValue::Paragraph => true,
                             _ => false,
                         },
+                        match container.data.borrow().value {
+                            NodeValue::List(..) => true,
+                            _ => false,
+                        },
+                        self.options.ext_reddit_quirks
                     ),
                     &mut matched,
                     &mut nl,
@@ -1959,6 +1964,8 @@ fn parse_list_marker(
     line: &[u8],
     mut pos: usize,
     interrupts_paragraph: bool,
+    in_list: bool,
+    reddit_quirks: bool,
 ) -> Option<(usize, NodeList)> {
     let mut c = line[pos];
     let startpos = pos;
@@ -2003,6 +2010,11 @@ fn parse_list_marker(
             if !(digits < 9 && isdigit(line[pos])) {
                 break;
             }
+        }
+
+        // Lists have to start with "1" on Reddit
+        if reddit_quirks && !in_list && start != 1 {
+            return None;
         }
 
         if interrupts_paragraph && start != 1 {
