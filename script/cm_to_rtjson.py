@@ -83,8 +83,10 @@ if __name__ == "__main__":
     if flame or bench:
         r = cm_to_rtjson(md)
         json.dumps(r) # maybe dumps needs to be initialized? just being cautious
-        snoomark.flame_clear()
         del r
+
+    if flame:
+        snoomark.flame_clear()
 
     # Run some number of times so that we're processing around N bytes
     repeat = 1 if not bench else 1000000 / len(md)
