@@ -67,6 +67,15 @@ Deploying changes to snoomark to Reddit is straightforward, but requires a preci
 7. [Update puppet manifest with new version and shasum](#update-puppet-manifest-with-new-version-and-shasum)
 8. [Verify the update](#verify-the-update)
 
+## Benchmarking
+
+`SM_TARGET=release script/cm_to_rtjson.py [FILE] --bench` will do a simple benchmark of a single file.
+
+`SM_TARGET=release script/bench_corpus.py [FILE]` will benchmark an entire
+comment corpus is json format. The corpus is not maintained in tree as it
+contains proprietary info, but ask someone for a copy of `comment_corpus.json`.
+This is probably the best real-world benchmark we have.
+
 ### Make updates to snoomark
 
 Make whatever changes you want in production and save them. If you _don't_ need the changes to immediately go to production, then stop here and commit your work. Your changes will be reflected the next time the entire deploy-to-production process is completed.
