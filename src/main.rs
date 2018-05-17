@@ -1,7 +1,7 @@
 //! The `comrak` binary.
 
 #![deny(missing_docs, missing_debug_implementations, missing_copy_implementations, trivial_casts,
-        trivial_numeric_casts, unstable_features, unused_import_braces)]
+        trivial_numeric_casts, unused_import_braces)]
 #![cfg_attr(feature = "dev", allow(unstable_features))]
 #![allow(unknown_lints, doc_markdown, cyclomatic_complexity)]
 
@@ -9,6 +9,15 @@
 // an unstable crate.
 #![cfg_attr(rustbuild, feature(staged_api, rustc_private))]
 #![cfg_attr(rustbuild, unstable(feature = "rustc_private", issue = "27812"))]
+
+#![cfg_attr(feature = "flamegraphs", feature(alloc_system))]
+#![cfg_attr(feature = "flamegraphs", feature(plugin, custom_attribute))]
+#![cfg_attr(feature = "flamegraphs", plugin(flamer))]
+
+#[cfg(feature = "flamegraphs")]
+extern crate flame;
+#[cfg(feature = "flamegraphs")]
+extern crate alloc_system;
 
 extern crate entities;
 #[macro_use]
@@ -49,6 +58,7 @@ fn render_html(text: &str, opts: &parser::ComrakOptions) -> String {
     String::from_utf8(rendered_html).unwrap()
 }
 
+#[cfg_attr(feature = "flamegraphs", flame)]
 fn render_rtjson(text: &str, opts: &parser::ComrakOptions) -> String {
     let arena = Arena::new();
     let root = parser::parse_document(&arena, text, opts);
@@ -321,6 +331,7 @@ fn main() {
 
     if matches.is_present("spec") {
         let r = spec_test(&matches.values_of("spec").unwrap().collect::<Vec<_>>(), options);
+        flame_dump();
         if r.is_err() {
             process::exit(1);
         }
@@ -328,3 +339,11 @@ fn main() {
 
     process::exit(0);
 }
+
+#[cfg(feature = "flamegraphs")]
+fn flame_dump() {
+    flame::dump_html(&mut File::create("flamegraph.html").unwrap()).unwrap()
+}
+
+#[cfg(not(feature = "flamegraphs"))]
+fn flame_dump() { }

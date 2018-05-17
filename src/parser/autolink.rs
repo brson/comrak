@@ -7,6 +7,7 @@ use regex::Regex;
 use typed_arena::Arena;
 use unicode_categories::UnicodeCategories;
 
+#[cfg_attr(feature = "flamegraphs", flame)]
 pub fn process_autolinks<'a>(
     arena: &'a Arena<AstNode<'a>>,
     node: &'a AstNode<'a>,
@@ -354,13 +355,24 @@ fn email_match<'a>(
 
 // reddit extensions
 
+#[cfg_attr(feature = "flamegraphs", flame)]
 pub fn process_redditlinks<'a>(
     arena: &'a Arena<AstNode<'a>>,
     node: &'a AstNode<'a>,
     contents: &mut Vec<u8>,
 ) {
     lazy_static! {
-        static ref RE: Regex = Regex::new(r"(^|[\n\t\r-_.+!*'(),%#@?=/;:,+&$])((/?(r|u)/)([-\w]+))").unwrap();
+        static ref RE: Regex = {
+            #[cfg(feature = "flamegraphs")]
+            fn flame_guard() -> ::flame::SpanGuard { ::flame::start_guard("init redditlinks regex") }
+
+            #[cfg(not(feature = "flamegraphs"))]
+            fn flame_guard() { }
+
+            let _guard = flame_guard();
+
+            Regex::new(r"(^|[\n\t\r-_.+!*'(),%#@?=/;:,+&$])((/?(r|u)/)([-\w]+))").unwrap()
+        };
     }
 
     let borrowed_contents = contents.to_owned();

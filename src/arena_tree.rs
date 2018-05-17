@@ -81,26 +81,31 @@ impl<'a, T> Node<'a, T> {
     }
 
     /// Return a reference to the first child of this node, unless it has no child.
+    #[cfg_attr(feature = "flamegraphs", flame)]
     pub fn first_child(&self) -> Option<&'a Node<'a, T>> {
         self.first_child.get()
     }
 
     /// Return a reference to the last child of this node, unless it has no child.
+    #[cfg_attr(feature = "flamegraphs", flame)]
     pub fn last_child(&self) -> Option<&'a Node<'a, T>> {
         self.last_child.get()
     }
 
     /// Return a reference to the previous sibling of this node, unless it is a first child.
+    #[cfg_attr(feature = "flamegraphs", flame)]
     pub fn previous_sibling(&self) -> Option<&'a Node<'a, T>> {
         self.previous_sibling.get()
     }
 
     /// Return a reference to the previous sibling of this node, unless it is a last child.
+    #[cfg_attr(feature = "flamegraphs", flame)]
     pub fn next_sibling(&self) -> Option<&'a Node<'a, T>> {
         self.next_sibling.get()
     }
 
     /// Returns whether two references point to the same node.
+    #[cfg_attr(feature = "flamegraphs", flame)]
     pub fn same_node(&self, other: &Node<'a, T>) -> bool {
         same_ref(self, other)
     }
@@ -108,6 +113,7 @@ impl<'a, T> Node<'a, T> {
     /// Return an iterator of references to this node and its ancestors.
     ///
     /// Call `.next().unwrap()` once on the iterator to skip the node itself.
+    #[cfg_attr(feature = "flamegraphs", flame)]
     pub fn ancestors(&'a self) -> Ancestors<'a, T> {
         Ancestors(Some(self))
     }
@@ -115,6 +121,7 @@ impl<'a, T> Node<'a, T> {
     /// Return an iterator of references to this node and the siblings before it.
     ///
     /// Call `.next().unwrap()` once on the iterator to skip the node itself.
+    #[cfg_attr(feature = "flamegraphs", flame)]
     pub fn preceding_siblings(&'a self) -> PrecedingSiblings<'a, T> {
         PrecedingSiblings(Some(self))
     }
@@ -122,16 +129,19 @@ impl<'a, T> Node<'a, T> {
     /// Return an iterator of references to this node and the siblings after it.
     ///
     /// Call `.next().unwrap()` once on the iterator to skip the node itself.
+    #[cfg_attr(feature = "flamegraphs", flame)]
     pub fn following_siblings(&'a self) -> FollowingSiblings<'a, T> {
         FollowingSiblings(Some(self))
     }
 
     /// Return an iterator of references to this node’s children.
+    #[cfg_attr(feature = "flamegraphs", flame)]
     pub fn children(&'a self) -> Children<'a, T> {
         Children(self.first_child.get())
     }
 
     /// Return an iterator of references to this node’s children, in reverse order.
+    #[cfg_attr(feature = "flamegraphs", flame)]
     pub fn reverse_children(&'a self) -> ReverseChildren<'a, T> {
         ReverseChildren(self.last_child.get())
     }
@@ -153,6 +163,7 @@ impl<'a, T> Node<'a, T> {
     }
 
     /// Return an iterator of references to this node and its descendants, in tree order.
+    #[cfg_attr(feature = "flamegraphs", flame)]
     pub fn reverse_traverse(&'a self) -> ReverseTraverse<'a, T> {
         ReverseTraverse {
             root: self,
@@ -161,6 +172,7 @@ impl<'a, T> Node<'a, T> {
     }
 
     /// Detach a node from its parent and siblings. Children are not affected.
+    #[cfg_attr(feature = "flamegraphs", flame)]
     pub fn detach(&self) {
         let parent = self.parent.take();
         let previous_sibling = self.previous_sibling.take();
@@ -180,6 +192,7 @@ impl<'a, T> Node<'a, T> {
     }
 
     /// Append a new child to this node, after existing children.
+    #[cfg_attr(feature = "flamegraphs", flame)]
     pub fn append(&'a self, new_child: &'a Node<'a, T>) {
         new_child.detach();
         new_child.parent.set(Some(self));
@@ -195,6 +208,7 @@ impl<'a, T> Node<'a, T> {
     }
 
     /// Prepend a new child to this node, before existing children.
+    #[cfg_attr(feature = "flamegraphs", flame)]
     pub fn prepend(&'a self, new_child: &'a Node<'a, T>) {
         new_child.detach();
         new_child.parent.set(Some(self));
@@ -210,6 +224,7 @@ impl<'a, T> Node<'a, T> {
     }
 
     /// Insert a new sibling after this node.
+    #[cfg_attr(feature = "flamegraphs", flame)]
     pub fn insert_after(&'a self, new_sibling: &'a Node<'a, T>) {
         new_sibling.detach();
         new_sibling.parent.set(self.parent.get());
@@ -226,6 +241,7 @@ impl<'a, T> Node<'a, T> {
     }
 
     /// Insert a new sibling before this node.
+    #[cfg_attr(feature = "flamegraphs", flame)]
     pub fn insert_before(&'a self, new_sibling: &'a Node<'a, T>) {
         new_sibling.detach();
         new_sibling.parent.set(self.parent.get());
@@ -332,6 +348,7 @@ macro_rules! traverse_iterator {
         impl<'a, T> Iterator for $name<'a, T> {
             type Item = NodeEdge<&'a Node<'a, T>>;
 
+            #[cfg_attr(feature = "flamegraphs", flame)]
             fn next(&mut self) -> Option<NodeEdge<&'a Node<'a, T>>> {
                 match self.next.take() {
                     Some(item) => {

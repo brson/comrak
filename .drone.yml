@@ -2,7 +2,7 @@ build:
   test:
     image: rust:1.23.0
     commands:
-      - bash ./test.sh
+      - bash ./script/test.sh
 
   release:
     image: rust:1.23.0

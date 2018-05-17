@@ -63,12 +63,21 @@
 //! ```
 
 #![deny(missing_debug_implementations, missing_copy_implementations, trivial_casts,
-        trivial_numeric_casts, unstable_features, unused_import_braces)]
+        trivial_numeric_casts, unused_import_braces)]
 #![cfg_attr(feature = "dev", allow(unstable_features))]
 #![allow(unknown_lints, doc_markdown, cyclomatic_complexity)]
 
 #![cfg_attr(rustbuild, feature(staged_api, rustc_private))]
 #![cfg_attr(rustbuild, unstable(feature = "rustc_private", issue = "27812"))]
+
+#![cfg_attr(feature = "flamegraphs", feature(alloc_system))]
+#![cfg_attr(feature = "flamegraphs", feature(plugin, custom_attribute))]
+#![cfg_attr(feature = "flamegraphs", plugin(flamer))]
+
+#[cfg(feature = "flamegraphs")]
+extern crate flame;
+#[cfg(feature = "flamegraphs")]
+extern crate alloc_system;
 
 extern crate unicode_categories;
 extern crate typed_arena;
@@ -118,13 +127,95 @@ py_module_initializer!(snoomark, initsnoomark, PyInit_snoomark, |py, m| {
     let doc_string = format!("[{} {}] This module is implemented in Rust.", DOC_NAME, DOC_VERSION);
     try!(m.add(py, "__doc__", doc_string));
     try!(m.add(py, "cm_to_rtjson", py_fn!(py, cm_to_rtjson_py(cm: String))));
+    add_flame_fns(py, m)?;
     Ok(())
 });
+
+#[cfg(feature = "flamegraphs")]
+fn add_flame_fns(py: Python, m: &PyModule) -> PyResult<()> {
+    try!(m.add(py, "flame_exec_start", py_fn!(py, flame_exec_start())));
+    try!(m.add(py, "flame_exec_end", py_fn!(py, flame_exec_end())));
+    try!(m.add(py, "flame_convert_start", py_fn!(py, flame_convert_start())));
+    try!(m.add(py, "flame_convert_end", py_fn!(py, flame_convert_end())));
+    try!(m.add(py, "flame_dumps_start", py_fn!(py, flame_dumps_start())));
+    try!(m.add(py, "flame_dumps_end", py_fn!(py, flame_dumps_end())));
+    try!(m.add(py, "flame_del_start", py_fn!(py, flame_del_start())));
+    try!(m.add(py, "flame_del_end", py_fn!(py, flame_del_end())));
+    try!(m.add(py, "flame_write", py_fn!(py, flame_write())));
+    try!(m.add(py, "flame_clear", py_fn!(py, flame_clear())));
+    Ok(())
+}
+
+#[cfg(not(feature = "flamegraphs"))]
+fn add_flame_fns(_py: Python, _m: &PyModule) -> PyResult<()> {
+    Ok(())
+}
+
+#[cfg(feature = "flamegraphs")]
+fn flame_exec_start(py: Python) -> PyResult<PyObject> {
+    flame::start("exec");
+    Ok(py.None())
+}
+
+#[cfg(feature = "flamegraphs")]
+fn flame_exec_end(py: Python) -> PyResult<PyObject> {
+    flame::end("exec");
+    Ok(py.None())
+}
+
+#[cfg(feature = "flamegraphs")]
+fn flame_convert_start(py: Python) -> PyResult<PyObject> {
+    flame::start("convert");
+    Ok(py.None())
+}
+
+#[cfg(feature = "flamegraphs")]
+fn flame_convert_end(py: Python) -> PyResult<PyObject> {
+    flame::end("convert");
+    Ok(py.None())
+}
+
+#[cfg(feature = "flamegraphs")]
+fn flame_dumps_start(py: Python) -> PyResult<PyObject> {
+    flame::start("dumps");
+    Ok(py.None())
+}
+
+#[cfg(feature = "flamegraphs")]
+fn flame_dumps_end(py: Python) -> PyResult<PyObject> {
+    flame::end("dumps");
+    Ok(py.None())
+}
+
+#[cfg(feature = "flamegraphs")]
+fn flame_del_start(py: Python) -> PyResult<PyObject> {
+    flame::start("del");
+    Ok(py.None())
+}
+
+#[cfg(feature = "flamegraphs")]
+fn flame_del_end(py: Python) -> PyResult<PyObject> {
+    flame::end("del");
+    Ok(py.None())
+}
+
+#[cfg(feature = "flamegraphs")]
+fn flame_write(py: Python) -> PyResult<PyObject> {
+    flame::dump_html(&mut ::std::fs::File::create("flamegraph.html").unwrap()).unwrap();
+    Ok(py.None())
+}
+
+#[cfg(feature = "flamegraphs")]
+fn flame_clear(py: Python) -> PyResult<PyObject> {
+    flame::clear();
+    Ok(py.None())
+}
 
 // rust-cpython aware function. All of our python interface could be
 // declared in a separate module.
 // Note that the py_fn!() macro automatically converts the arguments from
 // Python objects to Rust values; and the Rust return value back into a Python object.
+#[cfg_attr(feature = "flamegraphs", flame)]
 pub fn cm_to_rtjson(cm: String) -> Json {
     let arena = Arena::new();
 
@@ -153,6 +244,7 @@ pub fn cm_to_rtjson(cm: String) -> Json {
 /// Convert from a `serde_json::Value` to a `cpython::PyObject`.
 /// Code originally inspired from library by Iliana Weller found at
 /// https://github.com/ilianaw/rust-cpython-json/blob/master/src/lib.rs
+#[cfg_attr(feature = "flamegraphs", flame)]
 #[cfg(feature = "cpython")]
 pub fn from_json(py: Python, json: Json) -> PyObject {
     macro_rules! obj {
@@ -244,13 +336,13 @@ pub fn from_json(py: Python, json: Json) -> PyObject {
 }
 
 // logic implemented as a normal rust function
+#[cfg_attr(feature = "flamegraphs", flame)]
 #[cfg(feature = "cpython")]
 fn cm_to_rtjson_py(py: Python, cm: String) -> PyResult<PyObject> {
     let out = cm_to_rtjson(cm);
     let res = from_json(py, out);
     Ok(res)
 }
-
 
 #[cfg(test)]
 mod tests {
