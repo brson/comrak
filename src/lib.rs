@@ -89,8 +89,6 @@ extern crate pest;
 #[macro_use]
 extern crate pest_derive;
 extern crate twoway;
-#[macro_use]
-extern crate jetscii;
 extern crate memchr;
 
 mod arena_tree;
@@ -265,13 +263,6 @@ fn quick_render(py: Python, cm: &str) -> Option<PyObject> {
     // Quickly decide whether the document requires full markdown processing, by
     // scanning for characters that may indicate markdown syntax.
 
-    // Characters that might indicate markdown syntax this routine can't handle.
-    // The fast jetscii search here only supports searching up to 16 characters,
-    // so we're fonced to support some syntax to get below that limit.
-    let forbidden_chars = ascii_chars!(
-        '#', '_', '*', '=', '-', '~', '|', '[', '\\', '>', '^', '`', '&', '/', ':', '@'
-    );
-
     // Larger documents are less likely to be candidates
     const MAX_DOC_SIZE: usize = 640;
 
@@ -280,10 +271,10 @@ fn quick_render(py: Python, cm: &str) -> Option<PyObject> {
 
     let too_big = || cm.len() > MAX_DOC_SIZE;
     let empty = || cm.is_empty();
-    // Scan 1 - with jetscii, fast. This is the scan that will catch most of the
-    // cases the fast-path can't handle, and it's very fast, so we'll usually
-    // bail quickly.
-    let has_syntax = || forbidden_chars.find(cm).is_some();
+    // Scan 1 - Fast. This is the scan that will catch most of the cases the
+    // fast-path can't handle, and it's very fast, so we'll usually bail
+    // quickly.
+    let has_syntax = || strings::contains_forbidden_chars(cm);
     // Scan 2 - www autolinking. This one's a bummer.
     // This scan could possibly be incorporated into the line-splitting below
     // using memchr2, but not sure it's worth it - it's pretty fast as-is. Using

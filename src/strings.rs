@@ -300,3 +300,36 @@ impl<'a> Iterator for FastLines<'a> {
         }
     }
 }
+
+/// Look for characters that indicate that the fast-path renderer can't be
+/// taken. In my synthetic tests this table-based approach is surprisingly
+/// faster than the jetscii crate that uses explicit simd intrinsics, but it
+/// might be worth revisiting that later.
+pub fn contains_forbidden_chars(s: &str) -> bool {
+    // Characters that might indicate markdown syntax this routine can't handle.
+    // The fast jetscii search here only supports searching up to 16 characters,
+    // so we're fonced to support some syntax to get below that limit.
+    static FORBIDDEN_CHARS: &[char] = &[
+        '#', '_', '*', '=', '-', '~', '|', '[', '\\', '>', '^', '`', '&', '/', ':', '@'
+    ];
+
+    lazy_static! {
+        static ref TABLE: &'static [bool; 256] = {
+            static mut TABLE: [bool; 256] = [false; 256];
+            unsafe {
+                for ch in FORBIDDEN_CHARS {
+                    TABLE[*ch as usize] = true;
+                }
+                &TABLE
+            }
+        };
+    }
+
+    for byte in s.as_bytes().iter() {
+        if TABLE[*byte as usize] {
+            return true;
+        }
+    }
+
+    false
+}
