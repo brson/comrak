@@ -8,6 +8,7 @@ build:
     image: rust:1.23.0
     commands:
       - cargo build --release
+      - bash ./script/test.sh --release
       - cp target/release/libsnoomark.so target/release/snoomark-$${TAG}.so
       - echo
       - echo "SHA256 hash of the built snoomark release:"

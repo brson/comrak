@@ -13,20 +13,24 @@ run() {
 	echo
 }
 
+if [[ "$1" == "--release" ]]; then
+    export SM_TARGET="release"
+    cargo_build_arg = "--release"
+else
+    export SM_TARGET="debug"
+    cargo_build_arg = "--debug"
+fi
+
 if [[ -z "$SPECS_ONLY" ]]; then
-	run cargo build
+	run cargo build "$cargo_build_arg"
 
 	if [[ errors -ne 0 ]]; then
 		echo -e "\nbuild failed\n"
 		exit 1
 	fi
 
-	run cargo test
+	run cargo test "$cargo_build_arg"
 fi
-
-# First run with the Rust test harness
-run cargo run -- --rtjson --spec specs/rtjson/rtjson.spec
-run cargo run -- --rtjson --spec specs/rtjson/bugs.spec
 
 # Then the python test harness
 run python3 script/spec_tests.py --rtjson --spec specs/rtjson/rtjson.spec
