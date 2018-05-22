@@ -31,6 +31,7 @@ extern crate pest;
 #[macro_use]
 extern crate pest_derive;
 extern crate twoway;
+extern crate memchr;
 
 mod arena_tree;
 mod html;
