@@ -314,7 +314,7 @@ fn quick_render(py: Python, cm: &str) -> Option<PyObject> {
         for mut line in strings::fast_lines(cm).chain(iter::repeat("").take(1)) {
 
             // If this is a blank line then output a paragraph of the accumulated text
-            if line.is_empty() || line.as_bytes().iter().all(|b| isspace(*b)) {
+            if line.is_empty() || line.bytes().all(|b| isspace(b)) {
                 let pypara;
                 match (first_line, !para_accum.is_empty()) {
                     (None, false) => {
@@ -368,10 +368,8 @@ fn quick_render(py: Python, cm: &str) -> Option<PyObject> {
             // rendering.
 
             let hardbreak = if line.len() > 2 {
-                debug_assert!(!line.as_bytes().iter().all(|b| isspace(*b)));
-                let mut last_2 = [0; 2];
-                last_2.copy_from_slice(&line.as_bytes()[line.len() - 2..]);
-                isspace(last_2[0]) && isspace(last_2[1])
+                debug_assert!(!line.bytes().all(|b| isspace(b)));
+                line.bytes().rev().take(2).all(|b| isspace(b))
             } else {
                 false
             };
@@ -384,7 +382,7 @@ fn quick_render(py: Python, cm: &str) -> Option<PyObject> {
             let (leading_space, leading_space_bytes) = {
                 let mut leading_space = 0;
                 let mut leading_space_bytes = 0;
-                for ch in line.as_bytes().iter().cloned() {
+                for ch in line.bytes() {
                     if ch == b' ' {
                         leading_space += 1;
                         leading_space_bytes += 1;
@@ -403,8 +401,7 @@ fn quick_render(py: Python, cm: &str) -> Option<PyObject> {
             };
 
             let trailing_space_bytes = {
-                line.as_bytes().iter().rev().cloned()
-                    .take_while(|ch| isspace(*ch)).count()
+                line.bytes().rev().take_while(|ch| isspace(*ch)).count()
             };
 
             // Trim line

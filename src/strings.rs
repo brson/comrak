@@ -305,6 +305,7 @@ impl<'a> Iterator for FastLines<'a> {
 /// taken. In my synthetic tests this table-based approach is surprisingly
 /// faster than the jetscii crate that uses explicit simd intrinsics, but it
 /// might be worth revisiting that later.
+#[inline]
 pub fn contains_forbidden_chars(s: &str) -> bool {
     // Characters that might indicate markdown syntax this routine can't handle.
     // The fast jetscii search here only supports searching up to 16 characters,
