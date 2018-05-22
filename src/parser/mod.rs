@@ -1405,7 +1405,7 @@ impl<'a, 'o> Parser<'a, 'o> {
         // 65K, can we possibly fix that or make a better exit happen
         let mut prev_end = format_ranges[0][1] + format_ranges[0][2];
         let mut prev_style = format_ranges[0][0];
-        let mut new_format: Vec<[u16; 3]> = vec![];
+        let mut new_format: Vec<[u16; 3]> = Vec::with_capacity(format_ranges.len());
         let mut buffer_range = format_ranges[0];
         buffer_range[2] = 0;
         for (i, range) in format_ranges.iter().enumerate() {
