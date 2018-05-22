@@ -254,6 +254,10 @@ fn cm_to_rtjson_py(py: Python, cm: String) -> PyResult<PyObject> {
 // scans of the text, and up to two copies of the text. Besides the necessary
 // allocations of Python objects, it only does 1 allocation, and that is cached
 // thread-local.
+//
+// Note that in the unlikely case this function encounters an error constructing
+// python objects it just returns `None`, forcing the caller onto the full
+// rendering path - the errors are not propagated.
 #[cfg_attr(feature = "flamegraphs", flame)]
 fn quick_render(py: Python, cm: &str) -> Option<PyObject> {
     use std::iter;
@@ -340,22 +344,14 @@ fn quick_render(py: Python, cm: &str) -> Option<PyObject> {
                 first_line = None;
 
                 let text = PyDict::new(py);
-                if text.set_item(py, "e", PyBytes::new(py, b"text")).is_err() {
-                    return None;
-                }
-                if text.set_item(py, "t", pypara).is_err() {
-                    return None;
-                }
+                text.set_item(py, "e", PyBytes::new(py, b"text")).ok()?;
+                text.set_item(py, "t", pypara).ok()?;
 
                 let para_contents = PyList::new(py, &[text.into_object()]).into_object();
 
                 let para = PyDict::new(py);
-                if para.set_item(py, "e", PyBytes::new(py, b"par")).is_err() {
-                    return None;
-                }
-                if para.set_item(py, "c", para_contents).is_err() {
-                    return None;
-                }
+                para.set_item(py, "e", PyBytes::new(py, b"par")).ok()?;
+                para.set_item(py, "c", para_contents).ok()?;
 
                 doc_contents.insert_item(py, doc_contents.len(py), para.into_object());
 
@@ -457,9 +453,7 @@ fn quick_render(py: Python, cm: &str) -> Option<PyObject> {
         debug_assert!(first_line.is_none());
 
         let doc = PyDict::new(py);
-        if doc.set_item(py, "document", doc_contents.into_object()).is_err() {
-            return None;
-        }
+        doc.set_item(py, "document", doc_contents.into_object()).ok()?;
 
         Some(doc.into_object())
     })
