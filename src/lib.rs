@@ -128,7 +128,7 @@ py_module_initializer!(snoomark, initsnoomark, PyInit_snoomark, |py, m| {
     Ok(())
 });
 
-#[cfg(feature = "flamegraphs")]
+#[cfg(all(feature = "cpython", feature = "flamegraphs"))]
 fn add_flame_fns(py: Python, m: &PyModule) -> PyResult<()> {
     try!(m.add(py, "flame_exec_start", py_fn!(py, flame_exec_start())));
     try!(m.add(py, "flame_exec_end", py_fn!(py, flame_exec_end())));
@@ -143,66 +143,66 @@ fn add_flame_fns(py: Python, m: &PyModule) -> PyResult<()> {
     Ok(())
 }
 
-#[cfg(not(feature = "flamegraphs"))]
+#[cfg(all(feature = "cpython", not(feature = "flamegraphs")))]
 fn add_flame_fns(_py: Python, _m: &PyModule) -> PyResult<()> {
     Ok(())
 }
 
-#[cfg(feature = "flamegraphs")]
+#[cfg(all(feature = "cpython", feature = "flamegraphs"))]
 fn flame_exec_start(py: Python) -> PyResult<PyObject> {
     flame::start("exec");
     Ok(py.None())
 }
 
-#[cfg(feature = "flamegraphs")]
+#[cfg(all(feature = "cpython", feature = "flamegraphs"))]
 fn flame_exec_end(py: Python) -> PyResult<PyObject> {
     flame::end("exec");
     Ok(py.None())
 }
 
-#[cfg(feature = "flamegraphs")]
+#[cfg(all(feature = "cpython", feature = "flamegraphs"))]
 fn flame_convert_start(py: Python) -> PyResult<PyObject> {
     flame::start("convert");
     Ok(py.None())
 }
 
-#[cfg(feature = "flamegraphs")]
+#[cfg(all(feature = "cpython", feature = "flamegraphs"))]
 fn flame_convert_end(py: Python) -> PyResult<PyObject> {
     flame::end("convert");
     Ok(py.None())
 }
 
-#[cfg(feature = "flamegraphs")]
+#[cfg(all(feature = "cpython", feature = "flamegraphs"))]
 fn flame_dumps_start(py: Python) -> PyResult<PyObject> {
     flame::start("dumps");
     Ok(py.None())
 }
 
-#[cfg(feature = "flamegraphs")]
+#[cfg(all(feature = "cpython", feature = "flamegraphs"))]
 fn flame_dumps_end(py: Python) -> PyResult<PyObject> {
     flame::end("dumps");
     Ok(py.None())
 }
 
-#[cfg(feature = "flamegraphs")]
+#[cfg(all(feature = "cpython", feature = "flamegraphs"))]
 fn flame_del_start(py: Python) -> PyResult<PyObject> {
     flame::start("del");
     Ok(py.None())
 }
 
-#[cfg(feature = "flamegraphs")]
+#[cfg(all(feature = "cpython", feature = "flamegraphs"))]
 fn flame_del_end(py: Python) -> PyResult<PyObject> {
     flame::end("del");
     Ok(py.None())
 }
 
-#[cfg(feature = "flamegraphs")]
+#[cfg(all(feature = "cpython", feature = "flamegraphs"))]
 fn flame_write(py: Python) -> PyResult<PyObject> {
     flame::dump_html(&mut ::std::fs::File::create("flamegraph.html").unwrap()).unwrap();
     Ok(py.None())
 }
 
-#[cfg(feature = "flamegraphs")]
+#[cfg(all(feature = "cpython", feature = "flamegraphs"))]
 fn flame_clear(py: Python) -> PyResult<PyObject> {
     flame::clear();
     Ok(py.None())
