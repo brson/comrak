@@ -9,7 +9,7 @@ use serde_json;
 pub struct Json(pub serde_json::Value);
 
 impl Drop for Json {
-    #[cfg_attr(feature = "flamegraphs", flame)]
+    #[cfg_attr(any(feature = "flamegraphs", feature = "minflame"), flame)]
     fn drop(&mut self) {
         // We're going to iteratively peel apart the entire tree, by removing
         // child nodes from their parents and dropping them. The root is a
@@ -49,6 +49,7 @@ impl Drop for Json {
 }
 
 /// Formats an AST as RTJSON
+#[cfg_attr(any(feature = "flamegraphs", feature = "minflame"), flame)]
 pub fn format_document<'a>(root: &'a AstNode<'a>) -> Json {
     let f = RTJsonFormatter;
     Json(f.format(root).unwrap())
