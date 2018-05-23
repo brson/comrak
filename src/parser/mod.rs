@@ -24,6 +24,7 @@ const CODE_INDENT: usize = 4;
 /// Parse a Markdown document to an AST.
 ///
 /// See the documentation of the crate root for an example.
+#[cfg_attr(any(feature = "flamegraphs", feature = "minflame"), flame)]
 pub fn parse_document<'a>(
     arena: &'a Arena<AstNode<'a>>,
     buffer: &str,
@@ -300,7 +301,7 @@ impl<'a, 'o> Parser<'a, 'o> {
         }
     }
 
-    #[cfg_attr(feature = "flamegraphs", flame)]
+    #[cfg_attr(any(feature = "flamegraphs", feature = "minflame"), flame)]
     pub fn feed(&mut self, s: &[u8], eof: bool) {
         let mut i = 0;
         let buffer = s;
@@ -1056,7 +1057,7 @@ impl<'a, 'o> Parser<'a, 'o> {
         }
     }
 
-    #[cfg_attr(feature = "flamegraphs", flame)]
+    #[cfg_attr(any(feature = "flamegraphs", feature = "minflame"), flame)]
     pub fn finish(&mut self) -> &'a AstNode<'a> {
         if !self.linebuf.is_empty() {
             let linebuf = mem::replace(&mut self.linebuf, vec![]);
@@ -1076,7 +1077,7 @@ impl<'a, 'o> Parser<'a, 'o> {
         self.root
     }
 
-    #[cfg_attr(feature = "flamegraphs", flame)]
+    #[cfg_attr(any(feature = "flamegraphs", feature = "minflame"), flame)]
     fn finalize_document(&mut self) {
         while !self.current.same_node(self.root) {
             self.current = self.finalize(self.current).unwrap();
@@ -1216,7 +1217,7 @@ impl<'a, 'o> Parser<'a, 'o> {
         parent
     }
 
-    #[cfg_attr(feature = "flamegraphs", flame)]
+    #[cfg_attr(any(feature = "flamegraphs", feature = "minflame"), flame)]
     fn process_inlines(&mut self) {
         self.process_inlines_node(self.root);
     }
@@ -1323,7 +1324,7 @@ impl<'a, 'o> Parser<'a, 'o> {
         }
     }
 
-    #[cfg_attr(feature = "flamegraphs", flame)]
+    #[cfg_attr(any(feature = "flamegraphs", feature = "minflame"), flame)]
     fn postprocess_text_nodes(&mut self, node: &'a AstNode<'a>) {
         let mut stack = vec![node];
         let mut children = vec![];
@@ -1453,7 +1454,7 @@ impl<'a, 'o> Parser<'a, 'o> {
         *range_idx += range_length;
     }
 
-    #[cfg_attr(feature = "flamegraphs", flame)]
+    #[cfg_attr(any(feature = "flamegraphs", feature = "minflame"), flame)]
     fn postprocess_rtjson_ast(
         &mut self,
         root_node: &'a AstNode<'a>,
