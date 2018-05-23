@@ -128,7 +128,7 @@ py_module_initializer!(snoomark, initsnoomark, PyInit_snoomark, |py, m| {
     Ok(())
 });
 
-#[cfg(any(feature = "flamegraphs", feature = "minflame"))]
+#[cfg(all(feature = "cpython", any(feature = "flamegraphs", feature = "minflame")))]
 fn add_flame_fns(py: Python, m: &PyModule) -> PyResult<()> {
     try!(m.add(py, "flame_exec_start", py_fn!(py, flame_exec_start())));
     try!(m.add(py, "flame_exec_end", py_fn!(py, flame_exec_end())));
@@ -143,66 +143,66 @@ fn add_flame_fns(py: Python, m: &PyModule) -> PyResult<()> {
     Ok(())
 }
 
-#[cfg(not(any(feature = "flamegraphs", feature = "minflame")))]
+#[cfg(not(all(feature = "cpython", any(feature = "flamegraphs", feature = "minflame"))))]
 fn add_flame_fns(_py: Python, _m: &PyModule) -> PyResult<()> {
     Ok(())
 }
 
-#[cfg(any(feature = "flamegraphs", feature = "minflame"))]
+#[cfg(all(feature = "cpython", any(feature = "flamegraphs", feature = "minflame")))]
 fn flame_exec_start(py: Python) -> PyResult<PyObject> {
     flame::start("exec");
     Ok(py.None())
 }
 
-#[cfg(any(feature = "flamegraphs", feature = "minflame"))]
+#[cfg(all(feature = "cpython", any(feature = "flamegraphs", feature = "minflame")))]
 fn flame_exec_end(py: Python) -> PyResult<PyObject> {
     flame::end("exec");
     Ok(py.None())
 }
 
-#[cfg(any(feature = "flamegraphs", feature = "minflame"))]
+#[cfg(all(feature = "cpython", any(feature = "flamegraphs", feature = "minflame")))]
 fn flame_convert_start(py: Python) -> PyResult<PyObject> {
     flame::start("convert");
     Ok(py.None())
 }
 
-#[cfg(any(feature = "flamegraphs", feature = "minflame"))]
+#[cfg(all(feature = "cpython", any(feature = "flamegraphs", feature = "minflame")))]
 fn flame_convert_end(py: Python) -> PyResult<PyObject> {
     flame::end("convert");
     Ok(py.None())
 }
 
-#[cfg(any(feature = "flamegraphs", feature = "minflame"))]
+#[cfg(all(feature = "cpython", any(feature = "flamegraphs", feature = "minflame")))]
 fn flame_dumps_start(py: Python) -> PyResult<PyObject> {
     flame::start("dumps");
     Ok(py.None())
 }
 
-#[cfg(any(feature = "flamegraphs", feature = "minflame"))]
+#[cfg(all(feature = "cpython", any(feature = "flamegraphs", feature = "minflame")))]
 fn flame_dumps_end(py: Python) -> PyResult<PyObject> {
     flame::end("dumps");
     Ok(py.None())
 }
 
-#[cfg(any(feature = "flamegraphs", feature = "minflame"))]
+#[cfg(all(feature = "cpython", any(feature = "flamegraphs", feature = "minflame")))]
 fn flame_del_start(py: Python) -> PyResult<PyObject> {
     flame::start("del");
     Ok(py.None())
 }
 
-#[cfg(any(feature = "flamegraphs", feature = "minflame"))]
+#[cfg(all(feature = "cpython", any(feature = "flamegraphs", feature = "minflame")))]
 fn flame_del_end(py: Python) -> PyResult<PyObject> {
     flame::end("del");
     Ok(py.None())
 }
 
-#[cfg(any(feature = "flamegraphs", feature = "minflame"))]
+#[cfg(all(feature = "cpython", any(feature = "flamegraphs", feature = "minflame")))]
 fn flame_write(py: Python) -> PyResult<PyObject> {
     flame::dump_html(&mut ::std::fs::File::create("flamegraph.html").unwrap()).unwrap();
     Ok(py.None())
 }
 
-#[cfg(any(feature = "flamegraphs", feature = "minflame"))]
+#[cfg(all(feature = "cpython", any(feature = "flamegraphs", feature = "minflame")))]
 fn flame_clear(py: Python) -> PyResult<PyObject> {
     flame::clear();
     Ok(py.None())
@@ -238,7 +238,9 @@ pub fn cm_to_rtjson(py: Python, cm: String) -> PyResult<PyObject> {
     rtjson::format_document(py, root)
 }
 
-// logic implemented as a normal rust function
+/// Convert from a `serde_json::Value` to a `cpython::PyObject`.
+/// Code originally inspired from library by Iliana Weller found at
+/// https://github.com/ilianaw/rust-cpython-json/blob/master/src/lib.rs
 #[cfg_attr(any(feature = "flamegraphs", feature = "minflame"), flame)]
 #[cfg(feature = "cpython")]
 fn cm_to_rtjson_py(py: Python, cm: String) -> PyResult<PyObject> {
