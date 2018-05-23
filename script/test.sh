@@ -15,10 +15,10 @@ run() {
 
 if [[ "$1" == "--release" ]]; then
     export SM_TARGET="release"
-    cargo_build_arg = "--release"
+    cargo_build_arg="--release"
 else
     export SM_TARGET="debug"
-    cargo_build_arg = "--debug"
+    cargo_build_arg=""
 fi
 
 if [[ -z "$SPECS_ONLY" ]]; then
