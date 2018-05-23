@@ -10,13 +10,13 @@
 #![cfg_attr(rustbuild, feature(staged_api, rustc_private))]
 #![cfg_attr(rustbuild, unstable(feature = "rustc_private", issue = "27812"))]
 
-#![cfg_attr(feature = "flamegraphs", feature(alloc_system))]
-#![cfg_attr(feature = "flamegraphs", feature(plugin, custom_attribute))]
-#![cfg_attr(feature = "flamegraphs", plugin(flamer))]
+#![cfg_attr(any(feature = "flamegraphs", feature = "minflame"), feature(alloc_system))]
+#![cfg_attr(any(feature = "flamegraphs", feature = "minflame"), feature(plugin, custom_attribute))]
+#![cfg_attr(any(feature = "flamegraphs", feature = "minflame"), plugin(flamer))]
 
-#[cfg(feature = "flamegraphs")]
+#[cfg(any(feature = "flamegraphs", feature = "minflame"))]
 extern crate flame;
-#[cfg(feature = "flamegraphs")]
+#[cfg(any(feature = "flamegraphs", feature = "minflame"))]
 extern crate alloc_system;
 
 extern crate entities;

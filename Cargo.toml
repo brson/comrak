@@ -42,6 +42,7 @@ flamer = { version = "^0.2.1", optional = true }
 default = ["clap", "cpython"]
 dev = ["clap", "clippy", "cpython"]
 flamegraphs = ["flame", "flamer"]
+minflame = ["flame", "flamer"]
 
 [dependencies.cpython]
 git = "https://github.com/dgrunwald/rust-cpython.git"
