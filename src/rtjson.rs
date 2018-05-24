@@ -6,6 +6,7 @@ use self::cpython::*;
 use std::str;
 
 /// Formats an AST as RTJSON
+#[cfg_attr(any(feature = "flamegraphs", feature = "minflame"), flame)]
 pub fn format_document<'a>(py: Python, root: &'a AstNode<'a>) -> PyResult<PyObject> {
     let f = RTJsonFormatter;
     f.format(py, root)

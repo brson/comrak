@@ -42,6 +42,7 @@ memchr = "2.0.1"
 default = ["clap", "cpython", "cpython/extension-module-2-7"]
 dev = ["clap", "clippy", "cpython", "cpython/extension-module-2-7"]
 flamegraphs = ["flame", "flamer", "cpython/extension-module-2-7"]
+minflame = ["flame", "flamer", "cpython/extension-module-2-7"]
 
 [dependencies.cpython]
 git = "https://github.com/dgrunwald/rust-cpython.git"

@@ -34,9 +34,18 @@ supports testing rtjson with `--rtjson` flag.
 
 Generating flame graphs requires a nightly compiler and the "flamegraphs" feature.
 
-Build with
+Build with either
 
     cargo +nightly build --release --features=flamegraphs
+
+or
+
+    cargo +nightly build --release --features=minflame
+
+The former will capture a lot of detail during earlier phases of translation,
+but the overhead from all the instrumentation will distort the proportions of
+the graph; the latter will capture much less detail but retain reasonable
+proportions for all phases.
 
 Then generate a flamegraph with
 
