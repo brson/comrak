@@ -243,7 +243,7 @@ pub fn cm_to_rtjson(py: Python, cm: String) -> PyResult<PyObject> {
 /// https://github.com/ilianaw/rust-cpython-json/blob/master/src/lib.rs
 #[cfg_attr(any(feature = "flamegraphs", feature = "minflame"), flame)]
 #[cfg(feature = "cpython")]
-fn cm_to_rtjson_py(py: Python, cm: String) -> PyResult<PyObject> {
+pub fn cm_to_rtjson_py(py: Python, cm: String) -> PyResult<PyObject> {
     if let Some(obj) = quick_render(py, &cm) {
         return Ok(obj);
     }
