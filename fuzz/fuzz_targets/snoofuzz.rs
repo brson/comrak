@@ -1,9 +1,14 @@
 #![no_main]
 #[macro_use] extern crate libfuzzer_sys;
 extern crate snoomark as sm;
+#[macro_use] extern crate cpython;
+
+use cpython::*;
 
 fuzz_target!(|data: &[u8]| {
     if let Ok(s) = std::str::from_utf8(data) {
-        sm::cm_to_rtjson(s.to_string());
+        let gil = Python::acquire_gil();
+        let py = gil.python();
+        sm::cm_to_rtjson_py(py, s.to_string()).expect("parsing failed");
     }
 });

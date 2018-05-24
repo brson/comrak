@@ -39,14 +39,14 @@ flamer = { version = "^0.2.1", optional = true }
 memchr = "2.0.1"
 
 [features]
-default = ["clap", "cpython"]
-dev = ["clap", "clippy", "cpython"]
-flamegraphs = ["flame", "flamer"]
-minflame = ["flame", "flamer"]
+default = ["clap", "cpython", "cpython/extension-module-2-7"]
+dev = ["clap", "clippy", "cpython", "cpython/extension-module-2-7"]
+flamegraphs = ["flame", "flamer", "cpython/extension-module-2-7"]
+minflame = ["flame", "flamer", "cpython/extension-module-2-7"]
 
 [dependencies.cpython]
 git = "https://github.com/dgrunwald/rust-cpython.git"
 rev = "b7090799b652c77220bdb266937538a6e900119c"
 default-features = false
-features = ["python27-sys", "extension-module-2-7"]
+features = ["python27-sys"]
 optional = true

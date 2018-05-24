@@ -10,8 +10,8 @@ cargo-fuzz = true
 
 [dependencies.snoomark]
 path = ".."
-# Turn off cpython bindings
 default-features = false
+features = ["cpython"]
 
 [dependencies.libfuzzer-sys]
 git = "https://github.com/rust-fuzz/libfuzzer-sys.git"
@@ -23,3 +23,10 @@ members = ["."]
 [[bin]]
 name = "snoofuzz"
 path = "fuzz_targets/snoofuzz.rs"
+
+[dependencies.cpython]
+git = "https://github.com/dgrunwald/rust-cpython.git"
+rev = "b7090799b652c77220bdb266937538a6e900119c"
+default-features = false
+features = ["python27-sys"]
+optional = false
