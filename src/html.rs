@@ -482,11 +482,6 @@ impl<'o> HtmlFormatter<'o> {
             } else {
                 try!(self.output.write_all(b"</sup>"));
             },
-            NodeValue::Underline => if entering {
-                try!(self.output.write_all(b"<u>"));
-            } else {
-                try!(self.output.write_all(b"</u>"));
-            },
             NodeValue::Link(ref nl) => if entering {
                 try!(self.output.write_all(b"<a href=\""));
                 try!(self.escape_href(&nl.url));

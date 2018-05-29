@@ -38,25 +38,25 @@ nonoe /u/or u/or eu/au
 We have to make sure that nested styles get the proper rendering
 
 ```````````````````````````````` example
-~curly**curly and bold**curly~
+~~curly**curly and bold**curly~~
 .
-{"document":[{"c":[{"e":"text","f":[[4,0,5],[5,5,14],[4,19,5]],"t":"curlycurly and boldcurly"}],"e":"par"}]}
+{"document":[{"c":[{"e":"text","f":[[8,0,5],[9,5,14],[8,19,5]],"t":"curlycurly and boldcurly"}],"e":"par"}]}
 ````````````````````````````````
 
 The below does not work and should be looked into
 
 ```````````````````````````````` example
-~curly***curly and bold***curly~
+~~curly***curly and bold***curly~~
 .
-{"document":[{"c":[{"e":"text","f":[[4,0,30]],"t":"curly***curly and bold***curly"}],"e":"par"}]}
+{"document":[{"c":[{"e":"text","f":[[8,0,30]],"t":"curly***curly and bold***curly"}],"e":"par"}]}
 ````````````````````````````````
 
 We should also show code and underline when we are trying ot render content
 
 ```````````````````````````````` example
-`monospace` ~underline~ <usr/>
+`monospace` ~~strike~~ <usr/>
 .
-{"document":[{"c":[{"e":"text","f":[[64,0,9],[4,10,9]],"t":"monospace underline <usr/>"}],"e":"par"}]}
+{"document":[{"c":[{"e":"text","f":[[64,0,9],[8,10,6]],"t":"monospace strike <usr/>"}],"e":"par"}]}
 ````````````````````````````````
 
 The test above account for known bugs and fixes.
@@ -919,4 +919,32 @@ Here the second image disappears, even though it's "valid":
 
 .
 {"document": [{"e": "img", "id": "abcd"}]}
+````````````````````````````````
+
+## CREATE-1945
+
+Single twiddles are just twiddles on Reddit.
+
+```````````````````````````````` example
+~a~
+.
+{"document": [{"c": [{"e": "text", "t": "~a~"}], "e": "par"}]}
+````````````````````````````````
+
+More than two twiddles is still strikethrough, unlike snudown.
+
+```````````````````````````````` example
+a ~~~a~~~
+.
+{"document": [{"c": [{"e": "text", "t": "a a", "f": [[8, 2, 1]]}], "e": "par"}]}
+````````````````````````````````
+
+Twiddle codeblocks also work, unlike snudown.
+
+```````````````````````````````` example
+~~~
+a
+~~~
+.
+{"document": [{"c": [{"e": "raw", "t": "a"}], "e": "code"}]}
 ````````````````````````````````
