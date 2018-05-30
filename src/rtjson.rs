@@ -218,7 +218,7 @@ impl RTJsonFormatter {
             NodeValue::HtmlBlock(..) => unreachable!(),
             NodeValue:: SoftBreak => None,
             NodeValue::Code(_) | NodeValue::Strong | NodeValue::Emph | NodeValue::Superscript |
-            NodeValue::Strikethrough | NodeValue::Underline => unreachable!(),
+            NodeValue::Strikethrough => unreachable!(),
             NodeValue::Paragraph => {
                 Some(json!({
                     "e": "par",

@@ -1720,7 +1720,6 @@ impl<'a, 'o> Parser<'a, 'o> {
             }
             NodeValue::Strong => self.insert_format(current_format, 1),
             NodeValue::Emph => self.insert_format(current_format, 2),
-            NodeValue::Underline => self.insert_format(current_format, 4),
             NodeValue::Strikethrough => self.insert_format(current_format, 8),
             NodeValue::Superscript => self.insert_format(current_format, 32),
             _ => ()
@@ -1782,7 +1781,6 @@ impl<'a, 'o> Parser<'a, 'o> {
         match node.data.borrow().value {
             NodeValue::Strong => self.remove_format(current_format, 1),
             NodeValue::Emph => self.remove_format(current_format, 2),
-            NodeValue::Underline => self.remove_format(current_format, 4),
             NodeValue::Strikethrough => self.remove_format(current_format, 8),
             NodeValue::Superscript => self.remove_format(current_format, 32),
             _ => ()
@@ -1845,7 +1843,6 @@ impl<'a, 'o> Parser<'a, 'o> {
                 | NodeValue::Emph
                 | NodeValue::Strong
                 | NodeValue::Strikethrough
-                | NodeValue::Underline
                 | NodeValue::Superscript
                 | NodeValue::Code(..) => {
                     for ch in node.children() {
