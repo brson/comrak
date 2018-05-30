@@ -194,9 +194,9 @@ overall format through the whole thing, while also getting rid of the old format
 each time we went on.
 
 ```````````````````````````````` example
-*__bold__ ~underline~ ~~strikethrough~~*
+*__bold__ ~~strikethrough~~*
 .
-{"document":[{"c":[{"e":"text","f":[[3,0,4],[2,4,1],[6,5,9],[2,14,1],[10,15,13]],"t":"bold underline strikethrough"}],"e":"par"}]}
+{"document":[{"c":[{"e":"text","f":[[3,0,4],[2,4,1],[10,5,13]],"t":"bold strikethrough"}],"e":"par"}]}
 ````````````````````````````````
 
 In the case that we have two of the same styles nested within one another we want
@@ -285,9 +285,9 @@ This >!areallylongword **in bold followed** by something!< EMAIL_OK_SET
 
 
 ```````````````````````````````` example
-This >!areallylongword ~followed~ *by* something!< EMAIL_OK_SET
+This >!areallylongword _followed_ *by* something!< EMAIL_OK_SET
 .
-{"document":[{"c":[{"e":"text","t":"This "},{"c":[{"e":"text","f":[[4,16,8],[2,25,2]],"t":"areallylongword followed by something"}],"e":"spoilertext"},{"e":"text","t":" EMAIL_OK_SET"}],"e":"par"}]}
+{"document":[{"c":[{"e":"text","t":"This "},{"c":[{"e":"text","f":[[2,16,8],[2,25,2]],"t":"areallylongword followed by something"}],"e":"spoilertext"},{"e":"text","t":" EMAIL_OK_SET"}],"e":"par"}]}
 ````````````````````````````````
 
 

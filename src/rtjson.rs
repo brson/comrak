@@ -177,7 +177,7 @@ impl RTJsonFormatter {
             NodeValue::HtmlBlock(..) => unreachable!(),
             NodeValue:: SoftBreak => Ok(PyDict::new(py)),
             NodeValue::Code(_) | NodeValue::Strong | NodeValue::Emph | NodeValue::Superscript |
-            NodeValue::Strikethrough | NodeValue::Underline => unreachable!(),
+            NodeValue::Strikethrough => unreachable!(),
             NodeValue::Paragraph => {
                 let dict = PyDict::new(py);
                 dict.set_item(py, "e", "par")?;

@@ -150,7 +150,13 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
                 }
             }
             _ => if self.options.ext_strikethrough && c == '~' {
-                new_inl = Some(self.handle_delim(b'~'));
+                // Reddit quirk - strikethrough requires at least two twiddles
+                if self.options.ext_reddit_quirks && self.peek_char_n(1) != Some(&(b'~')) {
+                    self.pos += 1;
+                    new_inl = Some(make_inline(self.arena, NodeValue::Text(b"~".to_vec())));
+                } else {
+                    new_inl = Some(self.handle_delim(b'~'));
+                }
             } else if self.options.ext_superscript && c == '^' {
                 new_inl = Some(self.handle_delim(b'^'));
             } else if self.options.ext_reddit_quirks && c == '^' {
@@ -720,11 +726,7 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
         let emph = make_inline(
             self.arena,
             if self.options.ext_strikethrough && opener_char == b'~' {
-                if use_delims == 1 {
-                    NodeValue::Underline
-                } else {
-                    NodeValue::Strikethrough
-                }
+                NodeValue::Strikethrough
             } else if self.options.ext_superscript && opener_char == b'^' {
                 NodeValue::Superscript
             } else if self.options.ext_reddit_quirks && opener_char == b'^' {

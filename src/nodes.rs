@@ -119,9 +119,6 @@ pub enum NodeValue {
     /// **Inline**.  FormattedString. Reddit extension
     FormattedText(Vec<u8>, Vec<[u16; 3]>),
 
-    /// **Inline**.  Underline. Reddit extension.
-    Underline,
-
     /// **Inline** SpoilerText. Reddit extension.
     SpoilerText,
 
