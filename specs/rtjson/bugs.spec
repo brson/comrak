@@ -1007,3 +1007,12 @@ Nothing but newlines and spaces and tabs
 {"document": []}
 ````````````````````````````````
 
+## A quick_render bug found through fuzzing
+
+```````````````````````````````` example
+ <div class
+foo
+.
+{"document": [{"c": [{"e": "text", "t": " <div class\nfoo\n"}], "e": "par"}]}
+````````````````````````````````
+
