@@ -123,7 +123,7 @@ py_module_initializer!(snoomark, initsnoomark, PyInit_snoomark, |py, m| {
     const DOC_VERSION: &'static str = env!("CARGO_PKG_VERSION");
     let doc_string = format!("[{} {}] This module is implemented in Rust.", DOC_NAME, DOC_VERSION);
     try!(m.add(py, "__doc__", doc_string));
-    try!(m.add(py, "cm_to_rtjson", py_fn!(py, cm_to_rtjson_py(cm: String))));
+    try!(m.add(py, "cm_to_rtjson", py_fn!(py, cm_to_rtjson(cm: String))));
     add_flame_fns(py, m)?;
     Ok(())
 });
@@ -215,6 +215,9 @@ fn flame_clear(py: Python) -> PyResult<PyObject> {
 #[cfg(feature = "cpython")]
 #[cfg_attr(any(feature = "flamegraphs", feature = "minflame"), flame)]
 pub fn cm_to_rtjson(py: Python, cm: String) -> PyResult<PyObject> {
+    if let Some(obj) = quick_render(py, &cm) {
+        return Ok(obj);
+    }
     let arena = Arena::new();
 
     let options = ComrakOptions {
@@ -236,18 +239,6 @@ pub fn cm_to_rtjson(py: Python, cm: String) -> PyResult<PyObject> {
 
     let root = parse_document(&arena, &cm, &options);
     rtjson::format_document(py, root)
-}
-
-/// Convert from a `serde_json::Value` to a `cpython::PyObject`.
-/// Code originally inspired from library by Iliana Weller found at
-/// https://github.com/ilianaw/rust-cpython-json/blob/master/src/lib.rs
-#[cfg_attr(any(feature = "flamegraphs", feature = "minflame"), flame)]
-#[cfg(feature = "cpython")]
-pub fn cm_to_rtjson_py(py: Python, cm: String) -> PyResult<PyObject> {
-    if let Some(obj) = quick_render(py, &cm) {
-        return Ok(obj);
-    }
-    cm_to_rtjson(py, cm)
 }
 
 // An optimization for simple documents that use minimal markup, rendering
