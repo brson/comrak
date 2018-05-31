@@ -258,3 +258,76 @@ pub fn validate_url_scheme(url: &[u8]) -> bool {
 
     VALID_SCHEMES.iter().any(|scheme| url.starts_with(scheme))
 }
+
+// This is significantly faster than the line iterator in std. Std's iterator
+// goes through several complex layers of abstraction and uses a slower memchr
+// implementation.
+pub fn fast_lines(buf: &str) -> FastLines {
+    FastLines(buf.as_bytes())
+}
+
+pub struct FastLines<'a>(&'a [u8]);
+
+impl<'a> Iterator for FastLines<'a> {
+    type Item = &'a str;
+
+    #[inline]
+    fn next(&mut self) -> Option<&'a str> {
+        use memchr::memchr;
+
+        let slice = &mut self.0;
+
+        if self.0.is_empty() {
+            return None;
+        }
+
+        let line;
+
+        unsafe {
+            if let Some(i) = memchr(b'\n', slice) {
+                if i > 0 && slice.get_unchecked(i - 1) == &b'\r' {
+                    line = slice.get_unchecked(0..i - 1);
+                } else {
+                    line = slice.get_unchecked(0..i);
+                }
+                *slice = slice.get_unchecked(i + 1..);
+            } else {
+                line = slice;
+                *slice = slice.get_unchecked(0..0);
+            }
+
+            Some(::std::str::from_utf8_unchecked(line))
+        }
+    }
+}
+
+/// Look for characters that indicate that the fast-path renderer can't be
+/// taken. In my synthetic tests this table-based approach is surprisingly
+/// faster than the jetscii crate that uses explicit simd intrinsics, but it
+/// might be worth revisiting that later.
+#[inline]
+pub fn contains_forbidden_chars(s: &str) -> bool {
+    static FORBIDDEN_CHARS: &[char] = &[
+        '#', '_', '*', '=', '-', '~', '|', '[', '\\', '<', '>', '^', '`', '&', '/', ':', '@'
+    ];
+
+    lazy_static! {
+        static ref TABLE: &'static [bool; 256] = {
+            static mut TABLE: [bool; 256] = [false; 256];
+            unsafe {
+                for ch in FORBIDDEN_CHARS {
+                    TABLE[*ch as usize] = true;
+                }
+                &TABLE
+            }
+        };
+    }
+
+    for byte in s.as_bytes().iter() {
+        if TABLE[*byte as usize] {
+            return true;
+        }
+    }
+
+    false
+}

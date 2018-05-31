@@ -1391,6 +1391,111 @@ A sublist.
 {"document": [{"c": [{"c": [{"c": [{"e": "text", "t": ""}], "e": "par"}, {"c": [{"c": [{"c": [{"e": "text", "t": "b"}], "e": "par"}], "e": "li"}], "e": "list", "o": true}], "e": "li"}], "e": "list", "o": true}]}
 ````````````````````````````````
 
+## Tests of no-markup cases to ensure the quick_render optimization works.
+
+```````````````````````````````` example
+One line paragraph.
+.
+{"document": [{"c": [{"e": "text", "t": "One line paragraph."}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+Multi
+line
+paragraph.
+.
+{"document": [{"c": [{"e": "text", "t": "Multi line paragraph."}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+One
+paragraph.
+
+Two
+paragraphs.
+.
+{"document": [{"c": [{"e": "text", "t": "One paragraph."}], "e": "par"}, {"c": [{"e": "text", "t": "Two paragraphs."}], "e": "par"}]}
+````````````````````````````````
+
+With extra spaces
+
+```````````````````````````````` example
+ One 
+  paragraph.
+
+Two 
+  paragraphs.
+.
+{"document": [{"c": [{"e": "text", "t": "One paragraph."}], "e": "par"}, {"c": [{"e": "text", "t": "Two paragraphs."}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+One
+paragraph.
+
+
+Two
+paragraphs.
+
+.
+{"document": [{"c": [{"e": "text", "t": "One paragraph."}], "e": "par"}, {"c": [{"e": "text", "t": "Two paragraphs."}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+Para
+    not code
+.
+{"document": [{"c": [{"e": "text", "t": "Para not code"}], "e": "par"}]}
+````````````````````````````````
+
+Some bailout cases that quick_render rejects after speculating that it
+will be able to process the document.
+
+```````````````````````````````` example
+Para
+1. list
+.
+{"document": [{"c": [{"e": "text", "t": "Para"}], "e": "par"}, {"c": [{"c": [{"c": [{"e": "text", "t": "list"}], "e": "par"}], "e": "li"}], "e": "list", "o": true}]}
+````````````````````````````````
+
+```````````````````````````````` example
+Para
+
+1. list
+.
+{"document": [{"c": [{"e": "text", "t": "Para"}], "e": "par"}, {"c": [{"c": [{"c": [{"e": "text", "t": "list"}], "e": "par"}], "e": "li"}], "e": "list", "o": true}]}
+````````````````````````````````
+
+```````````````````````````````` example
+Para
+1) list
+.
+{"document": [{"c": [{"e": "text", "t": "Para"}], "e": "par"}, {"c": [{"c": [{"c": [{"e": "text", "t": "list"}], "e": "par"}], "e": "li"}], "e": "list", "o": true}]}
+````````````````````````````````
+
+```````````````````````````````` example
+Para
+
+1) list
+.
+{"document": [{"c": [{"e": "text", "t": "Para"}], "e": "par"}, {"c": [{"c": [{"c": [{"e": "text", "t": "list"}], "e": "par"}], "e": "li"}], "e": "list", "o": true}]}
+````````````````````````````````
+
+```````````````````````````````` example
+1.
+
+.
+{"document": [{"c": [{"c": [{"c": [{"e": "text", "t": ""}], "e": "par"}], "e": "li"}], "e": "list", "o": true}]}
+````````````````````````````````
+
+```````````````````````````````` example
+Para
+
+    code
+.
+{"document": [{"c": [{"e": "text", "t": "Para"}], "e": "par"}, {"c": [{"e": "raw", "t": "code"}], "e": "code"}]}
+````````````````````````````````
+                                                                   
 ## Spaces in links
 
 CREATE-1531

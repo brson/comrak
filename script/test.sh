@@ -35,6 +35,7 @@ fi
 # Then the python test harness
 run python3 script/spec_tests.py --rtjson --spec specs/rtjson/rtjson.spec
 run python3 script/spec_tests.py --rtjson --spec specs/rtjson/bugs.spec
+run python2 script/stack_smash_test.py
 
 if [[ errors -ne 0 ]]; then
 	echo -e "\nsome tests failed\n"
