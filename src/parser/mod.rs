@@ -1939,7 +1939,8 @@ impl<'a, 'o> Parser<'a, 'o> {
 
         subj.pos += 1;
         subj.spnl();
-        let matchlen = match inlines::manual_scan_link_url(&subj.input[subj.pos..]) {
+        let matchlen = match inlines::manual_scan_link_url(&subj.input[subj.pos..],
+                                                           self.options.ext_reddit_quirks) {
             Some(matchlen) => matchlen,
             None => return None,
         };

@@ -1495,3 +1495,116 @@ Para
 .
 {"document": [{"c": [{"e": "text", "t": "Para"}], "e": "par"}, {"c": [{"e": "raw", "t": "code"}], "e": "code"}]}
 ````````````````````````````````
+                                                                   
+## Spaces in links
+
+CREATE-1531
+
+```````````````````````````````` example
+[a](http://example.com/foo bar)
+.
+{"document": [{"c": [{"u": "http://example.com/foo bar", "e": "link", "t": "a"}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+[a](http://example.com/foo "bar")
+.
+{"document": [{"c": [{"a": "bar", "u": "http://example.com/foo", "e": "link", "t": "a"}], "e": "par"}]}
+````````````````````````````````
+
+This parses differently in snudown (it doesn't parse).
+
+```````````````````````````````` example
+[a](http://example.com/foo "bar)
+.
+{"document": [{"c": [{"u": "http://example.com/foo \"bar", "e": "link", "t": "a"}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+[a](http://example.com/foo "ba\"r")
+.
+{"document": [{"c": [{"a": "ba\"r", "u": "http://example.com/foo", "e": "link", "t": "a"}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+[a](http://example.com/foo" "bar")
+.
+{"document": [{"c": [{"a": "bar", "u": "http://example.com/foo\"", "e": "link", "t": "a"}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+[a](http://example.com/foo (bar))
+.
+{"document": [{"c": [{"a": "bar", "u": "http://example.com/foo", "e": "link", "t": "a"}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+[a](<http://example.com/foo bar>)
+.
+{"document": [{"c": [{"u": "http://example.com/foo bar", "e": "link", "t": "a"}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+[a](http://example.com/foo   "bar")
+.
+{"document": [{"c": [{"a": "bar", "u": "http://example.com/foo", "e": "link", "t": "a"}], "e": "par"}]}
+````````````````````````````````
+
+This parses differently in snudown.
+
+```````````````````````````````` example
+[a](http://example.com/foo "bar" "baz")
+
+.
+{"document": [{"c": [{"a": "baz", "u": "http://example.com/foo \"bar\"", "e": "link", "t": "a"}], "e": "par"}]}
+````````````````````````````````
+
+This parses diffently in snudown.
+
+```````````````````````````````` example
+[a](http://example.com/foo (bar) (baz))
+.
+{"document": [{"c": [{"a": "baz", "u": "http://example.com/foo (bar)", "e": "link", "t": "a"}], "e": "par"}]}
+````````````````````````````````
+
+Trailing space gets trimmed.
+
+```````````````````````````````` example
+[a](http://example.com/foo )
+.
+{"document": [{"c": [{"u": "http://example.com/foo", "e": "link", "t": "a"}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+[a](http://example.com/foo "bar" )
+.
+{"document": [{"c": [{"a": "bar", "u": "http://example.com/foo", "e": "link", "t": "a"}], "e": "par"}]}
+````````````````````````````````
+
+Reference links also support spaces.
+
+```````````````````````````````` example
+[a]
+
+[a]: http://example.com/foo bar
+.
+{"document": [{"c": [{"u": "http://example.com/foo bar", "e": "link", "t": "a"}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+[a]
+
+[a]: http://example.com/foo "bar"
+.
+{"document": [{"c": [{"a": "bar", "u": "http://example.com/foo", "e": "link", "t": "a"}], "e": "par"}]}
+````````````````````````````````
+
+Reference links without spaces still work.
+
+```````````````````````````````` example
+[a]
+
+[a]: http://example.com
+.
+{"document": [{"c": [{"u": "http://example.com", "e": "link", "t": "a"}], "e": "par"}]}
+````````````````````````````````

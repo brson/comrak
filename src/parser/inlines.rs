@@ -876,7 +876,8 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
         if self.peek_char() == Some(&(b'(')) && {
             sps = scanners::spacechars(&self.input[self.pos + 1..]).unwrap_or(0);
             unwrap_into(
-                manual_scan_link_url(&self.input[self.pos + 1 + sps..]),
+                manual_scan_link_url(&self.input[self.pos + 1 + sps..],
+                                     self.options.ext_reddit_quirks),
                 &mut n,
             )
         } {
@@ -1215,7 +1216,7 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
     }
 }
 
-pub fn manual_scan_link_url(input: &[u8]) -> Option<usize> {
+pub fn manual_scan_link_url(input: &[u8], reddit_quirks: bool) -> Option<usize> {
     let len = input.len();
     let mut i = 0;
     let mut nb_p = 0;
@@ -1229,8 +1230,11 @@ pub fn manual_scan_link_url(input: &[u8]) -> Option<usize> {
                 break;
             } else if b == b'\\' {
                 i += 2;
-            } else if isspace(b) || b == b'<' {
+            } else if !reddit_quirks && (isspace(b) || b == b'<') {
                 return None;
+            } else if reddit_quirks && ((isspace(b) && b != b' ') || b == b'<') {
+                // ^ Reddit allows space in links (but not newlines and tabs)
+                i += 1;
             } else {
                 i += 1;
             }
@@ -1251,8 +1255,41 @@ pub fn manual_scan_link_url(input: &[u8]) -> Option<usize> {
                 }
                 nb_p -= 1;
                 i += 1;
-            } else if isspace(input[i]) {
+            } else if !reddit_quirks && isspace(input[i]) {
                 break;
+            } else if reddit_quirks && isspace(input[i]) {
+                // Reddit allows space in links (but not newlines and tabs)
+                if input[i] != b' ' {
+                    break;
+                }
+
+                // Reddit allows spaces in links. Here we duplicate the logic
+                // from handle_close_brackets to figure out if the thing that
+                // comes after a space will parse as a title; and if so, if what
+                // follows is a closing paren (for inline links) or eol (for
+                // reference links).
+                let starttitle = i + scanners::spacechars(&input[i..]).unwrap_or(0);
+                let endtitle = starttitle + scanners::link_title(&input[starttitle..]).unwrap_or(0);
+                if starttitle == endtitle {
+                    // Not a title, just spaces
+                    i = endtitle;
+                } else {
+                    // Scan past any spaces after the title
+                    let endall = endtitle + scanners::spacechars(&input[endtitle..]).unwrap_or(0);
+                    if endall < input.len() && input[endall] == b')' {
+                        // The space was (probably) separating the title in an inline link
+                        break;
+                    } else if endall == input.len() {
+                        // The space was (probably) separating the title in a reference link
+                        break;
+                    } else {
+                        // Not a title, just spaces
+                        // NB: endall - 1 is the _last_ space scanned by spacechars above,
+                        // so that we leave one to interpret again in the loop, while not
+                        // rescanning any others if there are multiple spaces.
+                        i = endall - 1;
+                    }
+                }
             } else {
                 i += 1;
             }
