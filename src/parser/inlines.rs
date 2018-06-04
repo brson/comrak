@@ -27,7 +27,7 @@ pub struct Subject<'a: 'd, 'r, 'o, 'd, 'i> {
     brackets: Vec<Bracket<'a, 'd>>,
     pub backticks: [usize; MAXBACKTICKS + 1],
     pub scanned_for_backticks: bool,
-    special_chars: Vec<bool>,
+    special_chars: [bool; 256],
 }
 
 pub struct Delimiter<'a: 'd, 'd> {
@@ -69,9 +69,8 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
             brackets: vec![],
             backticks: [0; MAXBACKTICKS + 1],
             scanned_for_backticks: false,
-            special_chars: vec![],
+            special_chars: [false; 256],
         };
-        s.special_chars.extend_from_slice(&[false; 256]);
         for &c in &[
             b'\n', b'\r', b'_', b'*', b'"', b'`', b'\\', b'&', b'<', b'[', b']', b'!', b'>'
         ] {
