@@ -105,7 +105,6 @@ pub use html::format_document as format_html;
 pub use parser::{parse_document, ComrakOptions};
 pub use typed_arena::Arena;
 
-extern crate libc;
 #[cfg(feature = "cpython")]
 #[macro_use] extern crate cpython;
 

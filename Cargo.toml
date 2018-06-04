@@ -30,7 +30,6 @@ entities = "1.0.0"
 unicode_categories = "0.1.1"
 clap = { version = "2.22.2", optional = true }
 clippy = { version = "~0.0.123", optional = true }
-libc = "0.2.23"
 twoway = "0.1"
 pest = "1.0"
 pest_derive = "1.0"
