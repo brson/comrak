@@ -204,16 +204,25 @@ impl<'a, 'o> CommonMarkFormatter<'a, 'o> {
         self.need_cr = max(self.need_cr, 2);
     }
 
-    fn format_children(&mut self, node: &'a AstNode<'a>) {
-        for n in node.children() {
-            self.format(n);
-        }
-    }
-
     fn format(&mut self, node: &'a AstNode<'a>) {
-        if self.format_node(node, true) {
-            self.format_children(node);
-            self.format_node(node, false);
+
+        enum Phase { Pre, Post }
+        let mut stack = vec![(node, Phase::Pre)];
+
+        while let Some((node, phase)) = stack.pop() {
+            match phase {
+                Phase::Pre => {
+                    if self.format_node(node, true) {
+                        stack.push((node, Phase::Post));
+                        for ch in node.reverse_children() {
+                            stack.push((ch, Phase::Pre));
+                        }
+                    }
+                }
+                Phase::Post => {
+                    self.format_node(node, false);
+                }
+            }
         }
     }
 
@@ -349,45 +358,20 @@ impl<'a, 'o> CommonMarkFormatter<'a, 'o> {
                 if !first_in_list_item {
                     self.blankline();
                 }
-            }
-            NodeValue::ThematicBreak => {
-                if entering {
-                    self.blankline();
-                    write!(self, "-----").unwrap();
-                    self.blankline();
-                }
-            }
-            NodeValue::Paragraph => {
-                if !entering {
-                    self.blankline();
-                }
-            }
-            NodeValue::FormattedText(_, _) => (),
-            NodeValue::Text(ref literal) => {
-                if entering {
-                    self.output(literal.as_bytes(), allow_wrap, Escaping::Normal);
-                }
-            }
-            NodeValue::LineBreak => {
-                if entering {
-                    if !self.options.hardbreaks {
-                        write!(self, "  ").unwrap();
-                    }
-                    self.cr();
-                }
-            }
-            NodeValue::SoftBreak => {
-                if entering {
-                    if !self.no_linebreaks && self.options.width == 0 && !self.options.hardbreaks {
-                        self.cr();
-                    } else {
-                        self.output(&[b' '], allow_wrap, Escaping::Literal);
-                    }
-                }
-            }
-            NodeValue::Code(ref literal) => {
-                if entering {
-                    let numticks = shortest_unused_sequence(literal, b'`');
+
+                if ncb.info.is_empty()
+                    && (ncb.literal.len() > 2 && !isspace(ncb.literal[0])
+                        && !(isspace(ncb.literal[ncb.literal.len() - 1])
+                            && isspace(ncb.literal[ncb.literal.len() - 2])))
+                    && !first_in_list_item
+                {
+                    write!(self, "    ").unwrap();
+                    write!(self.prefix, "    ").unwrap();
+                    self.write_all(&ncb.literal).unwrap();
+                    let new_len = self.prefix.len() - 4;
+                    self.prefix.truncate(new_len);
+                } else {
+                    let numticks = max(3, longest_backtick_sequence(&ncb.literal) + 1);
                     for _ in 0..numticks {
                         write!(self, "`").unwrap();
                     }
@@ -487,40 +471,23 @@ impl<'a, 'o> CommonMarkFormatter<'a, 'o> {
             NodeValue::Link(ref nl) => if is_autolink(node, nl) {
                 if entering {
                     write!(self, "<").unwrap();
-                    if &nl.url[..7] == b"mailto:" {
+                    if nl.url.len() >= 7 && &nl.url[..7] == b"mailto:" {
                         self.write_all(&nl.url[7..]).unwrap();
                     } else {
                         self.write_all(&nl.url).unwrap();
                     }
                     write!(self, ">").unwrap();
                     return false;
-                } else if entering {
-                write!(self, "[").unwrap();
-                } else {
-                    write!(self, "](").unwrap();
-                    self.output(&nl.url, false, Escaping::URL);
-                    if !nl.title.is_empty() {
-                        write!(self, " \"").unwrap();
-                        self.output(&nl.title, false, Escaping::Title);
-                        write!(self, "\"").unwrap();
-                    }
                 }
-            }
-            NodeValue::FormattedLink(..) => (),
-            NodeValue::UnformattedLink(..) => (),
-            NodeValue::RedditLink(..) => (),
-            NodeValue::Image(ref nl) => {
-                if entering {
-                    write!(self, "![").unwrap();
-                } else {
-                    write!(self, "](").unwrap();
-                    self.output(nl.url.as_bytes(), false, Escaping::URL);
-                    if !nl.title.is_empty() {
-                        self.output(&[b' ', b'"'], allow_wrap, Escaping::Literal);
-                        self.output(nl.title.as_bytes(), false, Escaping::Title);
-                        write!(self, "\"").unwrap();
-                    }
-                    write!(self, ")").unwrap();
+            } else if entering {
+                write!(self, "[").unwrap();
+            } else {
+                write!(self, "](").unwrap();
+                self.output(&nl.url, false, Escaping::URL);
+                if !nl.title.is_empty() {
+                    write!(self, " \"").unwrap();
+                    self.output(&nl.title, false, Escaping::Title);
+                    write!(self, "\"").unwrap();
                 }
                 write!(self, ")").unwrap();
             },
@@ -597,6 +564,9 @@ impl<'a, 'o> CommonMarkFormatter<'a, 'o> {
                 self.write_all(r).unwrap();
                 self.write_all(b"]").unwrap();
             },
+            _ => {
+                // TODO: reddit nodes
+            }
         };
         true
     }
@@ -665,7 +635,7 @@ fn is_autolink<'a>(node: &'a AstNode<'a>, nl: &NodeLink) -> bool {
     };
 
     let mut real_url: &[u8] = &nl.url;
-    if &real_url[..7] == b"mailto:" {
+    if real_url.len() >=7 && &real_url[..7] == b"mailto:" {
         real_url = &real_url[7..];
     }
 

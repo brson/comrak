@@ -67,9 +67,6 @@ pub struct Parser<'a, 'o> {
 #[derive(Default, Debug, Clone)]
 /// Options for both parser and formatter functions.
 pub struct ComrakOptions {
-    /// RTJSON AST formatting
-    pub rtjson: bool,
-
     /// [Soft line breaks](http://spec.commonmark.org/0.27/#soft-line-breaks) in the input
     /// translate into hard line breaks in the output.
     ///
@@ -84,6 +81,21 @@ pub struct ComrakOptions {
     ///            "<p>Hello.<br />\nWorld.</p>\n");
     /// ```
     pub hardbreaks: bool,
+
+    /// Punctuation (quotes, full-stops and hyphens) are converted into 'smart' punctuation.
+    ///
+    /// ```ignore
+    /// # use comrak::{markdown_to_html, ComrakOptions};
+    /// let mut options = ComrakOptions::default();
+    /// assert_eq!(markdown_to_html("'Hello,' \"world\" ...", &options),
+    ///            "<p>'Hello,' &quot;world&quot; ...</p>\n");
+    ///
+    /// options.smart = true;
+    /// assert_eq!(markdown_to_html("'Hello,' \"world\" ...", &options),
+    ///            "<p>‘Hello,’ “world” …</p>\n");
+    /// ```
+    pub smart: bool,
+
 
     /// GitHub-style `<pre lang="xyz">` is used for fenced code blocks with info tags.
     ///
@@ -122,6 +134,45 @@ pub struct ComrakOptions {
     /// # }
     /// ```
     pub width: usize,
+
+    /// The default info string for fenced code blocks.
+    ///
+    /// ```ignore
+    /// # use comrak::{markdown_to_html, ComrakOptions};
+    /// let mut options = ComrakOptions::default();
+    /// assert_eq!(markdown_to_html("```\nfn hello();\n```\n", &options),
+    ///            "<pre><code>fn hello();\n</code></pre>\n");
+    ///
+    /// options.default_info_string = Some("rust".into());
+    /// assert_eq!(markdown_to_html("```\nfn hello();\n```\n", &options),
+    ///            "<pre><code class=\"language-rust\">fn hello();\n</code></pre>\n");
+    /// ```
+    pub default_info_string: Option<String>,
+
+    /// Disable rendering of raw HTML and potentially dangerous links.
+    ///
+    /// ```ignore
+    /// # use comrak::{markdown_to_html, ComrakOptions};
+    /// let mut options = ComrakOptions::default();
+    /// let input = "<script>\nalert('xyz');\n</script>\n\n\
+    ///              Possibly <marquee>annoying</marquee>.\n\n\
+    ///              [Dangerous](javascript:alert(document.cookie)).\n\n\
+    ///              [Safe](http://commonmark.org).\n";
+    ///
+    /// assert_eq!(markdown_to_html(input, &options),
+    ///            "<script>\nalert(\'xyz\');\n</script>\n\
+    ///             <p>Possibly <marquee>annoying</marquee>.</p>\n\
+    ///             <p><a href=\"javascript:alert(document.cookie)\">Dangerous</a>.</p>\n\
+    ///             <p><a href=\"http://commonmark.org\">Safe</a>.</p>\n");
+    ///
+    /// options.safe = true;
+    /// assert_eq!(markdown_to_html(input, &options),
+    ///            "<!-- raw HTML omitted -->\n\
+    ///             <p>Possibly <!-- raw HTML omitted -->annoying<!-- raw HTML omitted -->.</p>\n\
+    ///             <p><a href=\"\">Dangerous</a>.</p>\n\
+    ///             <p><a href=\"http://commonmark.org\">Safe</a>.</p>\n");
+    /// ```
+    pub safe: bool,
 
     /// Enables the
     /// [strikethrough extension](https://github.github.com/gfm/#strikethrough-extension-)
@@ -242,6 +293,11 @@ pub struct ComrakOptions {
     ///            "<p>Hi<sup class=\"footnote-ref\"><a href=\"#fn1\" id=\"fnref1\">[1]</a></sup>.</p>\n<section class=\"footnotes\">\n<ol>\n<li id=\"fn1\">\n<p>A greeting. <a href=\"#fnref1\" class=\"footnote-backref\">↩</a></p>\n</li>\n</ol>\n</section>\n");
     /// ```
     pub ext_footnotes: bool,
+
+    // Reddit-specific options
+
+    /// Enable the RTJSON-specific AST-munging pass
+    pub rtjson: bool,
 
     /// Enables the spoilertext extension per `Reddit Flavored Markdown`.
     ///

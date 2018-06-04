@@ -17,9 +17,7 @@
 //!
 //! ```ignore
 //! extern crate comrak;
-//! extern crate typed_arena;
-//! use typed_arena::Arena;
-//! use comrak::{parse_document, format_html, ComrakOptions};
+//! use comrak::{Arena, parse_document, format_html, ComrakOptions};
 //! use comrak::nodes::{AstNode, NodeValue};
 //!
 //! # fn main() {
@@ -62,47 +60,50 @@
 //! # }
 //! ```
 
-#![deny(missing_debug_implementations, missing_copy_implementations, trivial_casts,
-        trivial_numeric_casts, unused_import_braces)]
-#![cfg_attr(feature = "dev", allow(unstable_features))]
+#![deny(missing_docs, missing_debug_implementations, missing_copy_implementations, trivial_casts,
+        trivial_numeric_casts, unstable_features, unused_import_braces)]
 #![allow(unknown_lints, doc_markdown, cyclomatic_complexity)]
-
-#![cfg_attr(rustbuild, feature(staged_api, rustc_private))]
-#![cfg_attr(rustbuild, unstable(feature = "rustc_private", issue = "27812"))]
 
 #![cfg_attr(any(feature = "flamegraphs", feature = "minflame"), feature(alloc_system))]
 #![cfg_attr(any(feature = "flamegraphs", feature = "minflame"), feature(plugin, custom_attribute))]
 #![cfg_attr(any(feature = "flamegraphs", feature = "minflame"), plugin(flamer))]
 
-#[cfg(any(feature = "flamegraphs", feature = "minflame"))]
-extern crate flame;
-#[cfg(any(feature = "flamegraphs", feature = "minflame"))]
-extern crate alloc_system;
 
-extern crate unicode_categories;
-extern crate typed_arena;
-extern crate regex;
 extern crate entities;
 #[macro_use]
 extern crate lazy_static;
 extern crate pest;
 #[macro_use]
 extern crate pest_derive;
+extern crate regex;
 extern crate twoway;
+extern crate typed_arena;
+extern crate unicode_categories;
+
+// Reddit imports
+#[cfg(any(feature = "flamegraphs", feature = "minflame"))]
+extern crate flame;
+#[cfg(any(feature = "flamegraphs", feature = "minflame"))]
+extern crate alloc_system;
 extern crate memchr;
 
 mod arena_tree;
 mod parser;
 mod scanners;
+mod cm;
 mod html;
-mod rtjson;
 mod ctype;
-mod nodes;
+pub mod nodes;
 mod entity;
 mod strings;
 
+// Reddit modules
+mod rtjson;
+
+pub use cm::format_document as format_commonmark;
+pub use html::format_document as format_html;
 pub use parser::{parse_document, ComrakOptions};
-use typed_arena::Arena;
+pub use typed_arena::Arena;
 
 extern crate libc;
 #[cfg(feature = "cpython")]
@@ -111,22 +112,28 @@ extern crate libc;
 #[cfg(feature = "cpython")]
 use cpython::*;
 
-// add bindings to the generated python module
-// This initializes the Python module and assigns the name `snoomark`,
-// which converts Reddit-flavored CommonMark (or legacy Markdown) to RTJSON.
-#[cfg(feature = "cpython")]
-py_module_initializer!(snoomark, initsnoomark, PyInit_snoomark, |py, m| {
+// Hack: this module is just to provide a place to annotate `allow(missing_docs)`
+#[allow(missing_docs)]
+pub mod py {
+    use super::*;
+
     // add bindings to the generated python module
     // This initializes the Python module and assigns the name `snoomark`,
     // which converts Reddit-flavored CommonMark (or legacy Markdown) to RTJSON.
-    const DOC_NAME: &'static str = env!("CARGO_PKG_NAME");
-    const DOC_VERSION: &'static str = env!("CARGO_PKG_VERSION");
-    let doc_string = format!("[{} {}] This module is implemented in Rust.", DOC_NAME, DOC_VERSION);
-    try!(m.add(py, "__doc__", doc_string));
-    try!(m.add(py, "cm_to_rtjson", py_fn!(py, cm_to_rtjson(cm: String))));
-    add_flame_fns(py, m)?;
-    Ok(())
-});
+    #[cfg(feature = "cpython")]
+    py_module_initializer!(snoomark, initsnoomark, PyInit_snoomark, |py, m| {
+        // add bindings to the generated python module
+        // This initializes the Python module and assigns the name `snoomark`,
+        // which converts Reddit-flavored CommonMark (or legacy Markdown) to RTJSON.
+        const DOC_NAME: &'static str = env!("CARGO_PKG_NAME");
+        const DOC_VERSION: &'static str = env!("CARGO_PKG_VERSION");
+        let doc_string = format!("[{} {}] This module is implemented in Rust.", DOC_NAME, DOC_VERSION);
+        try!(m.add(py, "__doc__", doc_string));
+        try!(m.add(py, "cm_to_rtjson", py_fn!(py, cm_to_rtjson(cm: String))));
+        add_flame_fns(py, m)?;
+        Ok(())
+    });
+}
 
 #[cfg(all(feature = "cpython", any(feature = "flamegraphs", feature = "minflame")))]
 fn add_flame_fns(py: Python, m: &PyModule) -> PyResult<()> {
@@ -208,10 +215,10 @@ fn flame_clear(py: Python) -> PyResult<PyObject> {
     Ok(py.None())
 }
 
-// rust-cpython aware function. All of our python interface could be
-// declared in a separate module.
-// Note that the py_fn!() macro automatically converts the arguments from
-// Python objects to Rust values; and the Rust return value back into a Python object.
+/// rust-cpython aware function. All of our python interface could be
+/// declared in a separate module.
+/// Note that the py_fn!() macro automatically converts the arguments from
+/// Python objects to Rust values; and the Rust return value back into a Python object.
 #[cfg(feature = "cpython")]
 #[cfg_attr(any(feature = "flamegraphs", feature = "minflame"), flame)]
 pub fn cm_to_rtjson(py: Python, cm: String) -> PyResult<PyObject> {
@@ -223,8 +230,11 @@ pub fn cm_to_rtjson(py: Python, cm: String) -> PyResult<PyObject> {
     let options = ComrakOptions {
         rtjson: true,
         hardbreaks: false,
+        smart: false,
         github_pre_lang: false,
         width: 0,
+        default_info_string: None,
+        safe: false,
         ext_strikethrough: true,
         ext_tagfilter: false,
         ext_table: true,
