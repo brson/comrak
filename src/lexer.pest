@@ -58,9 +58,3 @@ table_cell_end = { "|" ~ table_spacechar* ~ table_newline? }
 table_row_end = { table_spacechar* ~ table_newline }
 
 dangerous_url = { "data:" ~ !("png" | "gif" | "jpeg" | "webp") | "javascript:" | "vbscript:" | "file:" }
-
-alpha = { 'a'..'z' | 'A'..'Z' }
-digit = { '0'..'9' }
-
-ident = { (alpha | digit)+ }
-reddit_link = { "/"? ~ ("u" | "r" | "c" | "p") ~ "/" ~ ident }
