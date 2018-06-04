@@ -13,6 +13,9 @@ run() {
 	echo
 }
 
+# Don't allow warnings to get past CI
+export RUSTFLAGS="-Dwarnings"
+
 if [[ "$1" == "--release" ]]; then
     export SM_TARGET="release"
     cargo_build_arg="--release"
