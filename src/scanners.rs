@@ -191,3 +191,8 @@ pub fn table_row_end(line: &[u8]) -> Option<usize> {
 pub fn table_marker(line: &[u8]) -> Option<usize> {
     search(Rule::table_marker, line)
 }
+
+#[inline(always)]
+pub fn dangerous_url(line: &[u8]) -> Option<usize> {
+    search(Rule::dangerous_url, line)
+}

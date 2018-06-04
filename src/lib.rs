@@ -76,6 +76,10 @@ extern crate pest;
 #[macro_use]
 extern crate pest_derive;
 extern crate regex;
+#[cfg(feature = "benchmarks")]
+extern crate test;
+#[cfg(test)]
+extern crate timebomb;
 extern crate twoway;
 extern crate typed_arena;
 extern crate unicode_categories;
@@ -98,6 +102,8 @@ mod ctype;
 pub mod nodes;
 mod entity;
 mod strings;
+#[cfg(test)]
+mod tests;
 
 // Reddit modules
 pub mod py;

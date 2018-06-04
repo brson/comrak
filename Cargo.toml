@@ -37,6 +37,9 @@ flame = { version = "0.2.2", optional = true }
 flamer = { version = "^0.2.1", optional = true }
 memchr = "2.0.1"
 
+[dev-dependencies]
+timebomb = "0.1.2"
+
 [features]
 default = ["clap", "cpython", "cpython/extension-module-2-7"]
 dev = ["clap", "clippy", "cpython", "cpython/extension-module-2-7"]
