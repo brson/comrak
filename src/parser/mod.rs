@@ -1618,7 +1618,7 @@ impl<'a, 'o> Parser<'a, 'o> {
                     self.reset_rtjson_node(unformatted_text, format_ranges, range_idx);
                 }
             },
-            NodeValue::Media(ref nl) => {
+            NodeValue::Media(..) => {
                 // Image syntax in rtjson is actually a media element, with the
                 // 'text' being either "img", "vid", or "gif". Any other
                 // childeren beneath the image results in something unsupported.
