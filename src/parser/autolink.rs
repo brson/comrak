@@ -1,5 +1,5 @@
 use ctype::{isalnum, isalpha, isspace};
-use nodes::{AstNode, NodeLink, NodeValue};
+use nodes::{AstNode, NodeLink, NodeRedditLink, NodeValue};
 use parser::inlines::make_inline;
 use std::str;
 use strings;
@@ -104,7 +104,6 @@ fn www_match<'a>(
         NodeValue::Link(NodeLink {
             url: url,
             title: vec![],
-            l: false,
         }),
     );
 
@@ -255,7 +254,6 @@ fn url_match<'a>(
         NodeValue::Link(NodeLink {
             url: url.clone(),
             title: vec![],
-            l: false,
         }),
     );
 
@@ -342,7 +340,6 @@ fn email_match<'a>(
         NodeValue::Link(NodeLink {
             url: url,
             title: vec![],
-            l: false,
         }),
     );
 
@@ -393,9 +390,9 @@ pub fn process_redditlinks<'a>(
 
     let inl = make_inline(
         arena,
-        NodeValue::RedditLink(NodeLink{
-            url: prefix.to_vec(),
-            title: name.to_vec(),
+        NodeValue::RedditLink(NodeRedditLink{
+            prefix: prefix.to_vec(),
+            name: name.to_vec(),
             l: leading_slash,
         })
     );

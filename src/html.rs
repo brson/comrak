@@ -645,19 +645,19 @@ impl<'o> HtmlFormatter<'o> {
             NodeValue::UnformattedLink(..) => (),
             NodeValue::RedditLink(ref nl) => if entering {
                 try!(self.output.write_all(b"<a href=\"/"));
-                try!(self.escape_href(&nl.url));
-                try!(self.escape_href(&nl.title));
-                if !nl.title.is_empty() {
+                try!(self.escape_href(&nl.prefix));
+                try!(self.escape_href(&nl.name));
+                if !nl.name.is_empty() {
                     try!(self.output.write_all(b"\" title=\""));
                     try!(self.output.write_all(b"/"));
-                    try!(self.escape_href(&nl.url));
-                    try!(self.escape(&nl.title));
+                    try!(self.escape_href(&nl.prefix));
+                    try!(self.escape(&nl.name));
                 }
                 try!(self.output.write_all(b"\">"));
             } else {
                 try!(self.output.write_all(b"/"));
-                try!(self.escape_href(&nl.url));
-                try!(self.escape(&nl.title));
+                try!(self.escape_href(&nl.prefix));
+                try!(self.escape(&nl.name));
                 try!(self.output.write_all(b"</a>"));
             },
             NodeValue::SpoilerText => if entering {

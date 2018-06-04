@@ -123,7 +123,7 @@ pub enum NodeValue {
     SpoilerText,
 
     /// **Inline**. A RedditLink
-    RedditLink(NodeLink),
+    RedditLink(NodeRedditLink),
 
     /// **Inline**.  An RTJSON FormattedLink
     FormattedLink(NodeFormatLink),
@@ -159,6 +159,16 @@ pub struct NodeLink {
     /// Note this field is used for the `title` attribute by the HTML formatter even for images;
     /// `alt` text is supplied in the image inline text.
     pub title: Vec<u8>,
+}
+
+/// The details of a link's destination, or an image's source.
+#[derive(Debug, Clone)]
+pub struct NodeRedditLink {
+    /// "r" for Reddit-links, "u" for user-links
+    pub prefix: Vec<u8>,
+
+    /// User/subreddit name
+    pub name: Vec<u8>,
 
     /// The l field for the leading slash in reddit/user links
     pub l: bool,
