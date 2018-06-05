@@ -41,7 +41,7 @@ run python3 script/spec_tests.py --rtjson --spec specs/rtjson/bugs.spec
 run python2 script/stack_smash_test.py
 
 # Also test commonmark HTML rendering
-run python3 script/spec_tests.py --spec specs/html/spec-gfm.txt -p "target/$SM_TARGET/snoomark"
+run python3 script/spec_tests.py --spec specs/html/spec.txt -p "target/$SM_TARGET/snoomark"
 
 if [[ errors -ne 0 ]]; then
 	echo -e "\nsome tests failed\n"
