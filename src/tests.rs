@@ -237,7 +237,6 @@ fn html_block_6() {
 }
 
 #[test]
-#[ignore] // Reddit
 fn html_block_7() {
     html(
         concat!(
@@ -314,7 +313,6 @@ fn entities() {
 }
 
 #[test]
-#[ignore] // Reddit
 fn pointy_brace() {
     html(
         concat!(
@@ -361,7 +359,6 @@ fn links() {
 }
 
 #[test]
-#[ignore] // Reddit
 fn images() {
     html(
         concat!("I am ![eating [things](/url)](http://i.imgur.com/QqK1vq7.png).\n"),
@@ -373,7 +370,6 @@ fn images() {
 }
 
 #[test]
-#[ignore] // Reddit
 fn reference_links() {
     html(
         concat!(
@@ -471,7 +467,6 @@ fn autolink_scheme_multiline() {
 }
 
 #[test]
-#[ignore] // Reddit
 fn tagfilter() {
     html_opts(
         concat!("hi <xmp> ok\n", "\n", "<xmp>\n"),
@@ -481,7 +476,6 @@ fn tagfilter() {
 }
 
 #[test]
-#[ignore] // Reddit
 fn tasklist() {
     html_opts(
         concat!(
@@ -527,7 +521,6 @@ fn tasklist() {
 }
 
 #[test]
-#[ignore] // Reddit
 fn tasklist_32() {
     html_opts(
         concat!(
