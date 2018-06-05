@@ -1011,7 +1011,7 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
         );
 
         let mut brackets_len = self.brackets.len();
-        if good_url {
+        if good_url || !self.options.ext_reddit_quirks {
             // If it's a good url then insert the new link node before the opening
             // bracket, move all the link text to a child of the link node,
             // then (further down) detach the opening bracket from the AST.
