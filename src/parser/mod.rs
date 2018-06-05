@@ -1925,7 +1925,7 @@ impl<'a, 'o> Parser<'a, 'o> {
         }
 
         if self.options.ext_autolink {
-            autolink::process_autolinks(self.arena, node, text);
+            autolink::process_autolinks(self.arena, node, text, self.options.ext_reddit_quirks);
         }
 
         autolink::process_redditlinks(self.arena, node, text);

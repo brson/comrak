@@ -12,6 +12,7 @@ pub fn process_autolinks<'a>(
     arena: &'a Arena<AstNode<'a>>,
     node: &'a AstNode<'a>,
     contents: &mut Vec<u8>,
+    reddit_quirks: bool,
 ) {
     let len = contents.len();
     let mut i = 0;
@@ -22,19 +23,19 @@ pub fn process_autolinks<'a>(
         while i < len {
             match contents[i] {
                 b':' => {
-                    post_org = url_match(arena, contents, i);
+                    post_org = url_match(arena, contents, i, reddit_quirks);
                     if post_org.is_some() {
                         break;
                     }
                 }
                 b'w' => {
-                    post_org = www_match(arena, contents, i);
+                    post_org = www_match(arena, contents, i, reddit_quirks);
                     if post_org.is_some() {
                         break;
                     }
                 }
                 b'@' => {
-                    post_org = email_match(arena, contents, i);
+                    post_org = email_match(arena, contents, i, reddit_quirks);
                     if post_org.is_some() {
                         break;
                     }
@@ -62,6 +63,7 @@ fn www_match<'a>(
     arena: &'a Arena<AstNode<'a>>,
     contents: &[u8],
     i: usize,
+    reddit_quirks: bool,
 ) -> Option<(&'a AstNode<'a>, usize, usize)> {
     lazy_static! {
         static ref WWW_DELIMS: [bool; 256] = {
@@ -95,7 +97,7 @@ fn www_match<'a>(
     let mut url = b"http://".to_vec();
     url.extend_from_slice(&contents[i..link_end + i]);
 
-    if !strings::validate_url_scheme(&url) {
+    if reddit_quirks && !strings::validate_url_scheme(&url) {
         return None;
     }
 
@@ -210,6 +212,7 @@ fn url_match<'a>(
     arena: &'a Arena<AstNode<'a>>,
     contents: &[u8],
     i: usize,
+    reddit_quirks: bool,
 ) -> Option<(&'a AstNode<'a>, usize, usize)> {
     lazy_static! {
         static ref SCHEMES: Vec<&'static [u8]> =
@@ -245,7 +248,7 @@ fn url_match<'a>(
 
     let url = contents[i - rewind..i + link_end].to_vec();
 
-    if !strings::validate_url_scheme(&url) {
+    if reddit_quirks && !strings::validate_url_scheme(&url) {
         return None;
     }
 
@@ -265,6 +268,7 @@ fn email_match<'a>(
     arena: &'a Arena<AstNode<'a>>,
     contents: &[u8],
     i: usize,
+    reddit_quirks: bool,
 ) -> Option<(&'a AstNode<'a>, usize, usize)> {
     lazy_static! {
         static ref EMAIL_OK_SET: [bool; 256] = {
@@ -331,7 +335,7 @@ fn email_match<'a>(
     let mut url = b"mailto:".to_vec();
     url.extend_from_slice(&contents[i - rewind..link_end + i]);
 
-    if !strings::validate_url_scheme(&url) {
+    if reddit_quirks && !strings::validate_url_scheme(&url) {
         return None;
     }
 
