@@ -72,7 +72,7 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
             special_chars: [false; 256],
         };
         for &c in &[
-            b'\n', b'\r', b'_', b'*', b'"', b'`', b'\\', b'&', b'<', b'[', b']', b'!', b'>'
+            b'\n', b'\r', b'_', b'*', b'"', b'`', b'\\', b'&', b'<', b'[', b']', b'!'
         ] {
             s.special_chars[c as usize] = true;
         }
@@ -87,6 +87,7 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
                         "ext_superscript and ext_reddit_quirks are incompatible");
             s.special_chars[b'^' as usize] = true;
             s.special_chars[b')' as usize] = true;
+            s.special_chars[b'>' as usize] = true;
         }
         s
     }
@@ -116,7 +117,7 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
             '<' => new_inl = Some(self.handle_pointy_brace()),
             '>' => {
                 self.pos += 1;
-                if self.peek_char() == Some(&(b'!')) {
+                if self.options.ext_reddit_quirks && self.peek_char() == Some(&(b'!')) {
                     self.pos += 1;
                     new_inl = Some(self.handle_spoiler(true));
                 } else {
@@ -141,7 +142,7 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
                     let inl = make_inline(self.arena, NodeValue::Text(b"![".to_vec()));
                     new_inl = Some(inl);
                     self.push_bracket(true, inl);
-                } else if self.peek_char() == Some(&(b'<')) {
+                } else if self.options.ext_reddit_quirks && self.peek_char() == Some(&(b'<')) {
                     self.pos += 1;
                     new_inl = Some(self.handle_spoiler(false));
                 } else {
@@ -261,6 +262,9 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
             }
             if self.options.ext_superscript || self.options.ext_reddit_quirks {
                 i['^' as usize] = stack_bottom;
+            }
+            if self.options.ext_reddit_quirks {
+                i['!' as usize] = stack_bottom;
             }
         }
 
