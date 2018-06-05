@@ -260,10 +260,12 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
             if self.options.ext_strikethrough {
                 i['~' as usize] = stack_bottom;
             }
-            if self.options.ext_superscript || self.options.ext_reddit_quirks {
+            if self.options.ext_superscript {
                 i['^' as usize] = stack_bottom;
             }
             if self.options.ext_reddit_quirks {
+                i['^' as usize] = stack_bottom;
+                i['.' as usize] = stack_bottom;
                 i['!' as usize] = stack_bottom;
             }
         }
