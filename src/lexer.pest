@@ -1,5 +1,6 @@
 atx_heading_start = { "#"{1, 6} ~ (" " | "\t" | "\r" | "\n") }
-reddit_atx_heading_start = { "#"{1, 6} }
+// Reddit quirk - hashes don't need to be followed by space
+atx_heading_start_reddit = { "#"{1, 6} }
 
 open_code_fence = _{ open_code_fence_match ~ (!("`" | "\r" | "\n" | "\x00") ~ any)* ~ ("\r" | "\n") }
 open_code_fence_match = { "`"{3,} | "~"{3,} }
@@ -46,9 +47,10 @@ link_title = { "\"" ~ (escaped_char | (!("\"" | "\x00") ~ any))* ~ "\"" | "'" ~ 
 
 table_spacechar = _{ " " | "\t" | "\x0b" | "\x0c" }
 table_newline = _{ "\r"? ~ "\n" }
+table_marker = _{ table_spacechar* ~ ":"? ~ "-"+ ~ ":"? ~ table_spacechar* }
 // Reddit quirk - comrak doesn't produce tokens for this case but we've got
 // to use this rule to verify table marker cells
-table_marker = { table_spacechar* ~ ":"? ~ "-"+ ~ ":"? ~ table_spacechar* }
+table_marker_reddit = { table_spacechar* ~ ":"? ~ "-"+ ~ ":"? ~ table_spacechar* }
 table_cell = { ( escaped_char | !("|" | "\r" | "\n") ~ any)* }
 
 table_start = { "|"? ~ table_marker ~ ("|" ~ table_marker)* ~ "|"? ~ table_spacechar* ~ table_newline }

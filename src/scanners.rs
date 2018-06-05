@@ -27,7 +27,7 @@ pub fn atx_heading_start(line: &[u8], reddit_quirks: bool) -> Option<usize> {
     if !reddit_quirks {
         search(Rule::atx_heading_start, line)
     } else {
-        search(Rule::reddit_atx_heading_start, line)
+        search(Rule::atx_heading_start_reddit, line)
     }
 }
 
@@ -189,7 +189,7 @@ pub fn table_row_end(line: &[u8]) -> Option<usize> {
 
 #[inline(always)]
 pub fn table_marker(line: &[u8]) -> Option<usize> {
-    search(Rule::table_marker, line)
+    search(Rule::table_marker_reddit, line)
 }
 
 #[inline(always)]
