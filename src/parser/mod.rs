@@ -461,6 +461,7 @@ impl<'a, 'o> Parser<'a, 'o> {
         } else {
             line
         };
+
         self.offset = 0;
         self.column = 0;
         self.blank = false;
@@ -632,7 +633,6 @@ impl<'a, 'o> Parser<'a, 'o> {
                     level: level,
                     setext: false,
                 });
-
             } else if !indented
                 && unwrap_into(
                     scanners::open_code_fence(&line[self.first_nonspace..]),
