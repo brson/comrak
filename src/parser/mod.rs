@@ -588,7 +588,8 @@ impl<'a, 'o> Parser<'a, 'o> {
             self.find_first_nonspace(line);
             let indented = self.indent >= CODE_INDENT;
 
-            if !indented && line[self.first_nonspace] == b'>' && line[self.first_nonspace + 1] != b'!' {
+            if !indented && line[self.first_nonspace] == b'>'
+                && (!self.options.ext_reddit_quirks || line[self.first_nonspace + 1] != b'!') {
                 let blockquote_startpos = self.first_nonspace;
                 let offset = self.first_nonspace + 1 - self.offset;
                 self.advance_offset(line, offset, false);
@@ -862,7 +863,8 @@ impl<'a, 'o> Parser<'a, 'o> {
     #[cfg_attr(feature = "flamegraphs", flame)]
     fn parse_block_quote_prefix(&mut self, line: &[u8]) -> bool {
         let indent = self.indent;
-        if indent <= 3 && line[self.first_nonspace] == b'>'  && line[self.first_nonspace + 1] != b'!' {
+        if indent <= 3 && line[self.first_nonspace] == b'>'
+            && (!self.options.ext_reddit_quirks || line[self.first_nonspace + 1] != b'!' ) {
             self.advance_offset(line, indent + 1, true);
 
             if strings::is_space_or_tab(line[self.offset]) {
