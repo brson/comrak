@@ -1415,8 +1415,8 @@ impl<'a, 'o> Parser<'a, 'o> {
                                 }
                             }
                         }
-                        NodeValue::Link(..) | NodeValue::RedditLink(..) |
-                        NodeValue::Image(..) | NodeValue::Media(..) => {
+                        NodeValue::Link(..) | NodeValue::Image(..) |
+                        NodeValue::RedditLink(..) | NodeValue::Media(..) => {
                             this_bracket = true;
                             break;
                         }
