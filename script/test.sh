@@ -35,9 +35,11 @@ if [[ -z "$SPECS_ONLY" ]]; then
 	run cargo test "$cargo_build_arg"
 fi
 
-# Then the python test harness
+# Run the RTJSON spec tests via Python
 run python3 script/spec_tests.py --rtjson --spec specs/rtjson/rtjson.spec
 run python3 script/spec_tests.py --rtjson --spec specs/rtjson/bugs.spec
+
+# And additional tests
 run python2 script/stack_smash_test.py
 
 # Also test commonmark HTML rendering
