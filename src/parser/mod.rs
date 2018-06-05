@@ -1963,7 +1963,7 @@ impl<'a, 'o> Parser<'a, 'o> {
         *text = text[end..].to_vec();
         let checkbox = inlines::make_inline(
             self.arena,
-            NodeValue::Text(if active {
+            NodeValue::HtmlInline(if active {
                 b"<input type=\"checkbox\" disabled=\"\" checked=\"\" />".to_vec()
             } else {
                 b"<input type=\"checkbox\" disabled=\"\" />".to_vec()
