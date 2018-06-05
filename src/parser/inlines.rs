@@ -304,7 +304,7 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
                 // This search short-circuits for openers we've previously
                 // failed to find, avoiding repeatedly rescanning the bottom of
                 // the stack, using the openers_bottom array.
-                while opener.is_some() && !Self::del_ref_eq(opener, stack_bottom)
+                while opener.is_some()
                     && !Self::del_ref_eq(
                         opener,
                         openers_bottom[closer.unwrap().length % 3]
