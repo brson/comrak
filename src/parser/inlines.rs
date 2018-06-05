@@ -842,7 +842,11 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
 
         if let Some(matchlen) = scanners::html_tag(&self.input[self.pos..]) {
             let contents = &self.input[self.pos - 1..self.pos + matchlen];
-            let inl = make_inline(self.arena, NodeValue::Text(contents.to_vec()));
+            let inl = if !self.options.ext_reddit_quirks {
+                make_inline(self.arena, NodeValue::HtmlInline(contents.to_vec()))
+            } else {
+                make_inline(self.arena, NodeValue::Text(contents.to_vec()))
+            };
             self.pos += matchlen;
             return inl;
         }
