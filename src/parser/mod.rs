@@ -32,7 +32,6 @@ pub fn parse_document<'a>(
     let root: &'a AstNode<'a> = arena.alloc(Node::new(RefCell::new(Ast {
         value: NodeValue::Document,
         content: vec![],
-        start_line: 0,
         open: true,
         last_line_blank: false,
     })));
@@ -890,7 +889,7 @@ impl<'a, 'o> Parser<'a, 'o> {
             parent = self.finalize(parent).unwrap();
         }
 
-        let child = make_block(value, self.line_number);
+        let child = make_block(value);
         let node = self.arena.alloc(Node::new(RefCell::new(child)));
         parent.append(node);
         node
@@ -916,7 +915,6 @@ impl<'a, 'o> Parser<'a, 'o> {
                 NodeValue::CodeBlock(ref ncb) => !ncb.fenced,
                 NodeValue::Item(..) => {
                     container.first_child().is_some()
-                        || container.data.borrow().start_line != self.line_number
                 }
                 _ => true,
             };

@@ -312,9 +312,6 @@ pub struct Ast {
     /// The node value itself.
     pub value: NodeValue,
 
-    /// The line in the input document the node starts at.
-    pub start_line: u32,
-
     #[doc(hidden)]
     pub content: Vec<u8>,
     #[doc(hidden)]
@@ -324,11 +321,10 @@ pub struct Ast {
 }
 
 #[doc(hidden)]
-pub fn make_block(value: NodeValue, start_line: u32) -> Ast {
+pub fn make_block(value: NodeValue) -> Ast {
     Ast {
         value: value,
         content: vec![],
-        start_line: start_line,
         open: true,
         last_line_blank: false,
     }

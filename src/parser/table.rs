@@ -60,7 +60,6 @@ fn try_opening_header<'a, 'o>(
 
     let child = make_block(
         NodeValue::Table(alignments),
-        parser.line_number,
     );
     let table = parser.arena.alloc(Node::new(RefCell::new(child)));
     container.append(table);

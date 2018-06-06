@@ -1089,7 +1089,6 @@ pub fn make_inline<'a>(arena: &'a Arena<AstNode<'a>>, value: NodeValue) -> &'a A
     let ast = Ast {
         value: value,
         content: vec![],
-        start_line: 0,
         open: false,
         last_line_blank: false,
     };
