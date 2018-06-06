@@ -1,5 +1,10 @@
 //! The `comrak` binary.
 
+use std::alloc::System;
+
+#[global_allocator]
+static A: System = System;
+
 extern crate comrak;
 
 #[macro_use]
