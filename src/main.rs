@@ -142,7 +142,8 @@ fn main() {
     };
 
     let arena = Arena::new();
-    let root = comrak::parse_document(&arena, &String::from_utf8(s).unwrap(), &options);
+    let d_arena = Arena::new();
+    let root = comrak::parse_document(&arena, &d_arena, &String::from_utf8(s).unwrap(), &options);
 
     let formatter = match matches.value_of("format") {
         Some("html") => comrak::format_html,

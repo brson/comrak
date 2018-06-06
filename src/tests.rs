@@ -31,17 +31,18 @@ where
     F: Fn(&mut ComrakOptions),
 {
     let arena = Arena::new();
+    let d_arena = Arena::new();
     let mut options = ComrakOptions::default();
     opts(&mut options);
 
-    let root = parse_document(&arena, input, &options);
+    let root = parse_document(&arena, &d_arena, input, &options);
     let mut output = vec![];
     html::format_document(root, &options, &mut output).unwrap();
     compare_strs(&String::from_utf8(output).unwrap(), expected, "regular");
 
     let mut md = vec![];
     cm::format_document(root, &options, &mut md).unwrap();
-    let root = parse_document(&arena, &String::from_utf8(md).unwrap(), &options);
+    let root = parse_document(&arena, &d_arena, &String::from_utf8(md).unwrap(), &options);
     let mut output_from_rt = vec![];
     html::format_document(root, &options, &mut output_from_rt).unwrap();
     compare_strs(
@@ -62,7 +63,8 @@ fn bench_progit(b: &mut Bencher) {
     file.read_to_string(&mut s).unwrap();
     b.iter(|| {
         let arena = Arena::new();
-        let root = parse_document(&arena, &s, &ComrakOptions::default());
+        let d_arena = Arena::new();
+        let root = parse_document(&arena, &d_arena, &s, &ComrakOptions::default());
         let mut output = vec![];
         html::format_document(root, &ComrakOptions::default(), &mut output).unwrap()
     });
@@ -802,7 +804,8 @@ fn nested_tables_3() {
 fn no_stack_smash_html() {
     let s: String = ::std::iter::repeat('>').take(150_000).collect();
     let arena = Arena::new();
-    let root = parse_document(&arena, &s, &ComrakOptions::default());
+    let d_arena = Arena::new();
+    let root = parse_document(&arena, &d_arena, &s, &ComrakOptions::default());
     let mut output = vec![];
     html::format_document(root, &ComrakOptions::default(), &mut output).unwrap()
 }
@@ -811,7 +814,8 @@ fn no_stack_smash_html() {
 fn no_stack_smash_cm() {
     let s: String = ::std::iter::repeat('>').take(150_000).collect();
     let arena = Arena::new();
-    let root = parse_document(&arena, &s, &ComrakOptions::default());
+    let d_arena = Arena::new();
+    let root = parse_document(&arena, &d_arena, &s, &ComrakOptions::default());
     let mut output = vec![];
     cm::format_document(root, &ComrakOptions::default(), &mut output).unwrap()
 }
