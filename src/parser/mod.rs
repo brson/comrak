@@ -606,7 +606,7 @@ impl<'a, 'o> Parser<'a, 'o> {
                     fence_length: matched,
                     fence_offset: first_nonspace - offset,
                     info: Vec::with_capacity(10),
-                    literal: Vec::with_capacity(80),
+                    literal: vec![],
                 };
                 *container =
                     self.add_child(*container, NodeValue::CodeBlock(ncb), first_nonspace + 1);
@@ -625,7 +625,7 @@ impl<'a, 'o> Parser<'a, 'o> {
                 let offset = self.first_nonspace + 1;
                 let nhb = NodeHtmlBlock {
                     block_type: matched as u8,
-                    literal: Vec::with_capacity(10),
+                    literal: vec![],
                 };
 
                 *container = self.add_child(*container, NodeValue::HtmlBlock(nhb), offset);
@@ -731,7 +731,7 @@ impl<'a, 'o> Parser<'a, 'o> {
                     fence_length: 0,
                     fence_offset: 0,
                     info: vec![],
-                    literal: Vec::with_capacity(80),
+                    literal: vec![],
                 };
                 let offset = self.offset + 1;
                 *container = self.add_child(*container, NodeValue::CodeBlock(ncb), offset);
