@@ -953,9 +953,9 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
         let inl = make_inline(
             self.arena,
             if is_image {
-                NodeValue::Image(nl)
+                NodeValue::Image(Box::new(nl))
             } else {
-                NodeValue::Link(nl)
+                NodeValue::Link(Box::new(nl))
             },
         );
 
@@ -1102,10 +1102,10 @@ fn make_autolink<'a>(
 ) -> &'a AstNode<'a> {
     let inl = make_inline(
         arena,
-        NodeValue::Link(NodeLink {
+        NodeValue::Link(Box::new(NodeLink {
             url: strings::clean_autolink(url, kind),
             title: vec![],
-        }),
+        })),
     );
     inl.append(make_inline(
         arena,

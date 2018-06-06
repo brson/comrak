@@ -94,10 +94,10 @@ fn www_match<'a>(
 
     let inl = make_inline(
         arena,
-        NodeValue::Link(NodeLink {
+        NodeValue::Link(Box::new(NodeLink {
             url: url,
             title: vec![],
-        }),
+        })),
     );
 
     inl.append(make_inline(
@@ -239,10 +239,10 @@ fn url_match<'a>(
     let url = contents[i - rewind..i + link_end].to_vec();
     let inl = make_inline(
         arena,
-        NodeValue::Link(NodeLink {
+        NodeValue::Link(Box::new(NodeLink {
             url: url.clone(),
             title: vec![],
-        }),
+        })),
     );
 
     inl.append(make_inline(arena, NodeValue::Text(url)));
@@ -321,10 +321,10 @@ fn email_match<'a>(
 
     let inl = make_inline(
         arena,
-        NodeValue::Link(NodeLink {
+        NodeValue::Link(Box::new(NodeLink {
             url: url,
             title: vec![],
-        }),
+        })),
     );
 
     inl.append(make_inline(

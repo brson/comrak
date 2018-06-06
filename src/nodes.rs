@@ -104,10 +104,10 @@ pub enum NodeValue {
 
     /// **Inline**.  A [link](https://github.github.com/gfm/#links) to some URL, with possible
     /// title.
-    Link(NodeLink),
+    Link(Box<NodeLink>),
 
     /// **Inline**.  An [image](https://github.github.com/gfm/#images).
-    Image(NodeLink),
+    Image(Box<NodeLink>),
 
     /// **Inline**.  A footnote reference; the `Vec<u8>` is the referent footnote's name.
     FootnoteReference(Vec<u8>),
