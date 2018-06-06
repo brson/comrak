@@ -24,8 +24,9 @@ const CODE_INDENT: usize = 4;
 /// Parse a Markdown document to an AST.
 ///
 /// See the documentation of the crate root for an example.
-pub fn parse_document<'a>(
+pub fn parse_document<'a: 'd, 'd>(
     arena: &'a Arena<AstNode<'a>>,
+    delimiter_arena: &'d Arena<inlines::Delimiter<'a, 'd>>,
     buffer: &str,
     options: &ComrakOptions,
 ) -> &'a AstNode<'a> {
@@ -39,13 +40,14 @@ pub fn parse_document<'a>(
         open: true,
         last_line_blank: false,
     })));
-    let mut parser = Parser::new(arena, root, options);
+    let mut parser = Parser::new(arena, delimiter_arena, root, options);
     parser.feed(buffer.as_bytes(), true);
     parser.finish()
 }
 
-pub struct Parser<'a, 'o> {
+pub struct Parser<'a: 'd, 'o, 'd> {
     arena: &'a Arena<AstNode<'a>>,
+    delimiter_arena: &'d Arena<inlines::Delimiter<'a, 'd>>,
     refmap: HashMap<Vec<u8>, Reference>,
     root: &'a AstNode<'a>,
     current: &'a AstNode<'a>,
@@ -304,14 +306,16 @@ struct FootnoteDefinition<'a> {
     node: &'a AstNode<'a>,
 }
 
-impl<'a, 'o> Parser<'a, 'o> {
+impl<'a: 'd, 'o, 'd> Parser<'a, 'o, 'd> {
     pub fn new(
         arena: &'a Arena<AstNode<'a>>,
+        delimiter_arena: &'d Arena<inlines::Delimiter<'a, 'd>>,
         root: &'a AstNode<'a>,
         options: &'o ComrakOptions,
-    ) -> Parser<'a, 'o> {
+    ) -> Parser<'a, 'o, 'd> {
         Parser {
             arena: arena,
+            delimiter_arena: delimiter_arena,
             refmap: HashMap::new(),
             root: root,
             current: root,
@@ -1205,7 +1209,6 @@ impl<'a, 'o> Parser<'a, 'o> {
     }
 
     fn parse_inlines(&mut self, node: &'a AstNode<'a>) {
-        let delimiter_arena = Arena::new();
         let node_data = node.data.borrow();
         let content = strings::rtrim_slice(&node_data.content);
         let mut subj = inlines::Subject::new(
@@ -1213,7 +1216,7 @@ impl<'a, 'o> Parser<'a, 'o> {
             self.options,
             content,
             &mut self.refmap,
-            &delimiter_arena,
+            self.delimiter_arena,
         );
 
         while !subj.eof() && subj.parse_inline(node) {}

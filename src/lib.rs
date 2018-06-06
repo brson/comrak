@@ -103,7 +103,8 @@ pub use typed_arena::Arena;
 /// See the documentation of the crate root for an example.
 pub fn markdown_to_html(md: &str, options: &ComrakOptions) -> String {
     let arena = Arena::new();
-    let root = parse_document(&arena, md, options);
+    let d_arena = Arena::new();
+    let root = parse_document(&arena, &d_arena, md, options);
     let mut s = Vec::new();
     format_html(root, options, &mut s).unwrap();
     String::from_utf8(s).unwrap()

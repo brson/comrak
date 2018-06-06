@@ -30,6 +30,7 @@ pub struct Subject<'a: 'd, 'r, 'o, 'd, 'i> {
     smart_chars: [bool; 256],
 }
 
+#[derive(Debug)]
 pub struct Delimiter<'a: 'd, 'd> {
     inl: &'a AstNode<'a>,
     length: usize,
@@ -49,7 +50,7 @@ struct Bracket<'a: 'd, 'd> {
     bracket_after: bool,
 }
 
-impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
+impl<'a: 'd, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
     pub fn new(
         arena: &'a Arena<AstNode<'a>>,
         options: &'o ComrakOptions,
