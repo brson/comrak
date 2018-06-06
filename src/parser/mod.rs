@@ -10,6 +10,7 @@ use nodes::{make_block, Ast, AstNode, ListDelimType, ListType, NodeCodeBlock, No
             NodeHtmlBlock, NodeList, NodeValue};
 use regex::bytes::Regex;
 use scanners;
+use std::boxed::Box;
 use std::cell::RefCell;
 use std::cmp::min;
 use std::collections::HashMap;
@@ -603,7 +604,7 @@ impl<'a, 'o> Parser<'a, 'o> {
                     literal: Vec::new(),
                 };
                 *container =
-                    self.add_child(*container, NodeValue::CodeBlock(ncb));
+                    self.add_child(*container, NodeValue::CodeBlock(Box::new(ncb)));
                 self.advance_offset(line, first_nonspace + matched - offset, false);
             } else if !indented
                 && (unwrap_into(
@@ -721,7 +722,7 @@ impl<'a, 'o> Parser<'a, 'o> {
                     info: vec![],
                     literal: Vec::new(),
                 };
-                *container = self.add_child(*container, NodeValue::CodeBlock(ncb));
+                *container = self.add_child(*container, NodeValue::CodeBlock(Box::new(ncb)));
             } else {
                 let new_container = if !indented && self.options.ext_table {
                     table::try_opening_block(self, *container, line)

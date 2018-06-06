@@ -1,6 +1,7 @@
 //! The CommonMark AST.
 
 use arena_tree::Node;
+use std::boxed::Box;
 use std::cell::RefCell;
 
 /// The core AST node enum.
@@ -36,7 +37,7 @@ pub enum NodeValue {
     /// **Block**. A code block; may be [fenced](https://github.github.com/gfm/#fenced-code-blocks)
     /// or [indented](https://github.github.com/gfm/#indented-code-blocks).  Contains raw text
     /// which is not parsed as Markdown, although is HTML escaped.
-    CodeBlock(NodeCodeBlock),
+    CodeBlock(Box<NodeCodeBlock>),
 
     /// **Block**. A [HTML block](https://github.github.com/gfm/#html-blocks).  Contains raw text
     /// which is neither parsed as Markdown nor HTML escaped.
