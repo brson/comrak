@@ -30,13 +30,15 @@ entities = "1.0.0"
 unicode_categories = "0.1.1"
 clap = { version = "2.22.2", optional = true }
 clippy = { version = "~0.0.123", optional = true }
-libc = "0.2.23"
 twoway = "0.1"
 pest = "1.0"
 pest_derive = "1.0"
 flame = { version = "0.2.2", optional = true }
 flamer = { version = "^0.2.1", optional = true }
 memchr = "2.0.1"
+
+[dev-dependencies]
+timebomb = "0.1.2"
 
 [features]
 default = ["clap", "cpython", "cpython/extension-module-2-7"]

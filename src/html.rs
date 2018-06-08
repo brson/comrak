@@ -2,6 +2,7 @@ use ctype::isspace;
 use nodes::{AstNode, ListType, NodeValue, TableAlignment};
 use parser::ComrakOptions;
 use regex::Regex;
+use scanners;
 use std::borrow::Cow;
 use std::cell::Cell;
 use std::collections::HashSet;
@@ -149,6 +150,10 @@ fn tagfilter_block(input: &[u8], o: &mut Write) -> io::Result<()> {
     Ok(())
 }
 
+fn dangerous_url(input: &[u8]) -> bool {
+    scanners::dangerous_url(input).is_some()
+}
+
 impl<'o> HtmlFormatter<'o> {
     fn new(options: &'o ComrakOptions, output: &'o mut WriteWithLast<'o>) -> Self {
         HtmlFormatter {
@@ -254,31 +259,48 @@ impl<'o> HtmlFormatter<'o> {
         Ok(())
     }
 
-    fn format_children<'a>(&mut self, node: &'a AstNode<'a>, plain: bool) -> io::Result<()> {
-        for n in node.children() {
-            try!(self.format(n, plain));
-        }
-        Ok(())
-    }
-
     fn format<'a>(&mut self, node: &'a AstNode<'a>, plain: bool) -> io::Result<()> {
-        if plain {
-            match node.data.borrow().value {
-                NodeValue::Text(ref literal)
-                | NodeValue::Code(ref literal)
-                | NodeValue::HtmlInline(ref literal) => {
-                    try!(self.escape(literal));
+        // Traverse the AST iteratively using a work stack, with pre- and
+        // post-child-traversal phases. During pre-order traversal render the
+        // opening tags, then push the node back onto the stack for the
+        // post-order traversal phase, then push the children in reverse order
+        // onto the stack and begin rendering first child.
+
+        enum Phase { Pre, Post }
+        let mut stack = vec![(node, plain, Phase::Pre)];
+
+        while let Some((node, plain, phase)) = stack.pop() {
+            match phase {
+                Phase::Pre => {
+                    let new_plain;
+                    if plain {
+                        match node.data.borrow().value {
+                            NodeValue::Text(ref literal)
+                            | NodeValue::Code(ref literal)
+                            | NodeValue::HtmlInline(ref literal) => {
+                                try!(self.escape(literal));
+                            }
+                            NodeValue::LineBreak | NodeValue::SoftBreak => {
+                                try!(self.output.write_all(b" "));
+                            }
+                            _ => (),
+                        }
+                        new_plain = plain;
+                    }
+                    else {
+                        stack.push((node, false, Phase::Post));
+                        new_plain = try!(self.format_node(node, true));
+                    }
+
+                    for ch in node.reverse_children() {
+                        stack.push((ch, new_plain, Phase::Pre));
+                    }
                 }
-                NodeValue::LineBreak | NodeValue::SoftBreak => {
-                    try!(self.output.write_all(b" "));
+                Phase::Post => {
+                    debug_assert!(!plain);
+                    try!(self.format_node(node, false));
                 }
-                _ => (),
             }
-            try!(self.format_children(node, true));
-        } else {
-            let new_plain = try!(self.format_node(node, true));
-            try!(self.format_children(node, new_plain));
-            try!(self.format_node(node, false));
         }
 
         Ok(())
@@ -399,7 +421,9 @@ impl<'o> HtmlFormatter<'o> {
             },
             NodeValue::HtmlBlock(ref nhb) => if entering {
                 try!(self.cr());
-                if self.options.ext_tagfilter {
+                if self.options.safe {
+                    try!(self.output.write_all(b"<!-- raw HTML omitted -->"));
+                } else if self.options.ext_tagfilter {
                     try!(tagfilter_block(&nhb.literal, &mut self.output));
                 } else {
                     try!(self.output.write_all(&nhb.literal));
@@ -455,7 +479,9 @@ impl<'o> HtmlFormatter<'o> {
                 try!(self.output.write_all(b"</code>"));
             },
             NodeValue::HtmlInline(ref literal) => if entering {
-                if self.options.ext_tagfilter && tagfilter(literal) {
+                if self.options.safe {
+                    try!(self.output.write_all(b"<!-- raw HTML omitted -->"));
+                } else if self.options.ext_tagfilter && tagfilter(literal) {
                     try!(self.output.write_all(b"&lt;"));
                     try!(self.output.write_all(&literal[1..]));
                 } else {
@@ -484,7 +510,9 @@ impl<'o> HtmlFormatter<'o> {
             },
             NodeValue::Link(ref nl) => if entering {
                 try!(self.output.write_all(b"<a href=\""));
-                try!(self.escape_href(&nl.url));
+                if !self.options.safe || !dangerous_url(&nl.url) {
+                    try!(self.escape_href(&nl.url));
+                }
                 if !nl.title.is_empty() {
                     try!(self.output.write_all(b"\" title=\""));
                     try!(self.escape(&nl.title));
@@ -495,7 +523,9 @@ impl<'o> HtmlFormatter<'o> {
             },
             NodeValue::Image(ref nl) => if entering {
                 try!(self.output.write_all(b"<img src=\""));
-                try!(self.escape_href(&nl.url));
+                if !self.options.safe || !dangerous_url(&nl.url) {
+                    try!(self.escape_href(&nl.url));
+                }
                 try!(self.output.write_all(b"\" alt=\""));
                 return Ok(true);
             } else {
@@ -608,24 +638,26 @@ impl<'o> HtmlFormatter<'o> {
                     r, r, r
                 ));
             },
+
+            // Reddit nodes
             NodeValue::FormattedText(_, _) => (),
             NodeValue::FormattedLink(..) => (),
             NodeValue::UnformattedLink(..) => (),
             NodeValue::RedditLink(ref nl) => if entering {
                 try!(self.output.write_all(b"<a href=\"/"));
-                try!(self.escape_href(&nl.url));
-                try!(self.escape_href(&nl.title));
-                if !nl.title.is_empty() {
+                try!(self.escape_href(&nl.prefix));
+                try!(self.escape_href(&nl.name));
+                if !nl.name.is_empty() {
                     try!(self.output.write_all(b"\" title=\""));
                     try!(self.output.write_all(b"/"));
-                    try!(self.escape_href(&nl.url));
-                    try!(self.escape(&nl.title));
+                    try!(self.escape_href(&nl.prefix));
+                    try!(self.escape(&nl.name));
                 }
                 try!(self.output.write_all(b"\">"));
             } else {
                 try!(self.output.write_all(b"/"));
-                try!(self.escape_href(&nl.url));
-                try!(self.escape(&nl.title));
+                try!(self.escape_href(&nl.prefix));
+                try!(self.escape(&nl.name));
                 try!(self.output.write_all(b"</a>"));
             },
             NodeValue::SpoilerText => if entering {

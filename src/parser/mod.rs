@@ -67,9 +67,6 @@ pub struct Parser<'a, 'o> {
 #[derive(Default, Debug, Clone)]
 /// Options for both parser and formatter functions.
 pub struct ComrakOptions {
-    /// RTJSON AST formatting
-    pub rtjson: bool,
-
     /// [Soft line breaks](http://spec.commonmark.org/0.27/#soft-line-breaks) in the input
     /// translate into hard line breaks in the output.
     ///
@@ -84,6 +81,21 @@ pub struct ComrakOptions {
     ///            "<p>Hello.<br />\nWorld.</p>\n");
     /// ```
     pub hardbreaks: bool,
+
+    /// Punctuation (quotes, full-stops and hyphens) are converted into 'smart' punctuation.
+    ///
+    /// ```ignore
+    /// # use comrak::{markdown_to_html, ComrakOptions};
+    /// let mut options = ComrakOptions::default();
+    /// assert_eq!(markdown_to_html("'Hello,' \"world\" ...", &options),
+    ///            "<p>'Hello,' &quot;world&quot; ...</p>\n");
+    ///
+    /// options.smart = true;
+    /// assert_eq!(markdown_to_html("'Hello,' \"world\" ...", &options),
+    ///            "<p>‘Hello,’ “world” …</p>\n");
+    /// ```
+    pub smart: bool,
+
 
     /// GitHub-style `<pre lang="xyz">` is used for fenced code blocks with info tags.
     ///
@@ -122,6 +134,45 @@ pub struct ComrakOptions {
     /// # }
     /// ```
     pub width: usize,
+
+    /// The default info string for fenced code blocks.
+    ///
+    /// ```ignore
+    /// # use comrak::{markdown_to_html, ComrakOptions};
+    /// let mut options = ComrakOptions::default();
+    /// assert_eq!(markdown_to_html("```\nfn hello();\n```\n", &options),
+    ///            "<pre><code>fn hello();\n</code></pre>\n");
+    ///
+    /// options.default_info_string = Some("rust".into());
+    /// assert_eq!(markdown_to_html("```\nfn hello();\n```\n", &options),
+    ///            "<pre><code class=\"language-rust\">fn hello();\n</code></pre>\n");
+    /// ```
+    pub default_info_string: Option<String>,
+
+    /// Disable rendering of raw HTML and potentially dangerous links.
+    ///
+    /// ```ignore
+    /// # use comrak::{markdown_to_html, ComrakOptions};
+    /// let mut options = ComrakOptions::default();
+    /// let input = "<script>\nalert('xyz');\n</script>\n\n\
+    ///              Possibly <marquee>annoying</marquee>.\n\n\
+    ///              [Dangerous](javascript:alert(document.cookie)).\n\n\
+    ///              [Safe](http://commonmark.org).\n";
+    ///
+    /// assert_eq!(markdown_to_html(input, &options),
+    ///            "<script>\nalert(\'xyz\');\n</script>\n\
+    ///             <p>Possibly <marquee>annoying</marquee>.</p>\n\
+    ///             <p><a href=\"javascript:alert(document.cookie)\">Dangerous</a>.</p>\n\
+    ///             <p><a href=\"http://commonmark.org\">Safe</a>.</p>\n");
+    ///
+    /// options.safe = true;
+    /// assert_eq!(markdown_to_html(input, &options),
+    ///            "<!-- raw HTML omitted -->\n\
+    ///             <p>Possibly <!-- raw HTML omitted -->annoying<!-- raw HTML omitted -->.</p>\n\
+    ///             <p><a href=\"\">Dangerous</a>.</p>\n\
+    ///             <p><a href=\"http://commonmark.org\">Safe</a>.</p>\n");
+    /// ```
+    pub safe: bool,
 
     /// Enables the
     /// [strikethrough extension](https://github.github.com/gfm/#strikethrough-extension-)
@@ -242,6 +293,11 @@ pub struct ComrakOptions {
     ///            "<p>Hi<sup class=\"footnote-ref\"><a href=\"#fn1\" id=\"fnref1\">[1]</a></sup>.</p>\n<section class=\"footnotes\">\n<ol>\n<li id=\"fn1\">\n<p>A greeting. <a href=\"#fnref1\" class=\"footnote-backref\">↩</a></p>\n</li>\n</ol>\n</section>\n");
     /// ```
     pub ext_footnotes: bool,
+
+    // Reddit-specific options
+
+    /// Enable the RTJSON-specific AST-munging pass
+    pub rtjson: bool,
 
     /// Enables the spoilertext extension per `Reddit Flavored Markdown`.
     ///
@@ -405,6 +461,7 @@ impl<'a, 'o> Parser<'a, 'o> {
         } else {
             line
         };
+
         self.offset = 0;
         self.column = 0;
         self.blank = false;
@@ -532,7 +589,8 @@ impl<'a, 'o> Parser<'a, 'o> {
             self.find_first_nonspace(line);
             let indented = self.indent >= CODE_INDENT;
 
-            if !indented && line[self.first_nonspace] == b'>' && line[self.first_nonspace + 1] != b'!' {
+            if !indented && line[self.first_nonspace] == b'>'
+                && (!self.options.ext_reddit_quirks || line[self.first_nonspace + 1] != b'!') {
                 let blockquote_startpos = self.first_nonspace;
                 let offset = self.first_nonspace + 1 - self.offset;
                 self.advance_offset(line, offset, false);
@@ -575,7 +633,6 @@ impl<'a, 'o> Parser<'a, 'o> {
                     level: level,
                     setext: false,
                 });
-
             } else if !indented
                 && unwrap_into(
                     scanners::open_code_fence(&line[self.first_nonspace..]),
@@ -682,6 +739,7 @@ impl<'a, 'o> Parser<'a, 'o> {
                         && have_pipe();
                     !skip_list_parsing
                 }
+                && self.indent < 4
                 && unwrap_into_2(
                     parse_list_marker(
                         line,
@@ -805,7 +863,8 @@ impl<'a, 'o> Parser<'a, 'o> {
     #[cfg_attr(feature = "flamegraphs", flame)]
     fn parse_block_quote_prefix(&mut self, line: &[u8]) -> bool {
         let indent = self.indent;
-        if indent <= 3 && line[self.first_nonspace] == b'>'  && line[self.first_nonspace + 1] != b'!' {
+        if indent <= 3 && line[self.first_nonspace] == b'>'
+            && (!self.options.ext_reddit_quirks || line[self.first_nonspace + 1] != b'!' ) {
             self.advance_offset(line, indent + 1, true);
 
             if strings::is_space_or_tab(line[self.offset]) {
@@ -1356,8 +1415,8 @@ impl<'a, 'o> Parser<'a, 'o> {
                                 }
                             }
                         }
-                        NodeValue::Link(..) | NodeValue::RedditLink(..) |
-                        NodeValue::Image(..) | NodeValue::Media(..) => {
+                        NodeValue::Link(..) | NodeValue::Image(..) |
+                        NodeValue::RedditLink(..) | NodeValue::Media(..) => {
                             this_bracket = true;
                             break;
                         }
@@ -1562,7 +1621,7 @@ impl<'a, 'o> Parser<'a, 'o> {
                     self.reset_rtjson_node(unformatted_text, format_ranges, range_idx);
                 }
             },
-            NodeValue::Media(ref nl) => {
+            NodeValue::Media(..) => {
                 // Image syntax in rtjson is actually a media element, with the
                 // 'text' being either "img", "vid", or "gif". Any other
                 // childeren beneath the image results in something unsupported.
@@ -1866,7 +1925,7 @@ impl<'a, 'o> Parser<'a, 'o> {
         }
 
         if self.options.ext_autolink {
-            autolink::process_autolinks(self.arena, node, text);
+            autolink::process_autolinks(self.arena, node, text, self.options.ext_reddit_quirks);
         }
 
         autolink::process_redditlinks(self.arena, node, text);
@@ -1904,7 +1963,7 @@ impl<'a, 'o> Parser<'a, 'o> {
         *text = text[end..].to_vec();
         let checkbox = inlines::make_inline(
             self.arena,
-            NodeValue::Text(if active {
+            NodeValue::HtmlInline(if active {
                 b"<input type=\"checkbox\" disabled=\"\" checked=\"\" />".to_vec()
             } else {
                 b"<input type=\"checkbox\" disabled=\"\" />".to_vec()

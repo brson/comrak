@@ -13,6 +13,9 @@ run() {
 	echo
 }
 
+# Don't allow warnings to get past CI
+export RUSTFLAGS="-Dwarnings"
+
 if [[ "$1" == "--release" ]]; then
     export SM_TARGET="release"
     cargo_build_arg="--release"
@@ -32,10 +35,15 @@ if [[ -z "$SPECS_ONLY" ]]; then
 	run cargo test "$cargo_build_arg"
 fi
 
-# Then the python test harness
+# Run the RTJSON spec tests via Python
 run python3 script/spec_tests.py --rtjson --spec specs/rtjson/rtjson.spec
 run python3 script/spec_tests.py --rtjson --spec specs/rtjson/bugs.spec
+
+# And additional tests
 run python2 script/stack_smash_test.py
+
+# Also test commonmark HTML rendering
+run python3 script/spec_tests.py --spec specs/html/spec.txt -p "target/$SM_TARGET/snoomark"
 
 if [[ errors -ne 0 ]]; then
 	echo -e "\nsome tests failed\n"

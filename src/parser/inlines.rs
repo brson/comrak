@@ -27,7 +27,7 @@ pub struct Subject<'a: 'd, 'r, 'o, 'd, 'i> {
     brackets: Vec<Bracket<'a, 'd>>,
     pub backticks: [usize; MAXBACKTICKS + 1],
     pub scanned_for_backticks: bool,
-    special_chars: Vec<bool>,
+    special_chars: [bool; 256],
 }
 
 pub struct Delimiter<'a: 'd, 'd> {
@@ -69,11 +69,10 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
             brackets: vec![],
             backticks: [0; MAXBACKTICKS + 1],
             scanned_for_backticks: false,
-            special_chars: vec![],
+            special_chars: [false; 256],
         };
-        s.special_chars.extend_from_slice(&[false; 256]);
         for &c in &[
-            b'\n', b'\r', b'_', b'*', b'"', b'`', b'\\', b'&', b'<', b'[', b']', b'!', b'>'
+            b'\n', b'\r', b'_', b'*', b'"', b'`', b'\\', b'&', b'<', b'[', b']', b'!'
         ] {
             s.special_chars[c as usize] = true;
         }
@@ -88,6 +87,7 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
                         "ext_superscript and ext_reddit_quirks are incompatible");
             s.special_chars[b'^' as usize] = true;
             s.special_chars[b')' as usize] = true;
+            s.special_chars[b'>' as usize] = true;
         }
         s
     }
@@ -117,7 +117,7 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
             '<' => new_inl = Some(self.handle_pointy_brace()),
             '>' => {
                 self.pos += 1;
-                if self.peek_char() == Some(&(b'!')) {
+                if self.options.ext_reddit_quirks && self.peek_char() == Some(&(b'!')) {
                     self.pos += 1;
                     new_inl = Some(self.handle_spoiler(true));
                 } else {
@@ -142,7 +142,7 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
                     let inl = make_inline(self.arena, NodeValue::Text(b"![".to_vec()));
                     new_inl = Some(inl);
                     self.push_bracket(true, inl);
-                } else if self.peek_char() == Some(&(b'<')) {
+                } else if self.options.ext_reddit_quirks && self.peek_char() == Some(&(b'<')) {
                     self.pos += 1;
                     new_inl = Some(self.handle_spoiler(false));
                 } else {
@@ -257,6 +257,17 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
             i['_' as usize] = stack_bottom;
             i['\'' as usize] = stack_bottom;
             i['"' as usize] = stack_bottom;
+            if self.options.ext_strikethrough {
+                i['~' as usize] = stack_bottom;
+            }
+            if self.options.ext_superscript {
+                i['^' as usize] = stack_bottom;
+            }
+            if self.options.ext_reddit_quirks {
+                i['^' as usize] = stack_bottom;
+                i['.' as usize] = stack_bottom;
+                i['!' as usize] = stack_bottom;
+            }
         }
 
         // This is traversing the stack from the top to the bottom, setting `closer` to
@@ -293,7 +304,7 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
                 // This search short-circuits for openers we've previously
                 // failed to find, avoiding repeatedly rescanning the bottom of
                 // the stack, using the openers_bottom array.
-                while opener.is_some() && !Self::del_ref_eq(opener, stack_bottom)
+                while opener.is_some()
                     && !Self::del_ref_eq(
                         opener,
                         openers_bottom[closer.unwrap().length % 3]
@@ -831,7 +842,11 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
 
         if let Some(matchlen) = scanners::html_tag(&self.input[self.pos..]) {
             let contents = &self.input[self.pos - 1..self.pos + matchlen];
-            let inl = make_inline(self.arena, NodeValue::Text(contents.to_vec()));
+            let inl = if !self.options.ext_reddit_quirks {
+                make_inline(self.arena, NodeValue::HtmlInline(contents.to_vec()))
+            } else {
+                make_inline(self.arena, NodeValue::Text(contents.to_vec()))
+            };
             self.pos += matchlen;
             return inl;
         }
@@ -974,7 +989,6 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
         let nl = NodeLink {
             url: url,
             title: title,
-            l: false,
         };
         let inl = make_inline(
             self.arena,
@@ -983,7 +997,6 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
                     NodeValue::Image(NodeLink{
                         url: nl.url,
                         title: nl.title,
-                        l: false,
                     })
                 } else {
                     NodeValue::Media(NodeMedia{
@@ -998,7 +1011,7 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
         );
 
         let mut brackets_len = self.brackets.len();
-        if good_url {
+        if good_url || !self.options.ext_reddit_quirks {
             // If it's a good url then insert the new link node before the opening
             // bracket, move all the link text to a child of the link node,
             // then (further down) detach the opening bracket from the AST.
@@ -1230,11 +1243,8 @@ pub fn manual_scan_link_url(input: &[u8], reddit_quirks: bool) -> Option<usize> 
                 break;
             } else if b == b'\\' {
                 i += 2;
-            } else if !reddit_quirks && (isspace(b) || b == b'<') {
+            } else if b == b'\n' || b == b'<' {
                 return None;
-            } else if reddit_quirks && ((isspace(b) && b != b' ') || b == b'<') {
-                // ^ Reddit allows space in links (but not newlines and tabs)
-                i += 1;
             } else {
                 i += 1;
             }
@@ -1328,7 +1338,6 @@ fn make_autolink<'a>(
         NodeValue::Link(NodeLink {
             url: strings::clean_autolink(url, kind),
             title: vec![],
-            l: false,
         }),
     );
     inl.append(make_inline(

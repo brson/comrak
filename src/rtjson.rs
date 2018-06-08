@@ -278,8 +278,8 @@ impl RTJsonFormatter {
             }
             NodeValue::RedditLink(ref nl) => {
                 let dict = PyDict::new(py);
-                dict.set_item(py, "e", unsafe { str::from_utf8_unchecked(&nl.url) })?;
-                dict.set_item(py, "t", unsafe { str::from_utf8_unchecked(&nl.title) })?;
+                dict.set_item(py, "e", unsafe { str::from_utf8_unchecked(&nl.prefix) })?;
+                dict.set_item(py, "t", unsafe { str::from_utf8_unchecked(&nl.name) })?;
                 dict.set_item(py, "l", nl.l)?;
                 Ok(dict)
             }

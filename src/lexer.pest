@@ -1,5 +1,6 @@
 atx_heading_start = { "#"{1, 6} ~ (" " | "\t" | "\r" | "\n") }
-reddit_atx_heading_start = { "#"{1, 6} }
+// Reddit quirk - hashes don't need to be followed by space
+atx_heading_start_reddit = { "#"{1, 6} }
 
 open_code_fence = _{ open_code_fence_match ~ (!("`" | "\r" | "\n" | "\x00") ~ any)* ~ ("\r" | "\n") }
 open_code_fence_match = { "`"{3,} | "~"{3,} }
@@ -15,7 +16,7 @@ space_char = _{ " " | "\t" | "\x0b" | "\x0c" | "\r" | "\n" }
 tag_name = _{ ('A'..'Z' | 'a'..'z') ~ ('A'..'Z' | 'a'..'z' | '0'..'9' | "-")* }
 close_tag = _{ "/" ~ tag_name ~ space_char* ~ ">" }
 attribute_name = _{ ('a'..'z' | 'A'..'Z' | "_" | ":") ~ ('a'..'z' | 'A'..'Z' | '0'..'9' | ":" | "." | "_" | "-")* }
-attribute_value = _{ (!("\"" | "'" | "=" | "<" | ">" | "`" | "\x00" | " ") ~ any)+ | ("'" ~ (!("'" | "\x00") ~ any)* ~ "'") | ("\"" ~ (!("\"" | "\x00") ~ any)* ~ "\"") }
+attribute_value = _{ (!(" " | "\t" | "\r" | "\n" | "\x0b" | "\x0c" | "\"" | "'" | "=" | "<" | ">" | "`" | "\x00") ~ any)+ | ("'" ~ (!("'" | "\x00") ~ any)* ~ "'") | ("\"" ~ (!("\"" | "\x00") ~ any)* ~ "\"") }
 attribute_value_spec = _{ space_char* ~ "=" ~ space_char* ~ attribute_value }
 attribute = _{ space_char+ ~ attribute_name ~ attribute_value_spec? }
 open_tag = _{ tag_name ~ attribute* ~ space_char* ~ "/"? ~ ">" }
@@ -46,9 +47,10 @@ link_title = { "\"" ~ (escaped_char | (!("\"" | "\x00") ~ any))* ~ "\"" | "'" ~ 
 
 table_spacechar = _{ " " | "\t" | "\x0b" | "\x0c" }
 table_newline = _{ "\r"? ~ "\n" }
+table_marker = _{ table_spacechar* ~ ":"? ~ "-"+ ~ ":"? ~ table_spacechar* }
 // Reddit quirk - comrak doesn't produce tokens for this case but we've got
 // to use this rule to verify table marker cells
-table_marker = { table_spacechar* ~ ":"? ~ "-"+ ~ ":"? ~ table_spacechar* }
+table_marker_reddit = { table_spacechar* ~ ":"? ~ "-"+ ~ ":"? ~ table_spacechar* }
 table_cell = { ( escaped_char | !("|" | "\r" | "\n") ~ any)* }
 
 table_start = { "|"? ~ table_marker ~ ("|" ~ table_marker)* ~ "|"? ~ table_spacechar* ~ table_newline }
@@ -57,8 +59,4 @@ table_start_reddit = { "|"? ~ table_marker ~ ("|" ~ table_marker)* ~ (("|"? ~ ta
 table_cell_end = { "|" ~ table_spacechar* ~ table_newline? }
 table_row_end = { table_spacechar* ~ table_newline }
 
-alpha = { 'a'..'z' | 'A'..'Z' }
-digit = { '0'..'9' }
-
-ident = { (alpha | digit)+ }
-reddit_link = { "/"? ~ ("u" | "r" | "c" | "p") ~ "/" ~ ident }
+dangerous_url = { "data:" ~ !("png" | "gif" | "jpeg" | "webp") | "javascript:" | "vbscript:" | "file:" }
