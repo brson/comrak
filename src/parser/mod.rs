@@ -96,7 +96,6 @@ pub struct ComrakOptions {
     /// ```
     pub smart: bool,
 
-
     /// GitHub-style `<pre lang="xyz">` is used for fenced code blocks with info tags.
     ///
     /// ```ignore
