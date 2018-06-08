@@ -693,7 +693,6 @@ fn table_misparse_2() {
 }
 
 #[test]
-#[ignore] // Reddit
 fn smart_chars() {
     html_opts(
         "Why 'hello' \"there\". It's good.",
@@ -824,7 +823,6 @@ fn cm_autolink_regression() {
 }
 
 #[test]
-#[ignore] // Reddit
 fn safe() {
     html_opts(
         concat!(

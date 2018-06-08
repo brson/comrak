@@ -63,6 +63,8 @@
 #![deny(missing_docs, missing_debug_implementations, missing_copy_implementations, trivial_casts,
         trivial_numeric_casts, unstable_features, unused_import_braces)]
 #![allow(unknown_lints, doc_markdown, cyclomatic_complexity)]
+#![cfg_attr(feature = "benchmarks", allow(unstable_features))]
+#![cfg_attr(feature = "benchmarks", feature(test))]
 
 #![cfg_attr(any(feature = "flamegraphs", feature = "minflame"), feature(alloc_system))]
 #![cfg_attr(any(feature = "flamegraphs", feature = "minflame"), feature(plugin, custom_attribute))]
