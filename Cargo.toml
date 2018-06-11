@@ -45,6 +45,7 @@ default = ["clap", "cpython", "cpython/extension-module-2-7"]
 dev = ["clap", "clippy", "cpython", "cpython/extension-module-2-7"]
 flamegraphs = ["flame", "flamer", "cpython/extension-module-2-7"]
 minflame = ["flame", "flamer", "cpython/extension-module-2-7"]
+benchmarks = []
 
 [dependencies.cpython]
 git = "https://github.com/dgrunwald/rust-cpython.git"
