@@ -9,6 +9,6 @@ fuzz_target!(|data: &[u8]| {
     if let Ok(s) = std::str::from_utf8(data) {
         let gil = Python::acquire_gil();
         let py = gil.python();
-        sm::cm_to_rtjson_py(py, s.to_string()).expect("parsing failed");
+        sm::py::cm_to_rtjson(py, s.to_string()).expect("parsing failed");
     }
 });
