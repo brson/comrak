@@ -43,12 +43,10 @@ We have to make sure that nested styles get the proper rendering
 {"document":[{"c":[{"e":"text","f":[[8,0,5],[9,5,14],[8,19,5]],"t":"curlycurly and boldcurly"}],"e":"par"}]}
 ````````````````````````````````
 
-The below does not work and should be looked into
-
 ```````````````````````````````` example
 ~~curly***curly and bold***curly~~
 .
-{"document":[{"c":[{"e":"text","f":[[8,0,30]],"t":"curly***curly and bold***curly"}],"e":"par"}]}
+{"document": [{"c": [{"e": "text", "t": "curlycurly and boldcurly", "f": [[8, 0, 5], [11, 5, 14], [8, 19, 5]]}], "e": "par"}]}
 ````````````````````````````````
 
 We should also show code and underline when we are trying ot render content
