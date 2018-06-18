@@ -28,6 +28,7 @@ pub struct Subject<'a: 'd, 'r, 'o, 'd, 'i> {
     pub backticks: [usize; MAXBACKTICKS + 1],
     pub scanned_for_backticks: bool,
     special_chars: [bool; 256],
+    smart_chars: [bool; 256],
 }
 
 pub struct Delimiter<'a: 'd, 'd> {
@@ -70,6 +71,7 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
             backticks: [0; MAXBACKTICKS + 1],
             scanned_for_backticks: false,
             special_chars: [false; 256],
+            smart_chars: [false; 256],
         };
         for &c in &[
             b'\n', b'\r', b'_', b'*', b'"', b'`', b'\\', b'&', b'<', b'[', b']', b'!'
@@ -88,6 +90,11 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
             s.special_chars[b'^' as usize] = true;
             s.special_chars[b')' as usize] = true;
             s.special_chars[b'>' as usize] = true;
+        }
+        for &c in &[
+            b'"', b'\'', b'.', b'-',
+        ] {
+            s.smart_chars[c as usize] = true;
         }
         s
     }
@@ -125,9 +132,8 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
                 }
             }
             '*' | '_' | '\'' | '"' => new_inl = Some(self.handle_delim(c as u8)),
-            // TODO: smart characters. Eh.
-            //'-' => new_inl => Some(self.handle_hyphen()),
-            //'.' => new_inl => Some(self.handle_period()),
+            '-' => new_inl = Some(self.handle_hyphen()),
+            '.' => new_inl = Some(self.handle_period()),
             '[' => {
                 self.pos += 1;
                 let inl = make_inline(self.arena, NodeValue::Text(b"[".to_vec()));
@@ -249,8 +255,6 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
         // This array is an important optimization that prevents searching down
         // the stack for openers we've previously searched for and know don't
         // exist, preventing exponential blowup on pathological cases.
-        // TODO: It _seems_ like these should be initialized for the other
-        // delimiters too.
         let mut openers_bottom: [[Option<&'d Delimiter<'a, 'd>>; 128]; 3] = [[None; 128]; 3];
         for i in &mut openers_bottom {
             i['*' as usize] = stack_bottom;
@@ -279,12 +283,6 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
         }
 
         while closer.is_some() {
-            // Curiously, ' and " are never actually pushed on the delimiter
-            // stack: handle_delim is short-circuited for both, so there seems
-            // to be lots of dead code related to quote delimiters.
-            debug_assert!(closer.unwrap().delim_char != b'\'');
-            debug_assert!(closer.unwrap().delim_char != b'"');
-
             if closer.unwrap().can_close {
                 // Each time through the outer `closer` loop we reset the opener
                 // to the element below the closer, and search down the stack
@@ -366,7 +364,6 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
                         closer = closer.unwrap().next.get();
                     }
                 } else if closer.unwrap().delim_char == b'\'' {
-                    debug_assert!(false, "NB: dead code (brson)");
                     *closer
                         .unwrap()
                         .inl
@@ -387,7 +384,6 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
                     }
                     closer = closer.unwrap().next.get();
                 } else if closer.unwrap().delim_char == b'"' {
-                    debug_assert!(false, "NB: dead code (brson)");
                     *closer
                         .unwrap()
                         .inl
@@ -482,6 +478,9 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
             if self.special_chars[self.input[n] as usize] {
                 return n;
             }
+            if self.options.smart && self.smart_chars[self.input[n] as usize] {
+                return n;
+            }
         }
 
         self.input.len()
@@ -569,10 +568,20 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
     pub fn handle_delim(&mut self, c: u8) -> &'a AstNode<'a> {
         let (numdelims, can_open, can_close) = self.scan_delims(c);
 
-        let contents = self.input[self.pos - numdelims..self.pos].to_vec();
+        let contents = if c == b'\'' && self.options.smart {
+            b"\xE2\x80\x99".to_vec()
+        } else if c == b'"' && self.options.smart {
+            if can_close {
+                b"\xE2\x90\x9D".to_vec()
+            } else {
+                b"\xE2\x80\x9C".to_vec()
+            }
+        } else {
+            self.input[self.pos - numdelims..self.pos].to_vec()
+        };
         let inl = make_inline(self.arena, NodeValue::Text(contents));
 
-        if (can_open || can_close) && c != b'\'' && c != b'"' {
+        if (can_open || can_close) && (!(c == b'\'' || c == b'"') || self.options.smart) {
             self.push_delimiter(c, can_open, can_close, inl);
         }
 
@@ -595,6 +604,56 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
     }
 
     #[cfg_attr(feature = "flamegraphs", flame)]
+    pub fn handle_hyphen(&mut self) -> &'a AstNode<'a> {
+        let start = self.pos;
+        self.pos += 1;
+
+        if !self.options.smart || self.peek_char().map_or(false, |&c| c != b'-') {
+            return make_inline(self.arena, NodeValue::Text(vec![b'-']))
+        }
+
+        while self.options.smart && self.peek_char().map_or(false, |&c| c == b'-') {
+            self.pos += 1;
+        }
+
+        let numhyphens = (self.pos - start) as i32;
+
+        let (ens, ems) = if numhyphens % 3 == 0 {
+            (0, numhyphens / 3)
+        } else if numhyphens % 2 == 0 {
+            (numhyphens / 2, 0)
+        } else if numhyphens % 3 == 2 {
+            (1, (numhyphens - 2) / 3)
+        } else {
+            (2, (numhyphens - 4) / 3)
+        };
+
+        let mut buf = vec![];
+        for _ in 0..ems {
+            buf.extend_from_slice(b"\xE2\x80\x94");
+        }
+        for _ in 0..ens {
+            buf.extend_from_slice(b"\xE2\x80\x93");
+        }
+
+        make_inline(self.arena, NodeValue::Text(buf))
+    }
+
+    pub fn handle_period(&mut self) -> &'a AstNode<'a> {
+        self.pos += 1;
+        if self.options.smart && self.peek_char().map_or(false, |&c| c == b'.') {
+            self.pos += 1;
+            if self.peek_char().map_or(false, |&c| c == b'.') {
+                self.pos += 1;
+                make_inline(self.arena, NodeValue::Text(b"\xE2\x80\xA6".to_vec()))
+            } else {
+                make_inline(self.arena, NodeValue::Text(b"..".to_vec()))
+            }
+        } else {
+            make_inline(self.arena, NodeValue::Text(b".".to_vec()))
+        }
+    }
+
     pub fn scan_delims(&mut self, c: u8) -> (usize, bool, bool) {
         let before_char = if self.pos == 0 {
             '\n'
@@ -649,7 +708,7 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
                 right_flanking && (!left_flanking || after_char.is_punctuation()),
             )
         } else if c == b'\'' || c == b'"' {
-            (numdelims, left_flanking && !right_flanking, right_flanking)
+            (numdelims, left_flanking && !right_flanking && before_char != ']' && before_char != ')', right_flanking)
         } else {
             (numdelims, left_flanking, right_flanking)
         }
