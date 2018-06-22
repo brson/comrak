@@ -18,6 +18,7 @@ py_module_initializer!(snoomark, initsnoomark, PyInit_snoomark, |py, m| {
     let doc_string = format!("[{} {}] This module is implemented in Rust.", DOC_NAME, DOC_VERSION);
     try!(m.add(py, "__doc__", doc_string));
     try!(m.add(py, "cm_to_rtjson", py_fn!(py, cm_to_rtjson(cm: String))));
+    try!(m.add(py, "cm_to_rtjson_no_qr", py_fn!(py, cm_to_rtjson_no_qr(cm: String))));
     add_flame_fns(py, m)?;
     Ok(())
 });
@@ -111,6 +112,37 @@ pub fn cm_to_rtjson(py: Python, cm: String) -> PyResult<PyObject> {
     if let Some(obj) = quick_render(py, &cm) {
         return Ok(obj);
     }
+    let arena = Arena::new();
+
+    let options = ComrakOptions {
+        rtjson: true,
+        hardbreaks: false,
+        smart: false,
+        github_pre_lang: false,
+        width: 0,
+        default_info_string: None,
+        safe: false,
+        ext_strikethrough: true,
+        ext_tagfilter: false,
+        ext_table: true,
+        ext_autolink: true,
+        ext_tasklist: false,
+        ext_superscript: false,
+        ext_footnotes: false,
+        ext_header_ids: None,
+        ext_spoilertext: true,
+        ext_reddit_quirks: true,
+    };
+
+    let root = parse_document(&arena, &cm, &options);
+    rtjson::format_document(py, root)
+}
+
+// Similar to above function in that it is an interface for
+// converting to markdown, main difference is that it doesn't 
+// use quickrender for any of it's passes. For fuzzing.
+#[cfg_attr(any(feature = "flamegraphs", feature = "minflame"), flame)]
+pub fn cm_to_rtjson_no_qr(py: Python, cm: String) -> PyResult<PyObject> {
     let arena = Arena::new();
 
     let options = ComrakOptions {
