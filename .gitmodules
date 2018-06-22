@@ -4,3 +4,6 @@
 [submodule "vendor/cmark-gfm"]
 	path = vendor/cmark-gfm
 	url = https://github.com/github/cmark.git
+[submodule "vendor/reddit-public"]
+	path = vendor/reddit-public
+	url = git@github.com:reddit/reddit-public.git
