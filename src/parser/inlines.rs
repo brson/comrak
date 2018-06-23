@@ -882,13 +882,20 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
         self.pos += 1;
 
         if let Some(matchlen) = scanners::autolink_uri(&self.input[self.pos..]) {
-            let inl = make_autolink(
-                self.arena,
-                &self.input[self.pos..self.pos + matchlen - 1],
-                AutolinkType::URI,
-            );
-            self.pos += matchlen;
-            return inl;
+            // NB: This validation happens _before_ HTML entity unescaping (which
+            // is in make_autolink), unlike other instances, but the autolink syntax
+            // requires absolute URLs and doesn't allow entities to appear in the
+            // scheme. This is verified by test cases.
+            let url = &self.input[self.pos..self.pos + matchlen - 1];
+            if !self.options.ext_reddit_quirks || strings::validate_url_scheme(url) {
+                let inl = make_autolink(
+                    self.arena,
+                    url,
+                    AutolinkType::URI,
+                );
+                self.pos += matchlen;
+                return inl;
+            }
         }
 
         if let Some(matchlen) = scanners::autolink_email(&self.input[self.pos..]) {
