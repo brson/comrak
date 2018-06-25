@@ -48,8 +48,7 @@ minflame = ["flame", "flamer", "cpython/extension-module-2-7"]
 benchmarks = []
 
 [dependencies.cpython]
-git = "https://github.com/dgrunwald/rust-cpython.git"
-rev = "b7090799b652c77220bdb266937538a6e900119c"
+version = "0.2.0"
 default-features = false
 features = ["python27-sys"]
 optional = true
