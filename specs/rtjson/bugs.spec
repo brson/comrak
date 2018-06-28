@@ -1042,6 +1042,59 @@ foo
 {"document": [{"c": [{"e": "text", "t": " <div class\nfoo\n"}], "e": "par"}]}
 ````````````````````````````````
 
+
+## More XSS cases
+
+```````````````````````````````` example
+<javascript:alert(0);>
+.
+{"document": [{"c": [{"e": "text", "t": "<javascript:alert(0);>"}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+< javascript:alert(0);>
+.
+{"document": [{"c": [{"e": "text", "t": "< javascript:alert(0);>"}], "e": "par"}]}
+````````````````````````````````
+
+Just ensuring that HTML entities can't be used to fool the URL validator.
+
+```````````````````````````````` example
+<javascript&#58;alert(0);>
+.
+{"document": [{"c": [{"e": "text", "t": "<javascript:alert(0);>"}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+<javascrip&#116;:alert(0);>
+.
+{"document": [{"c": [{"e": "text", "t": "<javascript:alert(0);>"}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+[a](<javascript&#58;alert(0);>)
+.
+{"document": [{"c": [{"e": "text", "t": "a"}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+[a](javascript&#58;alert(0);)
+.
+{"document": [{"c": [{"e": "text", "t": "a"}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+[a](&#32;javascript:alert(0);)
+.
+{"document": [{"c": [{"e": "text", "t": "a"}], "e": "par"}]}
+````````````````````````````````
+
+```````````````````````````````` example
+[a](<javascript:alert(0);>)
+.
+{"document": [{"c": [{"e": "text", "t": "a"}], "e": "par"}]}
+````````````````````````````````
+
 There should never be a crazy large number of nested nodes 
 
 ```````````````````````````````` example

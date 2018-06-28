@@ -44,6 +44,9 @@ if __name__ == "__main__":
     parser.add_argument('--rtjson', dest='rtjson',
             action='store_const', const=True, default=False,
             help='test RTJSON-formatted specs instead of HTML')
+    parser.add_argument('--roundtrip', dest='roundtrip',
+            action='store_const', const=True, default=False,
+            help='test conversion from Commonmark to RTJson and back again')
     args = parser.parse_args(sys.argv[1:])
 
 def out(str):
@@ -54,7 +57,8 @@ def print_test_header(headertext, example_number, start_line, end_line):
 
 def do_test(converter, test, normalize, result_counts, rtjson):
     [retcode, actual_html, err] = converter(test['markdown'], test['extensions'])
-    actual_html = re.sub(r'\r\n', '\n', actual_html)
+    if not rtjson:
+        actual_html = re.sub(r'\r\n', '\n', actual_html)
     if retcode == 0:
         expected_html = re.sub(r'\r\n', '\n', test['html'])
         unicode_error = None
@@ -109,7 +113,18 @@ def convert_rtjson(md, extensions):
     os.remove(tempspec)
     res = out.stdout.decode("utf-8") if not out.returncode else ""
     return [out.returncode, res, out.stderr]
-        
+
+def convert_roundtrip(md, extensions):
+    tempspec = "spec-test-case.md"
+    with open(tempspec, "w", encoding="utf-8") as f:
+        f.write(md)
+    out = subprocess.run(["python2", "script/roundtrip.py", tempspec], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    os.remove(tempspec)
+    if out.returncode != 0:
+        print("\n\nMarkdown Input: {}\n\n Err: {}".format(md, out.stderr))
+    res = out.stdout.decode("utf-8") if not out.returncode else ""
+    return [out.returncode, res, out.stderr]
+
 def get_tests(specfile):
     line_number = 0
     start_line = 0
@@ -179,10 +194,16 @@ if __name__ == "__main__":
         skipped = len(all_tests) - len(tests)
         if not rtjson:
             converter = CMark(prog=args.program, library_dir=args.library_dir, extensions=args.extensions).to_html
+        elif args.roundtrip:
+            converter = convert_roundtrip
         else:
             converter = convert_rtjson
         result_counts = {'pass': 0, 'fail': 0, 'error': 0, 'skip': skipped}
+        report_interval = len(tests) / 10
         for test in tests:
             do_test(converter, test, args.normalize, result_counts, rtjson)
+            coun = result_counts['pass'] + result_counts['fail'] + result_counts['error']
+            if coun % report_interval == 0:
+                print("{:}% complete".format(int(coun/len(tests) * 100)))
         out("{pass} passed, {fail} failed, {error} errored, {skip} skipped\n".format(**result_counts))
         exit(result_counts['fail'] + result_counts['error'])
