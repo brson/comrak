@@ -6,6 +6,10 @@ use nodes::{AstNode, NodeValue, NodeFormatLink};
 use std::collections::HashMap;
 use std::str;
 
+/// Adding a nesting level of 30 nodes
+/// because some clients reject json
+/// respinses with more than 32 levels
+/// of nesting.
 const NESTED_NODE_LIMIT: i32 = 30;
 
 impl<'a, 'o> Parser<'a, 'o> {
