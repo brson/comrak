@@ -25,14 +25,14 @@ else
 fi
 
 if [[ -z "$SPECS_ONLY" ]]; then
-	run cargo build "$cargo_build_arg"
+	run cargo build "$cargo_build_arg" --locked
 
 	if [[ errors -ne 0 ]]; then
 		echo -e "\nbuild failed\n"
 		exit 1
 	fi
 
-	run cargo test "$cargo_build_arg"
+	run cargo test "$cargo_build_arg" --locked
 fi
 
 # Run the RTJSON spec tests via Python
