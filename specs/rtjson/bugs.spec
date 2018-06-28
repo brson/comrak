@@ -1041,3 +1041,11 @@ foo
 .
 {"document": [{"c": [{"e": "text", "t": " <div class\nfoo\n"}], "e": "par"}]}
 ````````````````````````````````
+
+There should never be a crazy large number of nested nodes 
+
+```````````````````````````````` example
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+.
+{"document": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}]}
+````````````````````````````````
