@@ -98,6 +98,7 @@ impl<'a, 'o> Parser<'a, 'o> {
         enum Phase { Pre, Post };
 
         let mut stack = vec![(root_node, Phase::Pre)];
+        let mut nested_level: u16 = 0;
 
         while let Some((node, phase)) = stack.pop() {
             match phase {
@@ -117,9 +118,19 @@ impl<'a, 'o> Parser<'a, 'o> {
                     // stack in pre-traversal mode, in reverse order so that the
                     // first child is processed first,
                     stack.push((node, Phase::Post));
-                    stack.extend(node.reverse_children().map(|cn| (cn, Phase::Pre)));
+                    if nested_level <= 32 {
+                        stack.extend(node.reverse_children().map(|cn| {
+                            nested_level += 1;
+                            (cn, Phase::Pre)
+                        }));
+                    } else {
+                        node.detach();
+                    }
                 }
                 Phase::Post => {
+                    if nested_level > 0 {
+                        nested_level -= 1;
+                    }
                     self.postprocess_rtjson_ast_post(
                         node,
                         unformatted_text,
