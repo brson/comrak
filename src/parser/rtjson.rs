@@ -118,7 +118,7 @@ impl<'a, 'o> Parser<'a, 'o> {
                     // stack in pre-traversal mode, in reverse order so that the
                     // first child is processed first,
                     stack.push((node, Phase::Post));
-                    if nested_level <= 32 {
+                    if nested_level <= 30 {
                         stack.extend(node.reverse_children().map(|cn| {
                             nested_level += 1;
                             (cn, Phase::Pre)
