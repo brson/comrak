@@ -13,7 +13,7 @@ Rust port of [github's `cmark-gfm`](https://github.com/github/cmark).
 * [Contributors](#contributors)
 * [Legal](#legal)
 
-See [reddit.md] for notes about Reddit's comrak fork, snoomark.
+See [reddit.md](reddit.md) for notes about Reddit's comrak fork, snoomark.
 
 ## Installation
 
