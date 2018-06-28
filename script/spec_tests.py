@@ -199,10 +199,11 @@ if __name__ == "__main__":
         else:
             converter = convert_rtjson
         result_counts = {'pass': 0, 'fail': 0, 'error': 0, 'skip': skipped}
+        report_interval = len(tests) / 10
         for test in tests:
             do_test(converter, test, args.normalize, result_counts, rtjson)
             coun = result_counts['pass'] + result_counts['fail'] + result_counts['error']
-            if coun % 10 == 0:
-                print("{} percent complete".format(coun/len(tests))) 
+            if coun % report_interval == 0:
+                print("{:}% complete".format(int(coun/len(tests) * 100)))
         out("{pass} passed, {fail} failed, {error} errored, {skip} skipped\n".format(**result_counts))
         exit(result_counts['fail'] + result_counts['error'])
