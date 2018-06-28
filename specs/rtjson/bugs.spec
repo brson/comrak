@@ -1094,3 +1094,11 @@ Just ensuring that HTML entities can't be used to fool the URL validator.
 .
 {"document": [{"c": [{"e": "text", "t": "a"}], "e": "par"}]}
 ````````````````````````````````
+
+There should never be a crazy large number of nested nodes 
+
+```````````````````````````````` example
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+.
+{"document": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}]}
+````````````````````````````````
