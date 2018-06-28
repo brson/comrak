@@ -6,6 +6,8 @@ use nodes::{AstNode, NodeValue, NodeFormatLink};
 use std::collections::HashMap;
 use std::str;
 
+const NESTED_NODE_LIMIT: i32 = 30;
+
 impl<'a, 'o> Parser<'a, 'o> {
     #[cfg_attr(feature = "flamegraphs", flame)]
     fn reset_rtjson_node(
@@ -98,7 +100,7 @@ impl<'a, 'o> Parser<'a, 'o> {
         enum Phase { Pre, Post };
 
         let mut stack = vec![(root_node, Phase::Pre)];
-        let mut nested_level: u16 = 0;
+        let mut nested_level: i32 = 0;
 
         while let Some((node, phase)) = stack.pop() {
             match phase {
@@ -118,7 +120,7 @@ impl<'a, 'o> Parser<'a, 'o> {
                     // stack in pre-traversal mode, in reverse order so that the
                     // first child is processed first,
                     stack.push((node, Phase::Post));
-                    if nested_level <= 30 {
+                    if nested_level <= NESTED_NODE_LIMIT {
                         stack.extend(node.reverse_children().map(|cn| {
                             nested_level += 1;
                             (cn, Phase::Pre)
