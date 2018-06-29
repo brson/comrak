@@ -1095,10 +1095,37 @@ Just ensuring that HTML entities can't be used to fool the URL validator.
 {"document": [{"c": [{"e": "text", "t": "a"}], "e": "par"}]}
 ````````````````````````````````
 
-There should never be a crazy large number of nested nodes 
+Test case for incorrect nesting limit fix. The previous fix would mangle this
+table.
 
 ```````````````````````````````` example
->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+|A|B|C|D|E|F|G|H|
+|-|-|-|-|-|-|-|-|
+|a|b|c|d|e|f|
+|a|b|c|d|e|f|
+|a|b|c|d|e|f|
+|a|b|c|d|e|f|
+|a|b|c|d|e|f|
+|a|b|c|d|e|f|
+|a|b|c|d|e|f|
+|a|b|c|d|e|f|
+|a|b|c|d|e|f|
+|a|b|c|d|e|f|
+|a|b|c|d|e|f|
+|a|b|c|d|e|f|
+|a|b|c|d|e|f|
+|a|b|c|d|e|f|
+|a|b|c|d|e|f|
+|a|b|c|d|e|f|
+|a|b|c|d|e|f|
+|a|b|c|d|e|f|
+|a|b|c|d|e|f|
+|a|b|c|d|e|f|
+
+---
+
+a
+
 .
-{"document": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"c": [{"e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}], "e": "blockquote"}]}
+{"document": [{"h": [{"a": "", "c": [{"e": "text", "t": "A"}]}, {"a": "", "c": [{"e": "text", "t": "B"}]}, {"a": "", "c": [{"e": "text", "t": "C"}]}, {"a": "", "c": [{"e": "text", "t": "D"}]}, {"a": "", "c": [{"e": "text", "t": "E"}]}, {"a": "", "c": [{"e": "text", "t": "F"}]}, {"a": "", "c": [{"e": "text", "t": "G"}]}, {"a": "", "c": [{"e": "text", "t": "H"}]}], "c": [[{"c": [{"e": "text", "t": "a"}]}, {"c": [{"e": "text", "t": "b"}]}, {"c": [{"e": "text", "t": "c"}]}, {"c": [{"e": "text", "t": "d"}]}, {"c": [{"e": "text", "t": "e"}]}, {"c": [{"e": "text", "t": "f"}]}, {"c": []}, {"c": []}], [{"c": [{"e": "text", "t": "a"}]}, {"c": [{"e": "text", "t": "b"}]}, {"c": [{"e": "text", "t": "c"}]}, {"c": [{"e": "text", "t": "d"}]}, {"c": [{"e": "text", "t": "e"}]}, {"c": [{"e": "text", "t": "f"}]}, {"c": []}, {"c": []}], [{"c": [{"e": "text", "t": "a"}]}, {"c": [{"e": "text", "t": "b"}]}, {"c": [{"e": "text", "t": "c"}]}, {"c": [{"e": "text", "t": "d"}]}, {"c": [{"e": "text", "t": "e"}]}, {"c": [{"e": "text", "t": "f"}]}, {"c": []}, {"c": []}], [{"c": [{"e": "text", "t": "a"}]}, {"c": [{"e": "text", "t": "b"}]}, {"c": [{"e": "text", "t": "c"}]}, {"c": [{"e": "text", "t": "d"}]}, {"c": [{"e": "text", "t": "e"}]}, {"c": [{"e": "text", "t": "f"}]}, {"c": []}, {"c": []}], [{"c": [{"e": "text", "t": "a"}]}, {"c": [{"e": "text", "t": "b"}]}, {"c": [{"e": "text", "t": "c"}]}, {"c": [{"e": "text", "t": "d"}]}, {"c": [{"e": "text", "t": "e"}]}, {"c": [{"e": "text", "t": "f"}]}, {"c": []}, {"c": []}], [{"c": [{"e": "text", "t": "a"}]}, {"c": [{"e": "text", "t": "b"}]}, {"c": [{"e": "text", "t": "c"}]}, {"c": [{"e": "text", "t": "d"}]}, {"c": [{"e": "text", "t": "e"}]}, {"c": [{"e": "text", "t": "f"}]}, {"c": []}, {"c": []}], [{"c": [{"e": "text", "t": "a"}]}, {"c": [{"e": "text", "t": "b"}]}, {"c": [{"e": "text", "t": "c"}]}, {"c": [{"e": "text", "t": "d"}]}, {"c": [{"e": "text", "t": "e"}]}, {"c": [{"e": "text", "t": "f"}]}, {"c": []}, {"c": []}], [{"c": [{"e": "text", "t": "a"}]}, {"c": [{"e": "text", "t": "b"}]}, {"c": [{"e": "text", "t": "c"}]}, {"c": [{"e": "text", "t": "d"}]}, {"c": [{"e": "text", "t": "e"}]}, {"c": [{"e": "text", "t": "f"}]}, {"c": []}, {"c": []}], [{"c": [{"e": "text", "t": "a"}]}, {"c": [{"e": "text", "t": "b"}]}, {"c": [{"e": "text", "t": "c"}]}, {"c": [{"e": "text", "t": "d"}]}, {"c": [{"e": "text", "t": "e"}]}, {"c": [{"e": "text", "t": "f"}]}, {"c": []}, {"c": []}], [{"c": [{"e": "text", "t": "a"}]}, {"c": [{"e": "text", "t": "b"}]}, {"c": [{"e": "text", "t": "c"}]}, {"c": [{"e": "text", "t": "d"}]}, {"c": [{"e": "text", "t": "e"}]}, {"c": [{"e": "text", "t": "f"}]}, {"c": []}, {"c": []}], [{"c": [{"e": "text", "t": "a"}]}, {"c": [{"e": "text", "t": "b"}]}, {"c": [{"e": "text", "t": "c"}]}, {"c": [{"e": "text", "t": "d"}]}, {"c": [{"e": "text", "t": "e"}]}, {"c": [{"e": "text", "t": "f"}]}, {"c": []}, {"c": []}], [{"c": [{"e": "text", "t": "a"}]}, {"c": [{"e": "text", "t": "b"}]}, {"c": [{"e": "text", "t": "c"}]}, {"c": [{"e": "text", "t": "d"}]}, {"c": [{"e": "text", "t": "e"}]}, {"c": [{"e": "text", "t": "f"}]}, {"c": []}, {"c": []}], [{"c": [{"e": "text", "t": "a"}]}, {"c": [{"e": "text", "t": "b"}]}, {"c": [{"e": "text", "t": "c"}]}, {"c": [{"e": "text", "t": "d"}]}, {"c": [{"e": "text", "t": "e"}]}, {"c": [{"e": "text", "t": "f"}]}, {"c": []}, {"c": []}], [{"c": [{"e": "text", "t": "a"}]}, {"c": [{"e": "text", "t": "b"}]}, {"c": [{"e": "text", "t": "c"}]}, {"c": [{"e": "text", "t": "d"}]}, {"c": [{"e": "text", "t": "e"}]}, {"c": [{"e": "text", "t": "f"}]}, {"c": []}, {"c": []}], [{"c": [{"e": "text", "t": "a"}]}, {"c": [{"e": "text", "t": "b"}]}, {"c": [{"e": "text", "t": "c"}]}, {"c": [{"e": "text", "t": "d"}]}, {"c": [{"e": "text", "t": "e"}]}, {"c": [{"e": "text", "t": "f"}]}, {"c": []}, {"c": []}], [{"c": [{"e": "text", "t": "a"}]}, {"c": [{"e": "text", "t": "b"}]}, {"c": [{"e": "text", "t": "c"}]}, {"c": [{"e": "text", "t": "d"}]}, {"c": [{"e": "text", "t": "e"}]}, {"c": [{"e": "text", "t": "f"}]}, {"c": []}, {"c": []}], [{"c": [{"e": "text", "t": "a"}]}, {"c": [{"e": "text", "t": "b"}]}, {"c": [{"e": "text", "t": "c"}]}, {"c": [{"e": "text", "t": "d"}]}, {"c": [{"e": "text", "t": "e"}]}, {"c": [{"e": "text", "t": "f"}]}, {"c": []}, {"c": []}], [{"c": [{"e": "text", "t": "a"}]}, {"c": [{"e": "text", "t": "b"}]}, {"c": [{"e": "text", "t": "c"}]}, {"c": [{"e": "text", "t": "d"}]}, {"c": [{"e": "text", "t": "e"}]}, {"c": [{"e": "text", "t": "f"}]}, {"c": []}, {"c": []}], [{"c": [{"e": "text", "t": "a"}]}, {"c": [{"e": "text", "t": "b"}]}, {"c": [{"e": "text", "t": "c"}]}, {"c": [{"e": "text", "t": "d"}]}, {"c": [{"e": "text", "t": "e"}]}, {"c": [{"e": "text", "t": "f"}]}, {"c": []}, {"c": []}], [{"c": [{"e": "text", "t": "a"}]}, {"c": [{"e": "text", "t": "b"}]}, {"c": [{"e": "text", "t": "c"}]}, {"c": [{"e": "text", "t": "d"}]}, {"c": [{"e": "text", "t": "e"}]}, {"c": [{"e": "text", "t": "f"}]}, {"c": []}, {"c": []}]], "e": "table"}, {"e": "hr"}, {"c": [{"e": "text", "t": "a"}], "e": "par"}]}
 ````````````````````````````````
