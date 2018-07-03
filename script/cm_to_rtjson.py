@@ -29,6 +29,7 @@ import sys
 import json
 import os
 from timeit import default_timer as timer
+from math import sqrt
 
 # Use the environment to configure how to find the dylib
 root_dir = os.environ.get("SM_DIR")
@@ -89,14 +90,16 @@ if __name__ == "__main__":
         snoomark.flame_clear()
 
     # Run some number of times so that we're processing around N bytes
-    repeat = 1 if not bench else 1000000 / len(md)
+    repeat = 1 if not bench else 10000000 / len(md)
     assert repeat >= 1
+    if bench and repeat < 4:
+        repeat = 4
 
     if bench:
         print("running {} times".format(repeat))
         print("processing {} bytes".format(repeat * len(md)))
 
-    bench_runs = []
+    times = []
 
     for i in range(0, repeat):
 
@@ -137,17 +140,20 @@ if __name__ == "__main__":
             snoomark.flame_write()
 
         end = timer()
-        bench_runs.append(end - start)
+        times.append(end - start)
 
     if bench:
-        # Remove top and bottom outliers
-        to_remove = repeat / 4
-        assert repeat >= 1
-        assert len(bench_runs) > to_remove * 3
-        bench_runs.sort()
-        bench_runs = bench_runs[:len(bench_runs) - to_remove]
-        bench_runs = bench_runs[to_remove:]
-        print("using {} runs".format(len(bench_runs)))
-        bench_sum = sum(bench_runs)
-        avg_time = bench_sum / len(bench_runs)
-        print("avg time: {} s".format(avg_time))
+        assert repeat >= 3
+        times.sort()
+        times = times[1:-1]
+
+        total_time = sum(times)
+        samples = len(times)
+        mean_time = total_time / len(times)
+        variance = sum((x - mean_time) ** 2 for x in times) / samples
+        stddev = sqrt(variance)
+
+        print("samples: {}".format(len(times)))
+        print("mean time: {:.6} s".format(mean_time))
+        print("variance: {:.6} s^2".format(variance))
+        print("std dev: {:.6} s".format(stddev))
