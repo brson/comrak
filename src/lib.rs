@@ -106,6 +106,7 @@ mod entity;
 mod strings;
 #[cfg(test)]
 mod tests;
+mod borrow_unchecked;
 
 // Reddit modules
 pub mod py;

@@ -5,6 +5,7 @@ use super::inlines;
 use nodes::{AstNode, NodeValue, NodeFormatLink};
 use std::collections::HashMap;
 use std::str;
+use borrow_unchecked::*;
 
 impl<'a, 'o> Parser<'a, 'o> {
     #[cfg_attr(feature = "flamegraphs", flame)]
@@ -144,7 +145,7 @@ impl<'a, 'o> Parser<'a, 'o> {
         format_ranges: &mut Vec<[u16; 3]>,
         range_idx: &mut u16,
     ) -> bool {
-        match node.data.borrow_mut().value {
+        match node.data.borrow_mut_().value {
             NodeValue::Text(ref text) => {
                 self.output_format_range(
                     unformatted_text,
@@ -221,10 +222,10 @@ impl<'a, 'o> Parser<'a, 'o> {
                 self.reset_rtjson_node(unformatted_text, format_ranges, range_idx);
 
                 let parents_are_cool = if let Some(parent) = node.parent() {
-                    match parent.data.borrow().value {
+                    match parent.data.borrow_().value {
                         NodeValue::Paragraph => {
                             if let Some(grandparent) = parent.parent() {
-                                match grandparent.data.borrow().value {
+                                match grandparent.data.borrow_().value {
                                     NodeValue::Document => true,
                                     _ => false,
                                 }
@@ -253,7 +254,7 @@ impl<'a, 'o> Parser<'a, 'o> {
                 let one_child = node.children().count() == 1;
                 let valid_media_type = match node.first_child() {
                     Some(n) => {
-                        match n.data.borrow().value {
+                        match n.data.borrow_().value {
                             NodeValue::Text(ref t) => {
                                 static MEDIA_TYPES: &[&[u8]] = &[b"img", b"video", b"gif"];
                                 MEDIA_TYPES.iter().any(|m| *m == t.as_slice())
@@ -282,7 +283,7 @@ impl<'a, 'o> Parser<'a, 'o> {
                     }
                     let mut accum = vec![];
                     while let Some(n) = stack.pop() {
-                        match n.data.borrow().value {
+                        match n.data.borrow_().value {
                             NodeValue::Text(ref literal)
                             | NodeValue::Code(ref literal)
                             | NodeValue::HtmlInline(ref literal) => {
@@ -366,7 +367,7 @@ impl<'a, 'o> Parser<'a, 'o> {
         format_ranges: &mut Vec<[u16; 3]>,
         range_idx: &mut u16,
     ) {
-        match node.data.borrow().value {
+        match node.data.borrow_().value {
             NodeValue::Item(..) => {
                 match node.children().next() {
                     None => {
@@ -384,7 +385,7 @@ impl<'a, 'o> Parser<'a, 'o> {
                         node.prepend(par_inl);
                     },
                     Some(n) => {
-                        match n.data.borrow().value {
+                        match n.data.borrow_().value {
                             NodeValue::List(..) => {
                                 let par_inl = inlines::make_inline(
                                     self.arena,
@@ -407,7 +408,7 @@ impl<'a, 'o> Parser<'a, 'o> {
             _ => (),
         }
 
-        match node.data.borrow().value {
+        match node.data.borrow_().value {
             NodeValue::Strong => self.remove_format(current_format, 1),
             NodeValue::Emph => self.remove_format(current_format, 2),
             NodeValue::Strikethrough => self.remove_format(current_format, 8),
@@ -415,8 +416,8 @@ impl<'a, 'o> Parser<'a, 'o> {
             _ => ()
         }
 
-        if node.data.borrow_mut().value.contains_inlines() {
-            match node.data.borrow_mut().value {
+        if node.data.borrow_mut_().value.contains_inlines() {
+            match node.data.borrow_mut_().value {
                 NodeValue::Link(ref nl) => {
                     let link_node = if format_ranges.is_empty() {
                         NodeValue::UnformattedLink(NodeFormatLink{
@@ -467,7 +468,7 @@ impl<'a, 'o> Parser<'a, 'o> {
                 }
             }
         } else {
-            match node.data.borrow_mut().value {
+            match node.data.borrow_mut_().value {
                 NodeValue::Text(..)
                 | NodeValue::Emph
                 | NodeValue::Strong

@@ -17,6 +17,7 @@ use std::mem;
 use std::str;
 use strings;
 use typed_arena::Arena;
+use borrow_unchecked::*;
 
 mod rtjson;
 
@@ -530,7 +531,7 @@ impl<'a, 'o> Parser<'a, 'o> {
 
         while nodes::last_child_is_open(container) {
             container = container.last_child().unwrap();
-            let ast = &mut *container.data.borrow_mut();
+            let ast = &mut *container.data.borrow_mut_();
 
             self.find_first_nonspace(line);
 
@@ -578,12 +579,12 @@ impl<'a, 'o> Parser<'a, 'o> {
         let mut matched: usize = 0;
         let mut nl: NodeList = NodeList::default();
         let mut sc: scanners::SetextChar = scanners::SetextChar::Equals;
-        let mut maybe_lazy = match self.current.data.borrow().value {
+        let mut maybe_lazy = match self.current.data.borrow_().value {
             NodeValue::Paragraph => true,
             _ => false,
         };
 
-        while match container.data.borrow().value {
+        while match container.data.borrow_().value {
             NodeValue::CodeBlock(..) | NodeValue::HtmlBlock(..) => false,
             _ => true,
         } {
@@ -630,7 +631,7 @@ impl<'a, 'o> Parser<'a, 'o> {
                     level = 6;
                 }
 
-                container.data.borrow_mut().value = NodeValue::Heading(NodeHeading {
+                container.data.borrow_mut_().value = NodeValue::Heading(NodeHeading {
                     level: level,
                     setext: false,
                 });
@@ -656,7 +657,7 @@ impl<'a, 'o> Parser<'a, 'o> {
                 && (unwrap_into(
                     scanners::html_block_start(&line[self.first_nonspace..]),
                     &mut matched,
-                ) || match container.data.borrow().value {
+                ) || match container.data.borrow_().value {
                     NodeValue::Paragraph => false,
                     _ => unwrap_into(
                         scanners::html_block_start_7(&line[self.first_nonspace..]),
@@ -670,14 +671,14 @@ impl<'a, 'o> Parser<'a, 'o> {
                 };
 
                 *container = self.add_child(*container, NodeValue::HtmlBlock(nhb), offset);
-            } else if !indented && match container.data.borrow().value {
+            } else if !indented && match container.data.borrow_().value {
                 NodeValue::Paragraph => unwrap_into(
                     scanners::setext_heading_line(&line[self.first_nonspace..]),
                     &mut sc,
                 ),
                 _ => false,
             } {
-                container.data.borrow_mut().value = NodeValue::Heading(NodeHeading {
+                container.data.borrow_mut_().value = NodeValue::Heading(NodeHeading {
                     level: match sc {
                         scanners::SetextChar::Equals => 1,
                         scanners::SetextChar::Hyphen => 2,
@@ -686,7 +687,7 @@ impl<'a, 'o> Parser<'a, 'o> {
                 });
                 let adv = line.len() - 1 - self.offset;
                 self.advance_offset(line, adv, false);
-            } else if !indented && match (&container.data.borrow().value, all_matched) {
+            } else if !indented && match (&container.data.borrow_().value, all_matched) {
                 (&NodeValue::Paragraph, false) => false,
                 _ => unwrap_into(
                     scanners::thematic_break(&line[self.first_nonspace..]),
@@ -712,7 +713,7 @@ impl<'a, 'o> Parser<'a, 'o> {
                     NodeValue::FootnoteDefinition(c.to_vec()),
                     offset,
                 );
-            } else if (!indented || match container.data.borrow().value {
+            } else if (!indented || match container.data.borrow_().value {
                 NodeValue::List(..) => true,
                 _ => false,
             })
@@ -720,7 +721,7 @@ impl<'a, 'o> Parser<'a, 'o> {
                     // Reddit prefers parsing table rows to lists for
                     // backcompat, so e.g. we parse "- | cell | cell" as a table row
                     // if we are already parsing tables.
-                    let parsing_table_rows = match container.data.borrow().value {
+                    let parsing_table_rows = match container.data.borrow_().value {
                         NodeValue::Table(..) => true,
                         _ => false,
                     };
@@ -745,11 +746,11 @@ impl<'a, 'o> Parser<'a, 'o> {
                     parse_list_marker(
                         line,
                         self.first_nonspace,
-                        match container.data.borrow().value {
+                        match container.data.borrow_().value {
                             NodeValue::Paragraph => true,
                             _ => false,
                         },
-                        match container.data.borrow().value {
+                        match container.data.borrow_().value {
                             NodeValue::List(..) => true,
                             _ => false,
                         },
@@ -784,7 +785,7 @@ impl<'a, 'o> Parser<'a, 'o> {
                 nl.marker_offset = self.indent;
 
                 let offset = self.first_nonspace + 1;
-                if match container.data.borrow().value {
+                if match container.data.borrow_().value {
                     NodeValue::List(ref mnl) => !lists_match(&nl, mnl),
                     _ => true,
                 } {
@@ -824,7 +825,7 @@ impl<'a, 'o> Parser<'a, 'o> {
                 }
             }
 
-            if container.data.borrow().value.accepts_lines() {
+            if container.data.borrow_().value.accepts_lines() {
                 break;
             }
 
@@ -998,30 +999,30 @@ impl<'a, 'o> Parser<'a, 'o> {
 
         if self.blank {
             if let Some(last_child) = container.last_child() {
-                last_child.data.borrow_mut().last_line_blank = true;
+                last_child.data.borrow_mut_().last_line_blank = true;
             }
         }
 
-        container.data.borrow_mut().last_line_blank = self.blank
-            && match container.data.borrow().value {
+        container.data.borrow_mut_().last_line_blank = self.blank
+            && match container.data.borrow_().value {
                 NodeValue::BlockQuote | NodeValue::Heading(..) | NodeValue::ThematicBreak => false,
                 NodeValue::CodeBlock(ref ncb) => !ncb.fenced,
                 NodeValue::Item(..) => {
                     container.first_child().is_some()
-                        || container.data.borrow().start_line != self.line_number
+                        || container.data.borrow_().start_line != self.line_number
                 }
                 _ => true,
             };
 
         let mut tmp = container;
         while let Some(parent) = tmp.parent() {
-            parent.data.borrow_mut().last_line_blank = false;
+            parent.data.borrow_mut_().last_line_blank = false;
             tmp = parent;
         }
 
         if !self.current.same_node(last_matched_container)
             && container.same_node(last_matched_container) && !self.blank
-            && match self.current.data.borrow().value {
+            && match self.current.data.borrow_().value {
                 NodeValue::Paragraph => true,
                 _ => false,
             } {
@@ -1031,7 +1032,7 @@ impl<'a, 'o> Parser<'a, 'o> {
                 self.current = self.finalize(self.current).unwrap();
             }
 
-            let add_text_result = match container.data.borrow().value {
+            let add_text_result = match container.data.borrow_().value {
                 NodeValue::CodeBlock(..) => AddTextResult::CodeBlock,
                 NodeValue::HtmlBlock(ref nhb) => AddTextResult::HtmlBlock(nhb.block_type),
                 _ => AddTextResult::Otherwise,
@@ -1060,9 +1061,9 @@ impl<'a, 'o> Parser<'a, 'o> {
                 _ => {
                     if self.blank {
                         // do nothing
-                    } else if container.data.borrow().value.accepts_lines() {
+                    } else if container.data.borrow_().value.accepts_lines() {
                         let mut line: Vec<u8> = line.into();
-                        if let NodeValue::Heading(ref nh) = container.data.borrow().value {
+                        if let NodeValue::Heading(ref nh) = container.data.borrow_().value {
                             if !nh.setext {
                                 strings::chop_trailing_hashtags(&mut line);
                             }
@@ -1103,7 +1104,7 @@ impl<'a, 'o> Parser<'a, 'o> {
 
     #[cfg_attr(feature = "flamegraphs", flame)]
     fn add_line(&mut self, node: &'a AstNode<'a>, line: &[u8]) {
-        let mut ast = node.data.borrow_mut();
+        let mut ast = node.data.borrow_mut_();
         assert!(ast.open);
         if self.partially_consumed_tab {
             self.offset += 1;
@@ -1152,7 +1153,7 @@ impl<'a, 'o> Parser<'a, 'o> {
 
     #[cfg_attr(feature = "flamegraphs", flame)]
     fn finalize(&mut self, node: &'a AstNode<'a>) -> Option<&'a AstNode<'a>> {
-        self.finalize_borrowed(node, &mut *node.data.borrow_mut())
+        self.finalize_borrowed(node, &mut *node.data.borrow_mut_())
     }
 
     #[cfg_attr(feature = "flamegraphs", flame)]
@@ -1255,7 +1256,7 @@ impl<'a, 'o> Parser<'a, 'o> {
                 let mut ch = node.first_child();
 
                 while let Some(item) = ch {
-                    if item.data.borrow().last_line_blank && item.next_sibling().is_some() {
+                    if item.data.borrow_().last_line_blank && item.next_sibling().is_some() {
                         nl.tight = false;
                         break;
                     }
@@ -1292,7 +1293,7 @@ impl<'a, 'o> Parser<'a, 'o> {
     #[cfg_attr(feature = "flamegraphs", flame)]
     fn process_inlines_node(&mut self, node: &'a AstNode<'a>) {
         for node in node.descendants() {
-            if node.data.borrow().value.contains_inlines() {
+            if node.data.borrow_().value.contains_inlines() {
                 self.parse_inlines(node);
             }
         }
@@ -1301,7 +1302,7 @@ impl<'a, 'o> Parser<'a, 'o> {
     #[cfg_attr(feature = "flamegraphs", flame)]
     fn parse_inlines(&mut self, node: &'a AstNode<'a>) {
         let delimiter_arena = Arena::new();
-        let node_data = node.data.borrow();
+        let node_data = node.data.borrow_();
         let content = strings::rtrim_slice(&node_data.content);
         let mut subj = inlines::Subject::new(
             self.arena,
@@ -1340,7 +1341,7 @@ impl<'a, 'o> Parser<'a, 'o> {
         node: &'a AstNode<'a>,
         map: &mut HashMap<Vec<u8>, FootnoteDefinition<'a>>,
     ) {
-        match node.data.borrow().value {
+        match node.data.borrow_().value {
             NodeValue::FootnoteDefinition(ref name) => {
                 node.detach();
                 map.insert(
@@ -1362,7 +1363,7 @@ impl<'a, 'o> Parser<'a, 'o> {
         map: &mut HashMap<Vec<u8>, FootnoteDefinition>,
         ix: &mut u32,
     ) {
-        let mut ast = node.data.borrow_mut();
+        let mut ast = node.data.borrow_mut_();
         let mut replace = None;
         match ast.value {
             NodeValue::FootnoteReference(ref mut name) => {
@@ -1402,7 +1403,7 @@ impl<'a, 'o> Parser<'a, 'o> {
             while let Some(n) = nch {
                 let mut this_bracket = false;
                 loop {
-                    match n.data.borrow_mut().value {
+                    match n.data.borrow_mut_().value {
                         NodeValue::Text(ref mut root) => {
                             let ns = match n.next_sibling() {
                                 Some(ns) => ns,
@@ -1412,7 +1413,7 @@ impl<'a, 'o> Parser<'a, 'o> {
                                 }
                             };
 
-                            match ns.data.borrow().value {
+                            match ns.data.borrow_().value {
                                 NodeValue::Text(ref adj) => {
                                     root.extend_from_slice(adj);
                                     ns.detach();
@@ -1477,12 +1478,12 @@ impl<'a, 'o> Parser<'a, 'o> {
             return;
         }
 
-        match parent.data.borrow().value {
+        match parent.data.borrow_().value {
             NodeValue::Paragraph => (),
             _ => return,
         }
 
-        match parent.parent().unwrap().data.borrow().value {
+        match parent.parent().unwrap().data.borrow_().value {
             NodeValue::Item(..) => (),
             _ => return,
         }

@@ -2,6 +2,7 @@
 
 use arena_tree::Node;
 use std::cell::RefCell;
+use borrow_unchecked::*;
 
 /// The core AST node enum.
 #[derive(Debug, Clone)]
@@ -426,7 +427,7 @@ pub type AstNode<'a> = Node<'a, RefCell<Ast>>;
 
 #[doc(hidden)]
 pub fn last_child_is_open<'a>(node: &'a AstNode<'a>) -> bool {
-    node.last_child().map_or(false, |n| n.data.borrow().open)
+    node.last_child().map_or(false, |n| n.data.borrow_().open)
 }
 
 #[doc(hidden)]
@@ -435,7 +436,7 @@ pub fn can_contain_type<'a>(node: &'a AstNode<'a>, child: &NodeValue) -> bool {
         return false;
     }
 
-    match node.data.borrow().value {
+    match node.data.borrow_().value {
         NodeValue::Document
         | NodeValue::BlockQuote
         | NodeValue::FootnoteDefinition(_)
@@ -492,10 +493,10 @@ pub fn can_contain_type<'a>(node: &'a AstNode<'a>, child: &NodeValue) -> bool {
 pub fn ends_with_blank_line<'a>(node: &'a AstNode<'a>) -> bool {
     let mut it = Some(node);
     while let Some(cur) = it {
-        if cur.data.borrow().last_line_blank {
+        if cur.data.borrow_().last_line_blank {
             return true;
         }
-        match cur.data.borrow().value {
+        match cur.data.borrow_().value {
             NodeValue::List(..) | NodeValue::Item(..) => it = cur.last_child(),
             _ => it = None,
         };
@@ -507,7 +508,7 @@ pub fn ends_with_blank_line<'a>(node: &'a AstNode<'a>) -> bool {
 pub fn containing_block<'a>(node: &'a AstNode<'a>) -> Option<&'a AstNode<'a>> {
     let mut ch = Some(node);
     while let Some(n) = ch {
-        if n.data.borrow().value.block() {
+        if n.data.borrow_().value.block() {
             return Some(n);
         }
         ch = n.parent();

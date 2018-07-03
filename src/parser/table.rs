@@ -5,13 +5,14 @@ use scanners;
 use std::cell::RefCell;
 use std::cmp::min;
 use strings::trim;
+use borrow_unchecked::*;
 
 pub fn try_opening_block<'a, 'o>(
     parser: &mut Parser<'a, 'o>,
     container: &'a AstNode<'a>,
     line: &[u8],
 ) -> Option<(&'a AstNode<'a>, bool)> {
-    let aligns = match container.data.borrow().value {
+    let aligns = match container.data.borrow_().value {
         NodeValue::Paragraph => None,
         NodeValue::Table(ref aligns) => Some(aligns.clone()),
         _ => return None,
@@ -33,7 +34,7 @@ fn try_opening_header<'a, 'o>(
         return Some((container, false));
     }
 
-    let header_row = match row(&container.data.borrow().content) {
+    let header_row = match row(&container.data.borrow_().content) {
         Some(header_row) => header_row,
         None => return Some((container, false)),
     };
@@ -80,7 +81,7 @@ fn try_opening_header<'a, 'o>(
         });
     }
 
-    let start_column = container.data.borrow().start_column;
+    let start_column = container.data.borrow_().start_column;
     let child = make_block(
         NodeValue::Table(alignments),
         parser.line_number,
@@ -92,7 +93,7 @@ fn try_opening_header<'a, 'o>(
     let header = parser.add_child(table, NodeValue::TableRow(true), start_column);
     for header_str in header_row {
         let header_cell = parser.add_child(header, NodeValue::TableCell, start_column);
-        header_cell.data.borrow_mut().content = header_str;
+        header_cell.data.borrow_mut_().content = header_str;
     }
 
     let offset = line.len() - 1 - parser.offset;
@@ -114,7 +115,7 @@ fn try_opening_row<'a, 'o>(
     let new_row = parser.add_child(
         container,
         NodeValue::TableRow(false),
-        container.data.borrow().start_column,
+        container.data.borrow_().start_column,
     );
 
     let mut i = 0;
@@ -122,9 +123,9 @@ fn try_opening_row<'a, 'o>(
         let cell = parser.add_child(
             new_row,
             NodeValue::TableCell,
-            container.data.borrow().start_column,
+            container.data.borrow_().start_column,
         );
-        cell.data.borrow_mut().content = this_row[i].clone();
+        cell.data.borrow_mut_().content = this_row[i].clone();
         i += 1;
     }
 
@@ -132,7 +133,7 @@ fn try_opening_row<'a, 'o>(
         parser.add_child(
             new_row,
             NodeValue::TableCell,
-            container.data.borrow().start_column,
+            container.data.borrow_().start_column,
         );
         i += 1;
     }

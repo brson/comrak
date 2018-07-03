@@ -4,6 +4,7 @@ extern crate cpython;
 use nodes::{TableAlignment, NodeValue, ListType, AstNode};
 use self::cpython::*;
 use std::str;
+use borrow_unchecked::*;
 
 /// Formats an AST as RTJSON
 #[cfg_attr(any(feature = "flamegraphs", feature = "minflame"), flame)]
@@ -55,7 +56,7 @@ impl RTJsonFormatter {
                     let content =  PyList::new(py, &children[..]);
 
                     // Then add the child content to the node
-                    match node.data.borrow().value {
+                    match node.data.borrow_().value {
                         NodeValue::Document => {
                             json.set_item(py, "document", content).unwrap();
                         }
@@ -112,7 +113,7 @@ impl RTJsonFormatter {
             }
         }
 
-        match node.data.borrow().value {
+        match node.data.borrow_().value {
             NodeValue::Document => {
                 let dict = PyDict::new(py);
                 dict.set_item(py, "document", "")?;
@@ -184,7 +185,7 @@ impl RTJsonFormatter {
                 Ok(dict)
             }
             NodeValue::Text(ref literal) => {
-                match node.parent().unwrap().data.borrow().value {
+                match node.parent().unwrap().data.borrow_().value {
                     NodeValue::Heading(..) | NodeValue::CodeBlock(..) => {
                         let dict = PyDict::new(py);
                         dict.set_item(py, "e", "raw")?;
@@ -202,7 +203,7 @@ impl RTJsonFormatter {
                 }
             }
             NodeValue::FormattedText(ref literal, ref format_ranges) => {
-                match node.parent().unwrap().data.borrow().value {
+                match node.parent().unwrap().data.borrow_().value {
                     NodeValue::Heading(..) | NodeValue::CodeBlock(..) => {
                         let dict = PyDict::new(py);
                         dict.set_item(py, "e", "raw")?;
@@ -314,7 +315,7 @@ impl RTJsonFormatter {
                 }
             }
             NodeValue::TableCell => {
-                let row = &node.parent().unwrap().data.borrow().value;
+                let row = &node.parent().unwrap().data.borrow_().value;
                 let in_header = match *row {
                     NodeValue::TableRow(header) => header,
                     _ => panic!(),
@@ -325,7 +326,7 @@ impl RTJsonFormatter {
                                  .parent()
                                  .unwrap()
                                  .data
-                                 .borrow()
+                                 .borrow_()
                                  .value;
                 let alignments = match *table {
                     NodeValue::Table(ref alignments) => alignments,

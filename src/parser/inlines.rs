@@ -11,6 +11,7 @@ use std::str;
 use strings;
 use typed_arena::Arena;
 use unicode_categories::UnicodeCategories;
+use borrow_unchecked::*;
 
 const MAXBACKTICKS: usize = 80;
 const MAX_LINK_LABEL_LENGTH: usize = 1000;
@@ -370,7 +371,7 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
                         .unwrap()
                         .inl
                         .data
-                        .borrow_mut()
+                        .borrow_mut_()
                         .value
                         .text_mut()
                         .unwrap() = "’".to_string().into_bytes();
@@ -379,7 +380,7 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
                             .unwrap()
                             .inl
                             .data
-                            .borrow_mut()
+                            .borrow_mut_()
                             .value
                             .text_mut()
                             .unwrap() = "‘".to_string().into_bytes();
@@ -390,7 +391,7 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
                         .unwrap()
                         .inl
                         .data
-                        .borrow_mut()
+                        .borrow_mut_()
                         .value
                         .text_mut()
                         .unwrap() = "”".to_string().into_bytes();
@@ -399,7 +400,7 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
                             .unwrap()
                             .inl
                             .data
-                            .borrow_mut()
+                            .borrow_mut_()
                             .value
                             .text_mut()
                             .unwrap() = "“".to_string().into_bytes();
@@ -722,7 +723,7 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
             prev: Cell::new(self.last_delimiter),
             next: Cell::new(None),
             inl: inl,
-            length: inl.data.borrow().value.text().unwrap().len(),
+            length: inl.data.borrow_().value.text().unwrap().len(),
             delim_char: c,
             can_open: can_open,
             can_close: can_close,
@@ -744,9 +745,9 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
         opener: &'d Delimiter<'a, 'd>,
         closer: &'d Delimiter<'a, 'd>,
     ) -> Option<&'d Delimiter<'a, 'd>> {
-        let opener_char = opener.inl.data.borrow().value.text().unwrap()[0];
-        let mut opener_num_chars = opener.inl.data.borrow().value.text().unwrap().len();
-        let mut closer_num_chars = closer.inl.data.borrow().value.text().unwrap().len();
+        let opener_char = opener.inl.data.borrow_().value.text().unwrap()[0];
+        let mut opener_num_chars = opener.inl.data.borrow_().value.text().unwrap().len();
+        let mut closer_num_chars = closer.inl.data.borrow_().value.text().unwrap().len();
 
         // Decide how many "*"s or "_" to truncate from the delimiters, and thus
         // whether to insert an `Emph` (1) or `Strong` (2) node.
@@ -773,7 +774,7 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
         opener
             .inl
             .data
-            .borrow_mut()
+            .borrow_mut_()
             .value
             .text_mut()
             .unwrap()
@@ -781,7 +782,7 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
         closer
             .inl
             .data
-            .borrow_mut()
+            .borrow_mut_()
             .value
             .text_mut()
             .unwrap()
@@ -1015,7 +1016,7 @@ impl<'a, 'r, 'o, 'd, 'i> Subject<'a, 'r, 'o, 'd, 'i> {
         if self.options.ext_footnotes
             && match self.brackets[brackets_len - 1].inl_text.next_sibling() {
                 Some(n) => {
-                    text = n.data.borrow().value.text().cloned();
+                    text = n.data.borrow_().value.text().cloned();
                     text.is_some() && n.next_sibling().is_none()
                 }
                 _ => false,
