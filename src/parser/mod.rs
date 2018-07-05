@@ -43,7 +43,7 @@ pub fn parse_document<'a>(
         last_line_blank: false,
     })));
     let mut parser = Parser::new(arena, root, options);
-    parser.feed(buffer.as_bytes(), true);
+    parser.feed(buffer, true);
     parser.finish()
 }
 
@@ -359,7 +359,8 @@ impl<'a, 'o> Parser<'a, 'o> {
     }
 
     #[cfg_attr(any(feature = "flamegraphs", feature = "minflame"), flame)]
-    pub fn feed(&mut self, s: &[u8], eof: bool) {
+    fn feed(&mut self, s: &str, eof: bool) {
+        let s = s.as_bytes();
         let mut i = 0;
         let buffer = s;
         let sz = buffer.len();
@@ -647,7 +648,7 @@ impl<'a, 'o> Parser<'a, 'o> {
                     fence_length: matched,
                     fence_offset: first_nonspace - offset,
                     info: Vec::with_capacity(10),
-                    literal: Vec::with_capacity(80),
+                    literal: Vec::new(),
                 };
                 *container =
                     self.add_child(*container, NodeValue::CodeBlock(ncb), first_nonspace + 1);
@@ -666,7 +667,7 @@ impl<'a, 'o> Parser<'a, 'o> {
                 let offset = self.first_nonspace + 1;
                 let nhb = NodeHtmlBlock {
                     block_type: matched as u8,
-                    literal: Vec::with_capacity(10),
+                    literal: Vec::new(),
                 };
 
                 *container = self.add_child(*container, NodeValue::HtmlBlock(nhb), offset);
@@ -801,7 +802,7 @@ impl<'a, 'o> Parser<'a, 'o> {
                     fence_length: 0,
                     fence_offset: 0,
                     info: vec![],
-                    literal: Vec::with_capacity(80),
+                    literal: Vec::new(),
                 };
                 let offset = self.offset + 1;
                 *container = self.add_child(*container, NodeValue::CodeBlock(ncb), offset);
@@ -1203,7 +1204,9 @@ impl<'a, 'o> Parser<'a, 'o> {
                         seeked += pos;
                     }
                 }
-                *content = content[seeked..].to_vec();
+                if seeked != 0 {
+                    *content = content[seeked..].to_vec();
+                }
                 if strings::is_blank(content) {
                     node.detach();
                 }
@@ -1244,11 +1247,9 @@ impl<'a, 'o> Parser<'a, 'o> {
                     *content = content[pos..].to_vec();
                 }
                 mem::swap(&mut ncb.literal, content);
-                content.clear();
             }
             NodeValue::HtmlBlock(ref mut nhb) => {
                 mem::swap(&mut nhb.literal, content);
-                content.clear();
             }
             NodeValue::List(ref mut nl) => {
                 nl.tight = true;
@@ -1501,7 +1502,9 @@ impl<'a, 'o> Parser<'a, 'o> {
 
     #[cfg_attr(feature = "flamegraphs", flame)]
     fn parse_reference_inline(&mut self, content: &[u8]) -> Option<usize> {
-        let delimiter_arena = Arena::new();
+        // In this case reference inlines rarely have delimiters
+        // so we often just need the minimal case
+        let delimiter_arena = Arena::with_capacity(0);
         let mut subj = inlines::Subject::new(
             self.arena,
             self.options,
