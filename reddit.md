@@ -53,6 +53,15 @@ Then generate a flamegraph with
 
 The flame graph will be in flamegraph.html
 
+## Benchmarking
+
+`SM_TARGET=release script/cm_to_rtjson.py [FILE] --bench` will do a simple benchmark of a single file.
+
+`SM_TARGET=release script/bench_corpus.py [FILE]` will benchmark an entire
+comment corpus is json format. The corpus is not maintained in tree as it
+contains proprietary info, but ask someone for a copy of `comment_corpus.json`.
+This is probably the best real-world benchmark we have.
+
 ## Fuzzing
 
 The `fuzz` directory contains a fuzz target for `cargo-fuzz`. It also requires a
@@ -75,15 +84,6 @@ Deploying changes to snoomark to Reddit is straightforward, but requires a preci
 6. [Push git tag and retrieve shasum](#push-git-tag-and-retrieve-shasum)
 7. [Update puppet manifest with new version and shasum](#update-puppet-manifest-with-new-version-and-shasum)
 8. [Verify the update](#verify-the-update)
-
-## Benchmarking
-
-`SM_TARGET=release script/cm_to_rtjson.py [FILE] --bench` will do a simple benchmark of a single file.
-
-`SM_TARGET=release script/bench_corpus.py [FILE]` will benchmark an entire
-comment corpus is json format. The corpus is not maintained in tree as it
-contains proprietary info, but ask someone for a copy of `comment_corpus.json`.
-This is probably the best real-world benchmark we have.
 
 ### Make updates to snoomark
 
@@ -142,7 +142,7 @@ In the above example `<shasum_hash>` is the shasum of the file. You'll need to k
 
 ### Update puppet manifest with new version and shasum
 
-In [`reddit/puppet`](https://github.com/reddit/puppet), update [`common.yaml`](https://github.com/reddit/puppet/blob/master/hiera/common.yaml) with the version and shasum of the latest version:
+In [`reddit/puppet`](https://github.com/reddit/puppet), update [`hiera/common.yaml`](https://github.com/reddit/puppet/blob/master/hiera/common.yaml) with the version and shasum of the latest version:
 
 ```
 # reddit_service
@@ -150,7 +150,27 @@ reddit_service::snoomark::version: "<version>"
 reddit_service::snoomark::version_checksum: "<shasum_hash>"
 ```
 
-Then, follow the deploy instructions for puppet to make your changes and update snoomark in production. Shortly after puppet has been rolled, the production version of snoomark should be updated.
+Do the same in [`hiera/environ/local-test.yaml`](https://github.com/reddit/puppet/blob/master/hiera/environ/local-test.yaml
+
+Post a PR to puppet, then email askops@reddit.com requesting a review, merge, and a sync of the puppet masters. They'll let you know once they're done.
+
+## Deploy the puppet changes
+
+You're going to need ssh access to tardis, tools-01, log-01, and the rollout password.
+
+Grab the conch in #salon with `harold acquire`. Once you've got the conch, ssh into tardis then run tmux (in case you are disconnected mid-rollout). Open two windows. In one ssh into tools-01, in the other ssh into log-01.
+
+On log-01 run `apptail short`. This is the production log. You are going to watch it for errors as the rollout proceeds.
+
+On tools-01 run
+
+    rollout r2 -d none -c puppet --timeout=0 -r all --parallel 50
+
+Enter the password and follow instructions.
+
+Read the [wiki] for more on puppet rollouts.
+
+[wiki]: https://reddit.atlassian.net/wiki/spaces/IO/pages/71139549/Deploying+puppet+changes+on+a+server
 
 ### Verify the update
 
@@ -166,3 +186,5 @@ If your update has been successfully made, the response will read:
 ```
 [snoomark <version>] This module is implemented in Rust.
 ```
+
+Release the conche in #salon with `harold release`.
