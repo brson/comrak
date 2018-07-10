@@ -10,7 +10,7 @@ use std::str;
 /// because some clients reject json
 /// respinses with more than 32 levels
 /// of nesting.
-const NESTED_NODE_LIMIT: i32 = 30;
+const NESTED_NODE_LIMIT: i32 = 100;
 
 impl<'a, 'o> Parser<'a, 'o> {
     #[cfg_attr(feature = "flamegraphs", flame)]
@@ -33,6 +33,25 @@ impl<'a, 'o> Parser<'a, 'o> {
     #[cfg_attr(feature = "flamegraphs", flame)]
     fn remove_format(&mut self, current_format: &mut HashMap<u16, u16>, val: u16) {
         *current_format.entry(val).or_insert(1) -= 1;
+    }
+
+    fn remove_block_nested(&mut self, node: &'a AstNode<'a>,) -> bool {
+        match node.data.borrow().value {
+            NodeValue::BlockQuote
+            | NodeValue::FootnoteDefinition(_)
+            | NodeValue::List(..)
+            | NodeValue::Item(..)
+            | NodeValue::CodeBlock(..)
+            | NodeValue::HtmlBlock(..)
+            | NodeValue::Paragraph
+            | NodeValue::SpoilerText
+            | NodeValue::Heading(..)
+            | NodeValue::ThematicBreak
+            | NodeValue::Table(..) => {
+                return true
+            },
+            _ => return false,
+        }
     }
 
     #[cfg_attr(feature = "flamegraphs", flame)]
@@ -107,6 +126,7 @@ impl<'a, 'o> Parser<'a, 'o> {
         let mut nested_level: i32 = 0;
 
         while let Some((node, phase)) = stack.pop() {
+            let mut elim_paren: bool = false;
             match phase {
                 Phase::Pre => {
                     let skip = self.postprocess_rtjson_ast_pre(
@@ -129,21 +149,28 @@ impl<'a, 'o> Parser<'a, 'o> {
                             nested_level += 1;
                             (cn, Phase::Pre)
                         }));
-                    } else {
+                    } else if self.remove_block_nested(node) {
                         node.detach();
+                    } else {
+                        elim_paren = true;
                     }
                 }
                 Phase::Post => {
                     if nested_level > 0 {
                         nested_level -= 1;
                     }
-                    self.postprocess_rtjson_ast_post(
-                        node,
-                        unformatted_text,
-                        current_format,
-                        format_ranges,
-                        range_idx
-                    );
+                    if elim_paren {
+                        node.detach();
+                        elim_paren = false;
+                    } else {
+                        self.postprocess_rtjson_ast_post(
+                            node,
+                            unformatted_text,
+                            current_format,
+                            format_ranges,
+                            range_idx
+                        );
+                    }
                 }
             }
         }
