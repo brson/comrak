@@ -6,11 +6,12 @@ use nodes::{AstNode, NodeValue, NodeFormatLink};
 use std::collections::HashMap;
 use std::str;
 
-/// Adding a nesting level of 30 nodes
-/// because some clients reject json
-/// respinses with more than 32 levels
-/// of nesting.
-const NESTED_NODE_LIMIT: i32 = 100;
+// The 'official' node nesting limit (the number we've arbitrarily and
+// informally decided) in redesign is 32 levels. That's probably best defined as
+// the number of levels of JSON that a client needs to be able to deserialize
+// and render. For fear of off-by-N errors between snoomark and clients, we
+// actually limit nesting to 30 levels.
+const NESTED_NODE_LIMIT: u32 = 30;
 
 impl<'a, 'o> Parser<'a, 'o> {
     #[cfg_attr(feature = "flamegraphs", flame)]
@@ -33,25 +34,6 @@ impl<'a, 'o> Parser<'a, 'o> {
     #[cfg_attr(feature = "flamegraphs", flame)]
     fn remove_format(&mut self, current_format: &mut HashMap<u16, u16>, val: u16) {
         *current_format.entry(val).or_insert(1) -= 1;
-    }
-
-    fn remove_block_nested(&mut self, node: &'a AstNode<'a>,) -> bool {
-        match node.data.borrow().value {
-            NodeValue::BlockQuote
-            | NodeValue::FootnoteDefinition(_)
-            | NodeValue::List(..)
-            | NodeValue::Item(..)
-            | NodeValue::CodeBlock(..)
-            | NodeValue::HtmlBlock(..)
-            | NodeValue::Paragraph
-            | NodeValue::SpoilerText
-            | NodeValue::Heading(..)
-            | NodeValue::ThematicBreak
-            | NodeValue::Table(..) => {
-                return true
-            },
-            _ => return false,
-        }
     }
 
     #[cfg_attr(feature = "flamegraphs", flame)]
@@ -123,10 +105,17 @@ impl<'a, 'o> Parser<'a, 'o> {
         enum Phase { Pre, Post };
 
         let mut stack = vec![(root_node, Phase::Pre)];
-        let mut nested_level: i32 = 0;
+
+        // Tracking the nesting level. In this traversal we don't actually try
+        // to denest because there's too much tree manipulation going on to
+        // easily track exactly how deep any node is going to end up without
+        // doing a bunch of extra work in the post-traversal phase. So this
+        // traversal is just making a conservative guess as to whether the tree
+        // is too deep.
+        let mut nested_level = 0;
+        let mut may_need_denesting = false;
 
         while let Some((node, phase)) = stack.pop() {
-            let mut elim_paren: bool = false;
             match phase {
                 Phase::Pre => {
                     let skip = self.postprocess_rtjson_ast_pre(
@@ -144,36 +133,35 @@ impl<'a, 'o> Parser<'a, 'o> {
                     // stack in pre-traversal mode, in reverse order so that the
                     // first child is processed first,
                     stack.push((node, Phase::Post));
-                    if nested_level <= NESTED_NODE_LIMIT {
-                        stack.extend(node.reverse_children().map(|cn| {
-                            nested_level += 1;
-                            (cn, Phase::Pre)
-                        }));
-                    } else if self.remove_block_nested(node) {
-                        node.detach();
-                    } else {
-                        elim_paren = true;
+                    stack.extend(node.reverse_children().map(|cn| (cn, Phase::Pre)));
+
+                    if self.count_as_nested(node) {
+                        nested_level += 1;
+
+                        may_need_denesting |= nested_level > NESTED_NODE_LIMIT;
                     }
                 }
                 Phase::Post => {
-                    if nested_level > 0 {
+                    if self.count_as_nested(node) {
                         nested_level -= 1;
                     }
-                    if elim_paren {
-                        node.detach();
-                        elim_paren = false;
-                    } else {
-                        self.postprocess_rtjson_ast_post(
-                            node,
-                            unformatted_text,
-                            current_format,
-                            format_ranges,
-                            range_idx
-                        );
-                    }
+
+                    self.postprocess_rtjson_ast_post(
+                        node,
+                        unformatted_text,
+                        current_format,
+                        format_ranges,
+                        range_idx
+                    );
                 }
             }
         }
+
+        if may_need_denesting {
+            self.denest(root_node);
+        }
+
+        assert_eq!(nested_level, 0);
     }
 
     // The pre-traversal phase of rtjson postprocessing
@@ -529,6 +517,80 @@ impl<'a, 'o> Parser<'a, 'o> {
                 }
                 _ => ()
             }
+        }
+    }
+
+    fn denest(&self, root_node: &'a AstNode<'a>) {
+        enum Phase { Pre, Post };
+
+        let mut stack = vec![(root_node, Phase::Pre)];
+
+        let mut nested_level = 0;
+
+        while let Some((node, phase)) = stack.pop() {
+            match phase {
+                Phase::Pre => {
+                    nested_level += 1;
+
+                    if nested_level <= NESTED_NODE_LIMIT {
+                        stack.push((node, Phase::Post));
+                        stack.extend(node.reverse_children().map(|cn| (cn, Phase::Pre)));
+                    } else {
+                        // Limit exceeded, detach and stop the descent
+                        self.detach_nearest_removable(node);
+                    }
+                }
+                Phase::Post => {
+                    nested_level -= 1;
+                }
+            }
+        }
+    }
+
+    fn detach_nearest_removable(&self, node: &'a AstNode<'a>) {
+        let mut node = node;
+
+        while let Some(parent) = node.parent() {
+            if self.is_removable(node) {
+                node.detach();
+                return;
+            }
+
+            node = parent;
+        }
+    }
+
+    // To enforce nesting limits we need to sometimes remove nodes, but because
+    // there are sometimes invariants between nodes (e.g. Table contains
+    // TableRow) we only remove some node types. These are they.
+    fn is_removable(&self, node: &'a AstNode<'a>) -> bool {
+        match node.data.borrow().value {
+            NodeValue::BlockQuote
+            | NodeValue::FootnoteDefinition(_)
+            | NodeValue::List(..)
+            | NodeValue::Item(..)
+            | NodeValue::CodeBlock(..)
+            | NodeValue::HtmlBlock(..)
+            | NodeValue::Paragraph
+            | NodeValue::SpoilerText
+            | NodeValue::Heading(..)
+            | NodeValue::ThematicBreak
+            | NodeValue::Table(..) => {
+                return true
+            },
+            _ => return false,
+        }
+    }
+
+    // During the initial pass some nodes are guaranteed to be detached,
+    // removing a layer of nesting, so they are not counted.
+    fn count_as_nested(&self, node: &'a AstNode<'a>) -> bool {
+        match node.data.borrow_mut().value {
+            NodeValue::Emph
+            | NodeValue::Strong
+            | NodeValue::Strikethrough
+            | NodeValue::Superscript => false,
+            _ => true,
         }
     }
 }
