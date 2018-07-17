@@ -33,7 +33,7 @@ fn try_opening_header<'a, 'o>(
         return Some((container, false));
     }
 
-    let header_row = match row(&container.data.borrow().content) {
+    let mut header_row = match row(&container.data.borrow().content) {
         Some(header_row) => header_row,
         None => return Some((container, false)),
     };
@@ -47,6 +47,10 @@ fn try_opening_header<'a, 'o>(
             return Some((container, false));
         }
     } else {
+        if header_row().len() > MAX_COLUMNS {
+            
+        }
+
         // Though the marker row at least must be as long as the header row
         if marker_row.len() < header_row.len() {
             return Some((container, false));
