@@ -325,7 +325,6 @@ impl NodeValue {
             | NodeValue::CodeBlock(..)
             | NodeValue::HtmlBlock(..)
             | NodeValue::Paragraph
-            | NodeValue::SpoilerText
             | NodeValue::Heading(..)
             | NodeValue::ThematicBreak
             | NodeValue::Table(..)
