@@ -36,14 +36,11 @@ pub fn parse_document<'a>(
         value: NodeValue::Document,
         content: vec![],
         start_line: 0,
-        start_column: 0,
-        end_line: 0,
-        end_column: 0,
         open: true,
         last_line_blank: false,
     })));
     let mut parser = Parser::new(arena, root, options);
-    parser.feed(buffer, true);
+    parser.feed(buffer);
     parser.finish()
 }
 
@@ -61,8 +58,6 @@ pub struct Parser<'a, 'o> {
     blank: bool,
     partially_consumed_tab: bool,
     last_line_length: usize,
-    linebuf: Vec<u8>,
-    last_buffer_ended_with_cr: bool,
     options: &'o ComrakOptions,
 }
 
@@ -333,7 +328,7 @@ struct FootnoteDefinition<'a> {
 }
 
 impl<'a, 'o> Parser<'a, 'o> {
-    pub fn new(
+    fn new(
         arena: &'a Arena<AstNode<'a>>,
         root: &'a AstNode<'a>,
         options: &'o ComrakOptions,
@@ -352,70 +347,54 @@ impl<'a, 'o> Parser<'a, 'o> {
             blank: false,
             partially_consumed_tab: false,
             last_line_length: 0,
-            linebuf: Vec::with_capacity(80),
-            last_buffer_ended_with_cr: false,
             options: options,
         }
     }
 
     #[cfg_attr(any(feature = "flamegraphs", feature = "minflame"), flame)]
-    fn feed(&mut self, s: &str, eof: bool) {
+    fn feed(&mut self, s: &str) {
         let s = s.as_bytes();
         let mut i = 0;
-        let buffer = s;
-        let sz = buffer.len();
-
-        if self.last_buffer_ended_with_cr && buffer[i] == b'\n' {
-            i += 1;
-        }
-        self.last_buffer_ended_with_cr = false;
+        let sz = s.len();
+        let mut linebuf = vec![];
 
         while i < sz {
-            let mut process = false;
+            let mut process = true;
             let mut eol = i;
             while eol < sz {
-                if strings::is_line_end_char(buffer[eol]) {
-                    process = true;
+                if strings::is_line_end_char(s[eol]) {
                     break;
                 }
-                if buffer[eol] == 0 {
+                if s[eol] == 0 {
+                    process = false;
                     break;
                 }
                 eol += 1;
             }
 
-            if eol >= sz && eof {
-                process = true;
-            }
-
             if process {
-                if !self.linebuf.is_empty() {
-                    self.linebuf.extend_from_slice(&s[i..eol]);
-                    let linebuf = mem::replace(&mut self.linebuf, Vec::with_capacity(80));
+                if !linebuf.is_empty() {
+                    linebuf.extend_from_slice(&s[i..eol]);
                     self.process_line(&linebuf);
-                } else if sz > eol && buffer[eol] == b'\n' {
+                    linebuf.truncate(0);
+                } else if sz > eol && s[eol] == b'\n' {
                     self.process_line(&s[i..eol + 1]);
                 } else {
                     self.process_line(&s[i..eol]);
                 }
-            } else if eol < sz && buffer[eol] == b'\0' {
-                self.linebuf.extend_from_slice(&s[i..eol]);
-                self.linebuf
-                    .extend_from_slice(&"\u{fffd}".to_string().into_bytes());
-                eol += 1;
-            } else {
-                self.linebuf.extend_from_slice(&s[i..eol]);
-            }
 
-            i = eol;
-            if i < sz && buffer[i] == b'\r' {
-                i += 1;
-                if i == sz {
-                    self.last_buffer_ended_with_cr = true;
+                i = eol;
+                if i < sz && s[i] == b'\r' {
+                    i += 1;
                 }
-            }
-            if i < sz && buffer[i] == b'\n' {
-                i += 1;
+                if i < sz && s[i] == b'\n' {
+                    i += 1;
+                }
+            } else {
+                debug_assert!(eol < sz && s[eol] == b'\0');
+                linebuf.extend_from_slice(&s[i..eol]);
+                linebuf.extend_from_slice(&"\u{fffd}".to_string().into_bytes());
+                i = eol + 1;
             }
         }
     }
@@ -593,14 +572,13 @@ impl<'a, 'o> Parser<'a, 'o> {
 
             if !indented && line[self.first_nonspace] == b'>'
                 && (!self.options.ext_reddit_quirks || line[self.first_nonspace + 1] != b'!') {
-                let blockquote_startpos = self.first_nonspace;
                 let offset = self.first_nonspace + 1 - self.offset;
                 self.advance_offset(line, offset, false);
                 if strings::is_space_or_tab(line[self.offset]) {
                     self.advance_offset(line, 1, true);
                 }
                 *container =
-                    self.add_child(*container, NodeValue::BlockQuote, blockquote_startpos + 1);
+                    self.add_child(*container, NodeValue::BlockQuote);
             } else if !indented
                 && unwrap_into(
                     scanners::atx_heading_start(&line[self.first_nonspace..], self.options.ext_reddit_quirks),
@@ -612,7 +590,6 @@ impl<'a, 'o> Parser<'a, 'o> {
                 *container = self.add_child(
                     *container,
                     NodeValue::Heading(NodeHeading::default()),
-                    heading_startpos + 1,
                 );
 
                 let mut hashpos = line[self.first_nonspace..]
@@ -651,7 +628,7 @@ impl<'a, 'o> Parser<'a, 'o> {
                     literal: Vec::new(),
                 };
                 *container =
-                    self.add_child(*container, NodeValue::CodeBlock(ncb), first_nonspace + 1);
+                    self.add_child(*container, NodeValue::CodeBlock(ncb));
                 self.advance_offset(line, first_nonspace + matched - offset, false);
             } else if !indented
                 && (unwrap_into(
@@ -664,13 +641,12 @@ impl<'a, 'o> Parser<'a, 'o> {
                         &mut matched,
                     ),
                 }) {
-                let offset = self.first_nonspace + 1;
                 let nhb = NodeHtmlBlock {
                     block_type: matched as u8,
                     literal: Vec::new(),
                 };
 
-                *container = self.add_child(*container, NodeValue::HtmlBlock(nhb), offset);
+                *container = self.add_child(*container, NodeValue::HtmlBlock(nhb));
             } else if !indented && match container.data.borrow().value {
                 NodeValue::Paragraph => unwrap_into(
                     scanners::setext_heading_line(&line[self.first_nonspace..]),
@@ -694,8 +670,7 @@ impl<'a, 'o> Parser<'a, 'o> {
                     &mut matched,
                 ),
             } {
-                let offset = self.first_nonspace + 1;
-                *container = self.add_child(*container, NodeValue::ThematicBreak, offset);
+                *container = self.add_child(*container, NodeValue::ThematicBreak);
                 let adv = line.len() - 1 - self.offset;
                 self.advance_offset(line, adv, false);
             } else if !indented && self.options.ext_footnotes
@@ -707,11 +682,9 @@ impl<'a, 'o> Parser<'a, 'o> {
                 c = c.split(|&e| e == b']').next().unwrap();
                 let offset = self.first_nonspace + matched - self.offset;
                 self.advance_offset(line, offset, false);
-                let offset = self.first_nonspace + matched + 1;
                 *container = self.add_child(
                     *container,
                     NodeValue::FootnoteDefinition(c.to_vec()),
-                    offset,
                 );
             } else if (!indented || match container.data.borrow().value {
                 NodeValue::List(..) => true,
@@ -784,16 +757,14 @@ impl<'a, 'o> Parser<'a, 'o> {
 
                 nl.marker_offset = self.indent;
 
-                let offset = self.first_nonspace + 1;
                 if match container.data.borrow().value {
                     NodeValue::List(ref mnl) => !lists_match(&nl, mnl),
                     _ => true,
                 } {
-                    *container = self.add_child(*container, NodeValue::List(nl), offset);
+                    *container = self.add_child(*container, NodeValue::List(nl));
                 }
 
-                let offset = self.first_nonspace + 1;
-                *container = self.add_child(*container, NodeValue::Item(nl), offset);
+                *container = self.add_child(*container, NodeValue::Item(nl));
             } else if indented && !maybe_lazy && !self.blank {
                 self.advance_offset(line, CODE_INDENT, true);
                 let ncb = NodeCodeBlock {
@@ -804,8 +775,7 @@ impl<'a, 'o> Parser<'a, 'o> {
                     info: vec![],
                     literal: Vec::new(),
                 };
-                let offset = self.offset + 1;
-                *container = self.add_child(*container, NodeValue::CodeBlock(ncb), offset);
+                *container = self.add_child(*container, NodeValue::CodeBlock(ncb));
             } else {
                 let new_container = if !indented && self.options.ext_table {
                     table::try_opening_block(self, *container, line)
@@ -976,13 +946,12 @@ impl<'a, 'o> Parser<'a, 'o> {
         &mut self,
         mut parent: &'a AstNode<'a>,
         value: NodeValue,
-        start_column: usize,
     ) -> &'a AstNode<'a> {
         while !nodes::can_contain_type(parent, &value) {
             parent = self.finalize(parent).unwrap();
         }
 
-        let child = make_block(value, self.line_number, start_column);
+        let child = make_block(value, self.line_number);
         let node = self.arena.alloc(Node::new(RefCell::new(child)));
         parent.append(node);
         node
@@ -1089,8 +1058,7 @@ impl<'a, 'o> Parser<'a, 'o> {
                             self.add_line(container, &line);
                         }
                     } else {
-                        let start_column = self.first_nonspace + 1;
-                        container = self.add_child(container, NodeValue::Paragraph, start_column);
+                        container = self.add_child(container, NodeValue::Paragraph);
                         let count = self.first_nonspace - self.offset;
                         self.advance_offset(line, count, false);
                         self.add_line(container, line);
@@ -1119,11 +1087,7 @@ impl<'a, 'o> Parser<'a, 'o> {
     }
 
     #[cfg_attr(any(feature = "flamegraphs", feature = "minflame"), flame)]
-    pub fn finish(&mut self) -> &'a AstNode<'a> {
-        if !self.linebuf.is_empty() {
-            let linebuf = mem::replace(&mut self.linebuf, vec![]);
-            self.process_line(&linebuf);
-        }
+    fn finish(&mut self) -> &'a AstNode<'a> {
         self.finalize_document();
         self.postprocess_text_nodes(self.root);
         if self.options.rtjson {
@@ -1164,28 +1128,6 @@ impl<'a, 'o> Parser<'a, 'o> {
     ) -> Option<&'a AstNode<'a>> {
         assert!(ast.open);
         ast.open = false;
-
-        if !self.linebuf.is_empty() {
-            ast.end_line = self.line_number;
-            ast.end_column = self.last_line_length;
-        } else if match ast.value {
-            NodeValue::Document => true,
-            NodeValue::CodeBlock(ref ncb) => ncb.fenced,
-            NodeValue::Heading(ref nh) => nh.setext,
-            _ => false,
-        } {
-            ast.end_line = self.line_number;
-            ast.end_column = self.linebuf.len();
-            if ast.end_column > 0 && self.linebuf[ast.end_column - 1] == b'\n' {
-                ast.end_column -= 1;
-            }
-            if ast.end_column > 0 && self.linebuf[ast.end_column - 1] == b'\r' {
-                ast.end_column -= 1;
-            }
-        } else {
-            ast.end_line = self.line_number - 1;
-            ast.end_column = self.last_line_length;
-        }
 
         let content = &mut ast.content;
         let mut pos = 0;
@@ -1528,12 +1470,11 @@ impl<'a, 'o> Parser<'a, 'o> {
 
         subj.pos += 1;
         subj.spnl();
-        let matchlen = match inlines::manual_scan_link_url(&subj.input[subj.pos..],
-                                                           self.options.ext_reddit_quirks) {
-            Some(matchlen) => matchlen,
+        let (url, matchlen) = match inlines::manual_scan_link_url(&subj.input[subj.pos..],
+                                                                  self.options.ext_reddit_quirks) {
+            Some((url, matchlen)) => (url, matchlen),
             None => return None,
         };
-        let url = subj.input[subj.pos..subj.pos + matchlen].to_vec();
         subj.pos += matchlen;
 
         let beforetitle = subj.pos;

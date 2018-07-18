@@ -1,5 +1,5 @@
 [![Build Status](https://travis-ci.org/kivikakk/comrak.svg?branch=master)](https://travis-ci.org/kivikakk/comrak)
-![Spec Status: 647/647](https://img.shields.io/badge/specs-647%2F647-brightgreen.svg)
+![Spec Status: 649/649](https://img.shields.io/badge/specs-649%2F649-brightgreen.svg)
 [![crates.io version](https://img.shields.io/crates/v/comrak.svg)](https://crates.io/crates/comrak)
 [![docs.rs not building comrak right now!](https://docs.rs/comrak/badge.svg)](https://kivikakk.github.io/comrak/comrak/)
 
@@ -30,7 +30,7 @@ A binary is included which does everything you typically want:
 
 ```
 $ comrak --help
-comrak 0.2.13
+comrak 0.2.14
 Ashe Connor <kivikakk@github.com>
 A 100% CommonMark-compatible GitHub Flavored Markdown parser and formatter
 
