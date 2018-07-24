@@ -109,7 +109,7 @@ def convert_rtjson(md, extensions):
     tempspec = "spec-test-case.md"
     with open(tempspec, "w", encoding="utf-8") as f:
         f.write(md)
-    out = subprocess.run(["python2", "script/cm_to_rtjson.py", tempspec], stdout=subprocess.PIPE)
+    out = subprocess.run(["python2", "script/cm_to_rtjson.py", tempspec], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     os.remove(tempspec)
     res = out.stdout.decode("utf-8") if not out.returncode else ""
     return [out.returncode, res, out.stderr]

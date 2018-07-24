@@ -94,6 +94,7 @@ extern crate alloc_system;
 extern crate memchr;
 #[cfg(feature = "cpython")]
 #[macro_use] extern crate cpython;
+extern crate rtjv;
 
 mod arena_tree;
 mod parser;

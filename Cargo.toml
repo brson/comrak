@@ -36,6 +36,7 @@ clippy = { version = "0.0.212", optional = true }
 flame = { version = "0.2.2", optional = true }
 flamer = { version = "0.2.3", optional = true }
 memchr = "2.0.1"
+rtjv = { path = "rtjv" }
 
 [dependencies.cpython]
 version = "0.2.0"
@@ -52,3 +53,5 @@ dev = ["clap", "clippy", "cpython", "cpython/extension-module-2-7"]
 flamegraphs = ["flame", "flamer", "cpython/extension-module-2-7"]
 minflame = ["flame", "flamer", "cpython/extension-module-2-7"]
 benchmarks = []
+
+[workspace]

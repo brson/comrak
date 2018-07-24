@@ -19,6 +19,7 @@ py_module_initializer!(snoomark, initsnoomark, PyInit_snoomark, |py, m| {
     try!(m.add(py, "__doc__", doc_string));
     try!(m.add(py, "cm_to_rtjson", py_fn!(py, cm_to_rtjson(cm: String))));
     try!(m.add(py, "cm_to_rtjson_no_qr", py_fn!(py, cm_to_rtjson_no_qr(cm: String))));
+    try!(m.add(py, "validate_rtjson", py_fn!(py, validate_rtjson(cm: String))));
     add_flame_fns(py, m)?;
     Ok(())
 });
@@ -419,4 +420,13 @@ fn unsupported_block(line: &str, leading_space: usize, opening_line: bool) -> bo
     }
 
     return true;
+}
+
+pub fn validate_rtjson(py: Python, rtj: String) -> PyResult<PyObject> {
+    let vr = rtjv::validate(&rtj);
+
+    match vr {
+        Ok(_) => Ok(PyTuple::new(py, &[]).into_object()),
+        Err(e) => Ok(PyString::new(py, &format!("{}", e)).into_object()),
+    }
 }

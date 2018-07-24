@@ -6,7 +6,7 @@
 import sys
 import json
 import os
-from cm_to_rtjson import cm_to_rtjson
+from cm_to_rtjson import cm_to_rtjson_unvalidated
 
 big = '>' * 150000
-cm_to_rtjson(big)
+cm_to_rtjson_unvalidated(big)

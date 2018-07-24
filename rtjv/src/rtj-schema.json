@@ -1,0 +1,709 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "definitions": {
+        "AnimatedImage": {
+            "properties": {
+                "c": {
+                    "type": "string"
+                },
+                "e": {
+                    "enum": [
+                        "gif"
+                    ],
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "o": {
+                    "$ref": "#/definitions/ObfuscationReason"
+                }
+            },
+            "type": "object"
+        },
+        "BlockQuote": {
+            "properties": {
+                "a": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/Text"
+                        },
+                        {
+                            "$ref": "#/definitions/LineBreak"
+                        },
+                        {
+                            "$ref": "#/definitions/Link"
+                        },
+                        {
+                            "$ref": "#/definitions/CommentLink"
+                        },
+                        {
+                            "$ref": "#/definitions/PostLink"
+                        },
+                        {
+                            "$ref": "#/definitions/SubredditLink"
+                        },
+                        {
+                            "$ref": "#/definitions/UserLink"
+                        },
+                        {
+                            "$ref": "#/definitions/SpoilerText"
+                        }
+                    ]
+                },
+                "c": {
+                    "items": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/definitions/Paragraph"
+                            },
+                            {
+                                "$ref": "#/definitions/Heading"
+                            },
+                            {
+                                "$ref": "#/definitions/BlockQuote"
+                            },
+                            {
+                                "$ref": "#/definitions/CodeBlock"
+                            },
+                            {
+                                "$ref": "#/definitions/List"
+                            },
+                            {
+                                "$ref": "#/definitions/Table"
+                            }
+                        ]
+                    },
+                    "type": "array"
+                },
+                "e": {
+                    "enum": [
+                        "blockquote"
+                    ],
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "CodeBlock": {
+            "properties": {
+                "c": {
+                    "items": {
+                        "$ref": "#/definitions/RawText"
+                    },
+                    "type": "array"
+                },
+                "e": {
+                    "enum": [
+                        "code"
+                    ],
+                    "type": "string"
+                },
+                "l": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "ColumnAlignment": {
+            "enum": [
+                "C",
+                "L",
+                "R"
+            ],
+            "type": "string"
+        },
+        "CommentLink": {
+            "properties": {
+                "e": {
+                    "enum": [
+                        "c/"
+                    ],
+                    "type": "string"
+                },
+                "t": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "Embed": {
+            "properties": {
+                "c": {
+                    "type": "string"
+                },
+                "e": {
+                    "enum": [
+                        "embed"
+                    ],
+                    "type": "string"
+                },
+                "u": {
+                    "type": "string"
+                },
+                "x": {
+                    "type": "number"
+                },
+                "y": {
+                    "type": "number"
+                }
+            },
+            "type": "object"
+        },
+        "Heading": {
+            "properties": {
+                "c": {
+                    "items": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/definitions/RawText"
+                            },
+                            {
+                                "$ref": "#/definitions/Link"
+                            },
+                            {
+                                "$ref": "#/definitions/CommentLink"
+                            },
+                            {
+                                "$ref": "#/definitions/PostLink"
+                            },
+                            {
+                                "$ref": "#/definitions/SubredditLink"
+                            },
+                            {
+                                "$ref": "#/definitions/UserLink"
+                            }
+                        ]
+                    },
+                    "type": "array"
+                },
+                "e": {
+                    "enum": [
+                        "h"
+                    ],
+                    "type": "string"
+                },
+                "l": {
+                    "enum": [
+                        1,
+                        2,
+                        3,
+                        4,
+                        5,
+                        6
+                    ],
+                    "type": "number"
+                }
+            },
+            "type": "object"
+        },
+        "HorizontalRule": {
+            "properties": {
+                "e": {
+                    "enum": [
+                        "hr"
+                    ],
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "Image": {
+            "properties": {
+                "c": {
+                    "type": "string"
+                },
+                "e": {
+                    "enum": [
+                        "img"
+                    ],
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "o": {
+                    "$ref": "#/definitions/ObfuscationReason"
+                }
+            },
+            "type": "object"
+        },
+        "LineBreak": {
+            "properties": {
+                "e": {
+                    "enum": [
+                        "br"
+                    ],
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "Link": {
+            "properties": {
+                "a": {
+                    "type": "string"
+                },
+                "e": {
+                    "enum": [
+                        "link"
+                    ],
+                    "type": "string"
+                },
+                "f": {
+                    "items": {
+                        "additionalItems": {
+                            "anyOf": [
+                                {
+                                    "type": "number"
+                                },
+                                {
+                                    "type": "number"
+                                },
+                                {
+                                    "type": "number"
+                                }
+                            ]
+                        },
+                        "items": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "number"
+                            }
+                        ],
+                        "minItems": 3,
+                        "type": "array"
+                    },
+                    "type": "array"
+                },
+                "t": {
+                    "type": "string"
+                },
+                "u": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "List": {
+            "description": "Note: the spec is somewhat ambiguous here, consider that\nas typed, there are multiple possible representations of\na list of two, top-level, paragraphs.\n\ne.g.\nThe CommonMark list of:\n```\n  * foo\n  * bar\n```\n\ncould either be represented as\n(List\n    (ListChild\n       (Paragraph 'foo')\n       (Paragraph 'bar' )))\n\nOR\n\n(List\n    (ListChild\n        (Paragraph 'foo' ))\n    (ListChild\n        (Paragraph 'bar)))\n\nThe spec is designed to be interoperable with our CommonMark parser, and as so,\nthe preferred encoding is the latter.\n\nIf you would like to demo  CommonMark Markdown -> AST conversions,\nyou can try out http://spec.commonmark.org/dingus/",
+            "properties": {
+                "c": {
+                    "items": {
+                        "$ref": "#/definitions/ListItem"
+                    },
+                    "type": "array"
+                },
+                "e": {
+                    "enum": [
+                        "list"
+                    ],
+                    "type": "string"
+                },
+                "o": {
+                    "type": "boolean"
+                }
+            },
+            "type": "object"
+        },
+        "ListItem": {
+            "properties": {
+                "c": {
+                    "items": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/definitions/Paragraph"
+                            },
+                            {
+                                "$ref": "#/definitions/Heading"
+                            },
+                            {
+                                "$ref": "#/definitions/HorizontalRule"
+                            },
+                            {
+                                "$ref": "#/definitions/BlockQuote"
+                            },
+                            {
+                                "$ref": "#/definitions/CodeBlock"
+                            },
+                            {
+                                "$ref": "#/definitions/List"
+                            },
+                            {
+                                "$ref": "#/definitions/Table"
+                            }
+                        ]
+                    },
+                    "type": "array"
+                },
+                "e": {
+                    "enum": [
+                        "li"
+                    ],
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "ObfuscationReason": {
+            "enum": [
+                "nsfw",
+                "spoiler"
+            ],
+            "type": "string"
+        },
+        "Paragraph": {
+            "properties": {
+                "c": {
+                    "items": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/definitions/Text"
+                            },
+                            {
+                                "$ref": "#/definitions/LineBreak"
+                            },
+                            {
+                                "$ref": "#/definitions/Link"
+                            },
+                            {
+                                "$ref": "#/definitions/CommentLink"
+                            },
+                            {
+                                "$ref": "#/definitions/PostLink"
+                            },
+                            {
+                                "$ref": "#/definitions/SubredditLink"
+                            },
+                            {
+                                "$ref": "#/definitions/UserLink"
+                            },
+                            {
+                                "$ref": "#/definitions/SpoilerText"
+                            }
+                        ]
+                    },
+                    "type": "array"
+                },
+                "e": {
+                    "enum": [
+                        "par"
+                    ],
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "PostLink": {
+            "properties": {
+                "e": {
+                    "enum": [
+                        "p/"
+                    ],
+                    "type": "string"
+                },
+                "t": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "RawText": {
+            "properties": {
+                "e": {
+                    "enum": [
+                        "raw"
+                    ],
+                    "type": "string"
+                },
+                "t": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "SpoilerText": {
+            "properties": {
+                "c": {
+                    "items": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/definitions/Text"
+                            },
+                            {
+                                "$ref": "#/definitions/LineBreak"
+                            },
+                            {
+                                "$ref": "#/definitions/Link"
+                            },
+                            {
+                                "$ref": "#/definitions/CommentLink"
+                            },
+                            {
+                                "$ref": "#/definitions/PostLink"
+                            },
+                            {
+                                "$ref": "#/definitions/SubredditLink"
+                            },
+                            {
+                                "$ref": "#/definitions/UserLink"
+                            }
+                        ]
+                    },
+                    "type": "array"
+                },
+                "e": {
+                    "enum": [
+                        "spoilertext"
+                    ],
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "SubredditLink": {
+            "properties": {
+                "e": {
+                    "enum": [
+                        "r/"
+                    ],
+                    "type": "string"
+                },
+                "l": {
+                    "type": "boolean"
+                },
+                "t": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "Table": {
+            "properties": {
+                "c": {
+                    "items": {
+                        "items": {
+                            "$ref": "#/definitions/TableCell"
+                        },
+                        "type": "array"
+                    },
+                    "type": "array"
+                },
+                "e": {
+                    "enum": [
+                        "table"
+                    ],
+                    "type": "string"
+                },
+                "h": {
+                    "items": {
+                        "$ref": "#/definitions/TableHeaderCell"
+                    },
+                    "type": "array"
+                }
+            },
+            "type": "object"
+        },
+        "TableCell": {
+            "properties": {
+                "c": {
+                    "items": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/definitions/Text"
+                            },
+                            {
+                                "$ref": "#/definitions/Link"
+                            },
+                            {
+                                "$ref": "#/definitions/CommentLink"
+                            },
+                            {
+                                "$ref": "#/definitions/PostLink"
+                            },
+                            {
+                                "$ref": "#/definitions/SubredditLink"
+                            },
+                            {
+                                "$ref": "#/definitions/UserLink"
+                            },
+                            {
+                                "$ref": "#/definitions/SpoilerText"
+                            }
+                        ]
+                    },
+                    "type": "array"
+                }
+            },
+            "type": "object"
+        },
+        "TableHeaderCell": {
+            "properties": {
+                "a": {
+                    "$ref": "#/definitions/ColumnAlignment"
+                },
+                "c": {
+                    "items": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/definitions/Text"
+                            },
+                            {
+                                "$ref": "#/definitions/Link"
+                            },
+                            {
+                                "$ref": "#/definitions/CommentLink"
+                            },
+                            {
+                                "$ref": "#/definitions/PostLink"
+                            },
+                            {
+                                "$ref": "#/definitions/SubredditLink"
+                            },
+                            {
+                                "$ref": "#/definitions/UserLink"
+                            },
+                            {
+                                "$ref": "#/definitions/SpoilerText"
+                            }
+                        ]
+                    },
+                    "type": "array"
+                }
+            },
+            "type": "object"
+        },
+        "Text": {
+            "properties": {
+                "e": {
+                    "enum": [
+                        "text"
+                    ],
+                    "type": "string"
+                },
+                "f": {
+                    "items": {
+                        "additionalItems": {
+                            "anyOf": [
+                                {
+                                    "type": "number"
+                                },
+                                {
+                                    "type": "number"
+                                },
+                                {
+                                    "type": "number"
+                                }
+                            ]
+                        },
+                        "items": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "number"
+                            }
+                        ],
+                        "minItems": 3,
+                        "type": "array"
+                    },
+                    "type": "array"
+                },
+                "t": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "UserLink": {
+            "properties": {
+                "e": {
+                    "enum": [
+                        "u/"
+                    ],
+                    "type": "string"
+                },
+                "l": {
+                    "type": "boolean"
+                },
+                "t": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "Video": {
+            "properties": {
+                "c": {
+                    "type": "string"
+                },
+                "e": {
+                    "enum": [
+                        "video"
+                    ],
+                    "type": "string"
+                },
+                "gifify": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "o": {
+                    "$ref": "#/definitions/ObfuscationReason"
+                },
+                "p": {
+                    "$ref": "#/definitions/Image"
+                }
+            },
+            "type": "object"
+        }
+    },
+    "items": {
+        "anyOf": [
+            {
+                "$ref": "#/definitions/Paragraph"
+            },
+            {
+                "$ref": "#/definitions/Heading"
+            },
+            {
+                "$ref": "#/definitions/HorizontalRule"
+            },
+            {
+                "$ref": "#/definitions/BlockQuote"
+            },
+            {
+                "$ref": "#/definitions/CodeBlock"
+            },
+            {
+                "$ref": "#/definitions/List"
+            },
+            {
+                "$ref": "#/definitions/Table"
+            },
+            {
+                "$ref": "#/definitions/Embed"
+            },
+            {
+                "$ref": "#/definitions/Image"
+            },
+            {
+                "$ref": "#/definitions/AnimatedImage"
+            },
+            {
+                "$ref": "#/definitions/Video"
+            }
+        ]
+    },
+    "type": "array"
+}
+

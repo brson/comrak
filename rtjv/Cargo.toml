@@ -1,0 +1,17 @@
+[package]
+name = "rtjv"
+version = "0.1.0"
+authors = ["Brian Anderson <andersrb@gmail.com>"]
+
+[dependencies]
+#valico = "2.1.0"
+valico = { path = "../../../valico" }
+serde_json = "1.0.13"
+clap = "2.32.0"
+failure = "0.1.1"
+
+[[bin]]
+name = "rtjv"
+
+[lib]
+name = "rtjv"

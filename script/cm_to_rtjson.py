@@ -59,9 +59,30 @@ os.symlink(os.path.abspath(dylib), snoomark_so)
 sys.path.append(target_dir)
 import snoomark
 
+noraise = os.environ.get("SM_NORAISE")
+
 # Export the cm_to_rtjson function for other modules
-def cm_to_rtjson(s):
+def cm_to_rtjson_unvalidated(s):
     return snoomark.cm_to_rtjson(s)
+
+def cm_to_rtjson(s):
+    rtj = snoomark.cm_to_rtjson(s)
+    rtjs = json.dumps(rtj)
+    vr = snoomark.validate_rtjson(rtjs)
+    if isinstance(vr, basestring):
+        sys.stderr.write(vr)
+        sys.stderr.write("\n")
+        raise RuntimeError
+    return rtj
+
+def cm_to_rtjson_noraise(s):
+    rtj = snoomark.cm_to_rtjson(s)
+    rtjs = json.dumps(rtj)
+    vr = snoomark.validate_rtjson(rtjs)
+    if isinstance(vr, basestring):
+        sys.stderr.write(vr)
+        sys.stderr.write("\n")
+    return rtj
 
 if __name__ == "__main__":
     file_ = sys.argv[1]
@@ -82,7 +103,7 @@ if __name__ == "__main__":
     # If profiling then run it through once to trigger all the
     # lazy initializers
     if flame or bench:
-        r = cm_to_rtjson(md)
+        r = cm_to_rtjson_noraise(md)
         json.dumps(r) # maybe dumps needs to be initialized? just being cautious
         del r
 
@@ -109,7 +130,10 @@ if __name__ == "__main__":
             snoomark.flame_exec_start()
             snoomark.flame_convert_start()
 
-        doc = cm_to_rtjson(md)
+        if noraise:
+            doc = cm_to_rtjson_noraise(md)
+        else:
+            doc = cm_to_rtjson(md)
 
         if flame:
             snoomark.flame_convert_end()
